@@ -1,0 +1,23 @@
+/* -----------------------------------------------------------------------
+   Editor : Danmi
+   Date : 2011.3.6
+   ----------------------------------------------------------------------- */
+
+
+/*크로스 브라우징 폰트 */
+@charset "utf-8";
+@font-face{
+  font-family: 'nanumN';
+  font-style: normal;
+  font-weight: normal;
+  src: url('webfonts/NanumGothic.eot')/*tpa=http://weather.appme.co.kr/common/css/NanumGothic.eot*/; 
+  src: local('☺'), url('webfonts/NanumGothic.woff')/*tpa=http://weather.appme.co.kr/common/css/NanumGothic.woff*/ format('woff'), url('webfonts/NanumGothic.ttf')/*tpa=http://weather.appme.co.kr/common/css/NanumGothic.ttf*/ format('truetype'); 
+}
+
+@font-face{
+  font-family: 'nanumEB';
+  font-style: normal;
+  font-weight: bold;
+  src: url('webfonts/NanumGothicBold.eot')/*tpa=http://weather.appme.co.kr/common/css/NanumGothicBold.eot*/;
+  src: local('☺'), url('webfonts/NanumGothicBold.woff')/*tpa=http://weather.appme.co.kr/common/css/NanumGothicBold.woff*/ format('woff'), url('webfonts/NanumGothicBold.ttf')/*tpa=http://weather.appme.co.kr/common/css/NanumGothicBold.ttf*/ format('truetype'); 
+}

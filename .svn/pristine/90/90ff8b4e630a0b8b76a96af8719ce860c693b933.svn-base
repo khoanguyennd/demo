@@ -1,0 +1,644 @@
+<?php
+$account = $_SESSION['accountshopping'];
+$page = $this->getData('page');
+$type_depth = $this->getData('type_depth');
+$_SESSION['type_depth']=$type_depth;
+$m_start = $this->getData('m_start');
+$m_end = $this->getData('m_end');
+$nolimittime = $this->getData('nolimittime');
+$m_channel = $this->getData('m_channel');
+$m_status = $this->getData('m_status');
+$m_supplier = $this->getData('m_supplier');
+$m_keytime = $this->getData('m_keytime');
+$m_key = $this->getData('m_key');
+$m_name = $this->getData('m_name');
+
+$list_supplier = $this->getData('list_supplier');
+$list_channel = $this->getData('list_channel');
+
+$type_depth1= $this->getData('type1Id');
+$type_depth2= $this->getData('type2Id');
+$type_depth3= $this->getData('type3Id');
+$type_depth4= $this->getData('type4Id');
+
+$dem = $this->getData('dem');
+$list_product = $this->getData('list_product');
+
+$link = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+$_SESSION['linkproduct'] = $link;
+
+?>
+
+<link rel="stylesheet" type="text/css" href="<?=URL_PUBLIC?>css/jquery-ui.css" />
+<script type="text/javascript" src="<?=URL_PUBLIC?>js/jquery-ui.js"></script>
+
+
+<script type="text/javascript">
+
+$(document).ready(function(){
+	$.onchangetime = function(name){
+		var d= new Date();
+		$('input.datepick[name="m_end"]').val($.getFormattedDate(d.getFullYear(),(d.getMonth()+1).toString(),d.getDate().toString()));			
+		$.datepickMilisecond('input.datepick[name="m_end"]');
+		if(name=='week'){
+			d.setDate(d.getDate() -7);
+		}
+		if(name=='month'){
+			d.setMonth(d.getMonth() - 1);
+		}
+		if(name=='threemonth'){			
+			d.setMonth(d.getMonth() - 3);
+		}
+		$('input.datepick[name="m_start"]').val($.getFormattedDate(d.getFullYear(),(d.getMonth()+1).toString(),d.getDate().toString()));	
+		$.datepickMilisecond('input.datepick[name="m_start"]');
+	}		
+	$('.changepick').on('click',function(){
+		$(this).closest('td').find('input.btn').removeClass('active');
+		$(this).addClass('active');
+		$.onchangetime($(this).attr('name'));
+	});
+	//$('.btn.changepick[name="week"]').click();
+	$('#approvesale').on('click', function(){
+		var ids1=document.getElementsByName("checkproduct[]");
+		var dem=0;
+		var co=1;
+		
+		var checkproduct = [];
+		for (var j = 0; j< ids1.length; j++) {
+			if(ids1[j].checked){
+				var res = ids1[j].value.split(";");
+				checkproduct.push(ids1[j].value);
+				if (res[0]!=1)
+					co=0;
+				dem++;
+			}
+		}
+		if(co==0){
+			$.fn_alert(true, true, "<?=$this->language('l_listproduct8')?>");
+			return;
+		}
+		if(dem==0){
+			$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+			return;
+		}
+	
+		$.fn_ajax('changeStatus', {'act':'approve', 'checkproduct':checkproduct}, function(result){
+			if(result.flag == true){	
+				var ids1=document.getElementsByName("checkproduct[]");
+				for (var j = 0; j< ids1.length; j++) {
+					if(ids1[j].checked){
+						var res = ids1[j].value.split(";");
+		    			$('#listproductbody .checkbox[data-checkbox="'+res[1]+'"]').val(2+";"+res[1]);
+		    			$('#listproductbody .checkbox[data-checkbox="'+res[1]+'"]').prop("checked", false);
+		    			$('#listproductbody .status[data-status="'+res[1]+'"]').html("<?=$this->language("l_status2")?>");
+					}
+				}
+			}
+		}, true);
+	});
+	$('#stopsale').on('click', function(){
+		var ids1=document.getElementsByName("checkproduct[]");
+		var dem=0;
+		var co=1;
+		var checkproduct = [];
+		for (var j = 0; j< ids1.length; j++) {
+			if(ids1[j].checked){
+				var res = ids1[j].value.split(";");
+				checkproduct.push(ids1[j].value);
+				if(res[0]==0 || res[0]==4 || res[0]==-1)
+					co=0;
+				dem++;
+			}
+		}
+		
+		if(co==0){
+			$.fn_alert(true, true, "<?=$this->language('l_listproduct9')?>");
+			return;
+		}
+		if(dem==0){
+			$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+			return;
+		}
+		$.fn_confirm(true, {'class':"viewmanageproduct"}, '선택한 상품이 각 채널사별 판매중지됩니다. 계속하시겠습니까?');
+		$($.elt_popup).find('.back').val("취소");
+		$($.elt_popup).find('.continue').val("확인");
+		$($.elt_popup).on('click', '.confirm .viewmanageproduct .continue', function(){		
+			$($.elt_popup).hide().find('.absolute').hide();
+			$.fn_ajax('changeStatus', {'act':'stop', 'checkproduct':checkproduct}, function(result){
+				if(result.flag == true){	
+					var ids1=document.getElementsByName("checkproduct[]");
+					for (var j = 0; j< ids1.length; j++) {
+						if(ids1[j].checked){
+							var res = ids1[j].value.split(";");
+			    			$('#listproductbody .checkbox[data-checkbox="'+res[1]+'"]').val(-1+";"+res[1]);
+			    			$('#listproductbody .checkbox[data-checkbox="'+res[1]+'"]').prop("checked", false);
+			    			$('#listproductbody .status[data-status="'+res[1]+'"]').html("<?=$this->language("l_status_1")?>");
+						}  
+					}
+				}
+			}, true);
+		});
+		
+	});
+
+	$('#opensale').on('click', function(){
+		var ids1=document.getElementsByName("checkproduct[]");
+		var dem=0;
+		var co=1;
+		
+		var checkproduct = [];
+		for (var j = 0; j< ids1.length; j++) {
+			if(ids1[j].checked){
+				var res = ids1[j].value.split(";");
+				checkproduct.push(ids1[j].value);
+				if(res[0]!=-1)
+					co=0;
+				dem++;
+			}
+		}
+		if(co==0){
+			$.fn_alert(true, true, "<?=$this->language('l_listproduct10')?>");
+			return;
+		}
+		if(dem==0){
+			$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+			return;
+		}
+		$.fn_confirm(true, {'class':"viewmanageproduct"}, '선택한 상품의 판매가 재개됩니다. 판매기간을 한번 더 확인 해주세요.');
+		$($.elt_popup).find('.back').val("취소");
+		$($.elt_popup).find('.continue').val("확인");
+		$($.elt_popup).on('click', '.confirm .viewmanageproduct .continue', function(){		
+			$($.elt_popup).hide().find('.absolute').hide();
+    		$.fn_ajax('changeStatus', {'act':'open', 'checkproduct':checkproduct}, function(result){
+    			if(result.flag == true){	
+    				var ids1=document.getElementsByName("checkproduct[]");
+    				for (var j = 0; j< ids1.length; j++) {
+    					if(ids1[j].checked){
+    						var res = ids1[j].value.split(";");
+    		    			$('#listproductbody .checkbox[data-checkbox="'+res[1]+'"]').val(1+";"+res[1]);
+    		    			$('#listproductbody .checkbox[data-checkbox="'+res[1]+'"]').prop("checked", false);
+    		    			$('#listproductbody .status[data-status="'+res[1]+'"]').html("<?=$this->language("l_status2")?>");
+    					}
+    				}
+    			}
+    		}, true);
+		});
+		
+	});
+	$('#editsale').on('click', function(){
+		var ids1=document.getElementsByName("checkproduct[]");
+		var dem=0;
+		var co=1;
+		
+		var checkproduct = [];
+		for (var j = 0; j< ids1.length; j++) {
+			if(ids1[j].checked){
+				var res = ids1[j].value.split(";");
+				checkproduct.push(ids1[j].value);
+				dem++;
+			}
+		}
+		if(dem==0){
+			$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+			return;
+		}
+		$.fn_popup(true, 'listproduct');
+		
+	});
+	$('#btnstopsale').on('click', function(){
+		var ids1=document.getElementsByName("checkproduct[]"); 
+		var dem=0;
+		var co=1;
+		var checkproduct = [];
+		for (var j = 0; j< ids1.length; j++) {
+			if(ids1[j].checked){
+				var res = ids1[j].value.split(";");
+				checkproduct.push(ids1[j].value);
+				dem++;
+			}
+		}
+		if(dem==0){
+			$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+			return;
+		}
+		var stopsale=document.getElementById("m_stopsale").value;
+		$($.elt_popup).hide().find('.absolute').hide();
+		$.fn_ajax('stopsale', {'stopsale':stopsale,'checkproduct':checkproduct}, function(result){
+			if(result.flag == true){	
+				var stopsale=document.getElementById("m_stopsale").value;
+				var ids1=document.getElementsByName("checkproduct[]");
+				for (var j = 0; j< ids1.length; j++) {
+					if(ids1[j].checked){
+						var res = ids1[j].value.split(";");
+		    			$('#listproductbody .checkbox[data-checkbox="'+res[1]+'"]').prop("checked", false);
+		    			$('#listproductbody .stopsale[data-stopsale="'+res[1]+'"]').html(stopsale);
+					}
+				}
+			}
+		}, true);
+	});
+	$('#checklist').on('click', function(){
+		var ids1=document.getElementsByName("checkproduct[]");
+		var dem=0;
+		var co=1;
+		
+		var checkproduct = [];
+		for (var j = 0; j< ids1.length; j++) {
+			if(ids1[j].checked){
+				var res = ids1[j].value.split(";");
+				checkproduct.push(ids1[j].value);
+				dem++;
+			}
+		}
+		if(dem==0){
+			$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+			return;
+		}
+		
+		$.fn_popup(true, 'checklist');
+		$($.elt_popup).on('click', '.checklist #btnchecklist', function(){		
+            var email1 = $('#email1').val();
+            if (email1 != "" && $.isEmail(email1) == false) {
+                $('#email1').focus();
+                return false;
+            }
+            var email2 = $('#email2').val();
+            if (email2 != "" && $.isEmail(email2) == false) {
+                $('#email2').focus();
+                return false;
+            }
+            var email3 = $('#email3').val();
+            if (email3 != "" && $.isEmail(email3) == false) {
+                $('#email3').focus();
+                return false;
+            }
+            if (email1 != "" || email2 != "" || email3 != "") {
+            	$($.elt_popup).hide().find('.absolute').hide();
+            	$.fn_ajax('savechecklist', {'email1':email1,'email2':email2,'email3':email3,'checkproduct':checkproduct}, function(result){ 
+            		var ids1=document.getElementsByName("checkproduct[]");
+    				for (var j = 0; j< ids1.length; j++) {
+    					if(ids1[j].checked){
+    						var res = ids1[j].value.split(";");
+    		    			$('#listproductbody .checkbox[data-checkbox="'+res[1]+'"]').prop("checked", false);
+    					}
+    				}
+                }, true);
+            }else{
+            	$.fn_alert(true, true, "이메일주소는 1개 이상 필수 입력입니다.");
+    			return false;
+            }
+
+		});
+	});
+
+	// Hàm kiểm tra email và thông báo lỗi
+    $.isEmail = function (aemail) {
+        if (aemail == '') {
+             $.fn_alert(true, true, "<?=$this->language('l_inputemail')?>");
+            return false;
+        }
+        if ($.validateEmail(aemail) == false) {
+             $.fn_alert(true, true, "<?=$this->language('l_erremail')?>");
+            return false;
+        }
+        return true;
+    }
+    
+	
+	// Thực hiện phân trang
+	$('div.listproduct').on('click', '.pagination a', function(){
+		
+		var length = $(this).attr('data-length');
+		var page = $(this).attr('data-page');
+		if(length && page){
+			$.fn_ajax('pagination', {'page':page, 'length': length}, function(result){
+				console.log(result);
+				$.fn_result(result);
+				return false;
+			}, true);
+		}
+		return false;
+	});
+	// Thay đổi số dòng hiển thị trên một trang
+	$('div.listproduct').on('change', 'select.select', function(){
+		var length = $(this).val();
+		if(length){
+			$.fn_ajax('pagination', {'page':1, 'length': length}, function(result){
+				$.fn_result(result);
+			}, true);
+		}
+		return false;
+	});
+	// Hàm xử lý kết quả trả về		
+	$.fn_result = function(data){
+		if(data.flag == true){
+			document.getElementById('listproductbody').innerHTML=data.listproductbody;	
+			document.getElementById('divpaging').innerHTML=data.divpaging;
+		}
+	}
+
+	// Thực hiện tại xuất file excel
+	$('button.downloadExcel').on('click', function(result){		
+		var tbody = $('#listproductbody').find('td.empty');
+        if(tbody.length > 0) {
+            //
+        }else{
+        	window.open(jsData.urlAjax + 'downloadExcel');
+        }
+	});
+	
+});
+function getFormattedDate(year,month,day) {
+	  month = month.length > 1 ? month : '0' + month;
+	  day = day.length > 1 ? day : '0' + day;
+	  return year + '-' + month + '-' + day;
+}
+
+function changeType1(value) {
+    runAjax('changeType1', {'id_type1': value}, function (result) {
+        document.getElementById('otype2').innerHTML = result;
+        changeType2(document.getElementById('type2Id').value);
+    });
+}
+
+function changeType2(value) {
+	var type1Id=document.getElementById('type1Id').value;
+    runAjax('changeType2', {'id_type1': type1Id, 'id_type2': value}, function (result) {
+        document.getElementById('otype3').innerHTML = result;
+        changeType3(document.getElementById('type3Id').value);
+    });
+
+}
+function changeType3(value) {
+	var type1Id=document.getElementById('type1Id').value;
+	var type2Id=document.getElementById('type2Id').value;
+    runAjax('changeType3', {'id_type1': type1Id,'id_type2': type2Id,'id_type3': value}, function (result) {
+        document.getElementById('otype4').innerHTML = result;
+    });
+}
+
+function goPage(link,on) {
+		window.location.assign(link+"&page="+on)
+}
+
+function checkAllproduct(source){
+	var ids1=document.getElementsByName("checkproduct[]");
+	for (var j = 0; j< ids1.length; j++) {
+		ids1[j].checked=source.checked;
+	}
+}
+window.onload = function(){
+	document.multiselect('#channelSelect');
+};
+</script>
+<div class="ct_head">
+	<h3><?=$this->language('l_manageproduct')?></h3>
+	<p>
+    	<?=date('m')?>월<?=date('d')?>일 <?=date('H')?>시<?=date('i')?>분  <?=$this->language('l_listproduct11')?> (<?=$this->language('l_listproduct12')?>) 
+    	<a href="" class="btn small" onclick='document.getElementById("mform").submit();'><?=$this->language('l_update')?></a>
+	</p>
+</div>
+<div class="ct_content">
+	<div class="form_group">
+		<form class="search_member" action="<?=$this->route('listproduct', ['method'=>'sale'])?>" method="POST" name="mform" id="mform">
+			<table class="table" >
+				<tr>
+					<th>판매일</th>
+					<td colspan="3">
+						<select name="m_keytime" class="select small">
+							<option <?php if ($m_keytime==0) echo 'selected="selected"';?> value="0">판매시작일</option>
+							<option <?php if ($m_keytime==1) echo 'selected="selected"';?> value="1">판매종료일</option>	
+						</select>
+						<input type="text" class="input datepick" name="m_start" value="<?=$m_start?>" readonly="readonly" style="max-width: 100px;">
+						<span>~</span> 
+						<input type="text" class="input datepick" name="m_end" value="<?=$m_end?>" readonly="readonly" style="max-width: 100px;">
+						<input type="button" class="btn small changepick" name="week" value="<?=$this->language('l_1week')?>">
+						<input type="button" class="btn small changepick" name="month" value="<?=$this->language('l_1month')?>">
+						<input type="button" class="btn small changepick" name="threemonth" value="<?=$this->language('l_3month')?>"> 
+						<input type="checkbox" value="1" <?php if($nolimittime==1) echo 'checked="checked"';?> name="nolimittime" id="checknolimittime"> 
+						<label for="checknolimittime"><?=$this->language('l_listproduct13')?></label>
+					</td>
+					<td rowspan="5" style="line-height: 40px; width: 100px;">
+						<input type="submit" class="btn small full hover" name="m_search" value="<?=$this->language('l_search')?>"> 
+						<input type="submit" class="btn small full hover reset" name="m_reset" value="<?=$this->language('l_reset')?>">
+					</td>
+				</tr>
+
+				<tr>
+					<th><?=$this->language('l_supplier')?></th>
+					<td style="width: 160px;">
+						<select name="m_supplier" id="supplier" class="select small full">
+							<option <?php if ($m_supplier==0) echo 'selected="selected"';?> value="0"><?=$this->language('l_question4')?></option>
+							<option <?php if ($m_supplier==$account['idx']) echo 'selected="selected"';?> value="<?=$account['idx']?>"><?=$account['ID']?></option>
+							<?php foreach ($list_supplier as $value => $giatri) {?>
+							<option <?php if ($m_supplier==$giatri['idx']) echo 'selected="selected"';?> value="<?=$giatri['idx']?>"><?=$giatri['ID']?></option>
+							<?php }?>
+						</select>
+					</td>
+					<th><?=$this->language('l_channelsell')?></th>
+					<td>
+						<select class="select small full" name="m_channel[]" id='channelSelect' multiple>
+							<?php foreach ($list_channel as $value =>$giatri){?>
+							<option <?php if (in_array($giatri[0], $m_channel)) echo 'selected="selected"';?>
+									value='<?=$giatri[0]?>'><?=$giatri[1]?></option>
+							<?php }?>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<th><?=$this->language('l_status')?></th>
+					<td colspan="3">
+						<ul class="clearfix">
+							<li>
+								<input <?php if($m_status==10) echo ' checked="checked"';?> type="radio" id="forstatus10" name="m_status" value="10"> 
+								<label for="forstatus10"><?=$this->language('l_status10')?></label>
+								</li>
+							<li>
+								<input <?php if($m_status==0) echo ' checked="checked"';?> type="radio" id="forstatus0" name="m_status" value="0"> 
+								<label for="forstatus0"><?=$this->language('l_status0')?></label>
+							</li>
+							<li style="display: none;">	
+								<input <?php if($m_status==1) echo ' checked="checked"';?> type="radio" id="forstatus1" name="m_status" value="1"> 
+								<label for="forstatus1"><?=$this->language('l_status1')?></label></li>
+							<li>
+								<input <?php if($m_status==2) echo ' checked="checked"';?> type="radio" id="forstatus2" name="m_status" value="2"> 
+								<label for="forstatus2"><?=$this->language('l_status2')?></label>
+							</li>
+							<li>
+								<input <?php if($m_status==3) echo ' checked="checked"';?> type="radio" id="forstatus3" name="m_status" value="3"> 
+								<label for="forstatus3"><?=$this->language('l_status3')?></label>
+							</li>
+							<li>
+    							<input <?php if($m_status==-1) echo ' checked="checked"';?> type="radio" id="forstatus_1" name="m_status" value="-1"> 
+    							<label for="forstatus_1"><?=$this->language('l_status_1')?></label>
+							</li>
+							<li>
+								<input <?php if($m_status==4) echo ' checked="checked"';?> type="radio" id="forstatus4" name="m_status" value="4"> 
+								<label for="forstatus4"><?=$this->language('l_status4')?></label>
+							</li>
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<th><?=$this->language('l_type')?></th>
+					<td colspan="3">
+						<ul class="clearfix">
+							<li>
+								<div class="contBox">
+									<div class="contBox" id="otype1" style="display: inline-block; width: 150px;">
+    									<select style="width: 145px; height: 24px;" class="TextBoxField" name="type1Id" id="type1Id" onchange="changeType1(this.value)">
+    											<option value="0" <?php if($type_depth1=="0") echo'selected="selected"';?>><?=$this->language('l_question4')?></option>
+                                            <?php foreach ($type_depth as $value => $giatri) { ?>
+                                           		<option value="<?=$value?>" <?php if( $type_depth1 == $value) echo 'selected="selected"';?> ><?=$value?></option>
+                                            <?php } ?>
+            							</select>
+            						</div>
+									<div class="contBox" id="otype2" style="display: inline-block; width: 150px;">
+										<select style="width: 150px; height: 24px;" class="TextBoxField" onchange="changeType2(this.value)" id="type2Id" name="type2Id">
+											<option value="0" <?php if($type_depth2=="0") echo'selected="selected"';?>><?=$this->language('l_question4')?></option>
+										<?php foreach ($type_depth[$type_depth1] as $value => $giatri) {?>
+                                       		<option value="<?=$value?>"  <?php if( $type_depth2 == $value) echo 'selected="selected"';?>  ><?=$value?></option>
+                                       <?php }?>
+                            			</select>
+									</div>
+									<div class="contBox" id="otype3" style="display: inline-block; width: 150px;display: none;">
+										<select style="width: 150px; height: 24px;" class="TextBoxField" onchange="changeType3(this.value)" name="type3Id" id="type3Id">
+											<option value="0" <?php if($type_depth3=="0") echo'selected="selected"';?>><?=$this->language('l_question4')?></option>
+                            			<?php foreach ($type_depth[$type_depth1][$type_depth2] as $value => $giatri) { ?>
+                                           	<option value="<?=$value?>"  <?php if( $type_depth3 == $value) echo 'selected="selected"';?>  ><?=$value?></option>
+                                        <?php }  ?>
+                            			</select>
+									</div>
+									<div class="contBox" id="otype4" style="display: inline-block; width: 150px;display: none;">
+										<select style="width: 150px; height: 24px;" class="TextBoxField" name="type4Id" id="type4Id">
+											<option value="0" <?php if($type_depth4=="0") echo'selected="selected"';?>><?=$this->language('l_question4')?></option>
+                    					<?php foreach ($type_depth[$type_depth1][$type_depth2][$type_depth3] as $value => $giatri) { ?>
+                                           	<option value="<?=$value?>"  <?php if( $type_depth4 == $value) echo 'selected="selected"';?>  ><?=$value?></option>
+                                        <?php } ?>
+                        				</select>
+									</div>
+								</div>
+							</li>
+						</ul>
+					</td>
+				</tr>				
+				<tr>
+					<th><?=$this->language('l_keyword')?></th>
+					<td style="width: 150px;">
+						<select class="select small full multiple" name="m_key">
+							<option <?php if($m_key==0) echo'selected="selected"';?> value="0"><?=$this->language('l_nameproduct')?></option>
+							<option <?php if($m_key==1) echo'selected="selected"';?> value="1"><?=$this->language('l_codeproduct')?></option>
+						</select>
+					</td>
+					<td colspan="2"><input name="m_name" type="text" value="<?=$m_name?>" class="input full" style="height: 24px; "></td>
+				</tr>
+			</table>
+		</form>
+
+	</div>
+
+	<div class="form_group clearfix listproduct" >
+
+		<div class="table_head bgwhite">
+			<div class="ctrl_head clearfix align-left">
+				<div class="title col-xs-1">
+					<h3><?=$this->language('l_mbtotal')?> <?=$this->getData('count')?> <?=$this->language('l_notification16')?></h3>
+				</div>
+				<div class="title col-xs-2">
+					<select name="" class="select">
+						<option value="20" <?=(($this->getData('length')==20)?'selected':'')?>>20 <?=$this->language('l_notification8')?></option>
+						<option value="50" <?=(($this->getData('length')==50)?'selected':'')?>>50 <?=$this->language('l_notification8')?></option>
+						<option value="100" <?=(($this->getData('length')==100)?'selected':'')?>>100 <?=$this->language('l_notification8')?></option>
+					</select>
+				</div>
+				<div class="title col-xs-2">
+					<button type="button" name="" class="btn hover downloadExcel"><?=$this->language('l_Channel26')?></button>
+				</div>
+				<div class="icons col-xs-7 align-right">
+					<button type="button" name="" class="btn hover checklist" id="checklist">체크리스트발송</button>
+					<button type="button" name="" class="btn hover statusconfirm" id="stopsale"><?=$this->language('l_listproduct15')?></button>
+					<button type="button" name="" class="btn hover" id="opensale"><?=$this->language('l_listproduct16')?></button>
+					<button type="button" name="" class="btn hover" id="editsale"><?=$this->language('l_listproduct17')?></button>
+				</div>
+			</div>
+		</div>
+		<table class="table" id="listproduct">
+			<thead>
+				<tr>
+					<th style="min-width: 30px;"><input type="checkbox"
+						onclick="checkAllproduct(this)" value="all" id="checkall"></th>
+					<th style="min-width: 60px;"><?=$this->language('l_listproduct6')?></th>
+					<th style="min-width: 100px;"><?=$this->language('l_codeproduct')?></th>
+					<th style="min-width: 100px;"><?=$this->language('l_nameproduct')?></th>
+					<th style="min-width: 100px;"><?=$this->language('l_acctable1')?></th>
+					<th style="min-width: 150px;"><?=$this->language('l_type')?></th>
+					<th style="min-width: 100px;"><?=$this->language('l_channelsell')?></th>
+					<th style="min-width: 100px;"><?=$this->language('l_listproduct1')?></th>
+					<th style="min-width: 100px;"><?=$this->language('l_listproduct2')?></th>
+					<th style="min-width: 100px;"><?=$this->language('l_listproduct3')?></th>
+					<th style="min-width: 100px;"><?=$this->language('l_listproduct4')?></th>
+				</tr>
+			</thead>
+			<tbody id="listproductbody">
+				<?php
+                $vitri = 0;
+                if ($dem > 0){
+                    foreach ($list_product as $value => $giatri) {
+                        $vitri ++;
+                        ?>
+            			<tr>
+            					<td>
+            						<input type="checkbox" name="checkproduct[]" class="checkbox" data-checkbox="<?=$giatri[13]?>" 
+            							value="<?=$giatri[10]?>;<?=$giatri[13]?>" id="checkproduct<?=$vitri?>">
+            					</td>
+            					<td><input type="button" onclick="window.location.assign('<?=URL_BASE?>/editticket1.html/<?=$giatri[1]?>')" class="btn hover small" value="<?=$this->language('l_edit')?>"></td>
+            					<td><?=$giatri[1]?></td>
+            					<td><?=$giatri[2]?></td>
+            					<td><?=$giatri[3]?></td>
+            					<td>
+        							<?php echo $giatri[4]; ?> >
+                                    <?php echo $giatri[5]; ?> >
+                                    <?php echo $giatri[6]; ?> >
+                                    <?php echo $giatri[7]; ?>	
+            					</td>
+            					<td><?=$giatri[8]?></td>
+            					<td>
+            						<?php if($giatri[8] == 'COUPANG' ){?>
+            							<a href="https://trip.coupang.com/tp/products/<?=$giatri[14]?>" target="_blank"><?=$giatri[9]?></a>
+            						<?php }
+            						      if($giatri[8] == 'TMON' ){?>	
+        						     	<a href="http://www.tmon.co.kr/deal/<?=$giatri[14]?>" target="_blank"><?=$giatri[9]?></a>
+            						<?php }?>
+            					</td>
+            					<td class="status" data-status="<?=$giatri[13]?>">
+            						<?php
+                                    if ($giatri[10] == 0)
+                                        echo $this->language("l_status0");
+                                    if ($giatri[10] == 1)
+                                        echo $this->language("l_status1");
+                                    if ($giatri[10] == 2)
+                                        echo $this->language("l_status2");
+                                    if ($giatri[10] == 3)
+                                        echo $this->language("l_status3");
+                                    if ($giatri[10] == 4)
+                                        echo $this->language("l_status4");
+                                    if ($giatri[10] == - 1)
+                                        echo $this->language("l_status_1");
+                                    ?>
+            					</td>
+            					<td><?=$giatri[11]?></td>
+            					<td class="stopsale" data-stopsale="<?=$giatri[13]?>"><?=$giatri[12]?></td>
+            				</tr>
+                           <?php
+                    }
+                }else {
+                    echo '<tr><td colspan="11" class="empty">'.$this->language("l_rowemptydata").'</td></tr>';
+                }
+                ?>
+				</tbody>
+		</table>
+		<div id="divpaging">
+		<?=$this->getData('pagination')?>
+		</div>
+	</div>
+</div>

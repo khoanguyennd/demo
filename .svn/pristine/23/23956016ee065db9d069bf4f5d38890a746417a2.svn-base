@@ -1,0 +1,772 @@
+<?php
+$list_supplier = $this->getData('list_supplier');
+$list_channel = $this->getData('list_channel');
+
+$m_start = $this->getData('m_start');
+$m_end = $this->getData('m_end');
+$m_supplier = $this->getData('m_supplier');
+$m_channel = $this->getData('m_channel');
+$m_restore = $this->getData('m_restore');
+$m_status1 = $this->getData('m_status1');
+$m_status2 = $this->getData('m_status2');
+$m_status3 = $this->getData('m_status3');
+$m_status4 = $this->getData('m_status4');
+$m_key = $this->getData('m_key');
+$m_name = $this->getData('m_name');
+
+$text_ten_phone_mave = $this->getData('text_ten_phone_mave');
+$thoigian = $this->getData('thoigian');
+$text_input_boloc = $this->getData('text_input_boloc');
+$ncc_id=$this->getData('ncc_id');
+$mang_kenh=$this->getData('mang_kenh');
+
+?>
+<link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>css/jquery-ui.css" />
+<script type="text/javascript" src="<?= URL_PUBLIC ?>js/jquery-ui.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $.onchangetime = function (name) {
+            var d = new Date();
+            $('input.datepick[name="dateend"]').val($.getFormattedDate(d.getFullYear(), (d.getMonth() + 1).toString(), d.getDate().toString()));
+            $.datepickMilisecond('input.datepick[name="dateend"]');
+            if (name == 'week') {
+                d.setDate(d.getDate() - 7);
+            }
+            if (name == 'today') {
+                d.setDate(d.getDate());
+            }
+            if (name == 'month') {
+                d.setMonth(d.getMonth() - 1);
+            }
+            if (name == 'threemonth') {
+                d.setMonth(d.getMonth() - 3);
+            }
+            $('input.datepick[name="datestart"]').val($.getFormattedDate(d.getFullYear(), (d.getMonth() + 1).toString(), d.getDate().toString()));
+            $.datepickMilisecond('input.datepick[name="datestart"]');
+        }
+        $('.changepick').on('click', function () {
+            $(this).closest('td').find('input.btn').removeClass('active');
+            $(this).addClass('active');
+            $.onchangetime($(this).attr('name'));
+        });
+        //$('.btn.changepick[name="today"]').click();
+
+        // Hiển thị popup chi tiết 1
+        $('table.table').on('click', 'a.vdetail1', function () {
+            $.fn_popup(true, 'revenue1');
+            return false;
+        });
+        // Hiển thị popup chi tiêt 2
+        $('table.table').on('click', 'a.vdetail2', function () {
+            $.fn_popup(true, 'revenue2');
+            return false;
+        });
+        // Thực hiện phân trang
+        $('div.ct_content').on('click', '.pagination a', function () {
+            var length = $(this).attr('data-length');
+            var page = $(this).attr('data-page');
+            if (length && page) {
+                $.fn_ajax('searchAndPaginationMobi', {'page': page, 'length': length}, function (result) {
+                    $.fn_result(result);
+                    return false;
+                }, true);
+            }
+            return false;
+        });
+        // Thay đổi số dòng hiển thị trên một trang
+        $('div.order').on('change', 'select.select', function () {
+            var length = $(this).val();
+            var page = 1;
+            if (length && page) {
+                $.fn_ajax('searchAndPagination', {'page': page, 'length': length}, function (result) {
+                    $.fn_result(result);
+                    return false;
+                }, true);
+            }
+            return false;
+        });
+
+        // Hàm xử lý kết quả trả về		
+        $.fn_result = function (data) {
+            if (data.flag == true) {
+                $('#tableorder tbody').html(data.rows);
+                $('div.ct_content .pagination').closest('div.form_group').remove();
+                $('div.ct_content').append(data.pagination);
+            }
+        }
+        // Thực hiện lựa chọn tất cả trong bảng
+        $('#tbcheckall').on('click', function () {
+            var checked = $(this).get(0).checked;
+            $('#tableorder tbody input[type="checkbox"]').each(function () {
+                $(this).get(0).checked = checked
+            });
+        });
+        // Thực hiện sử dụng
+        $('#confirmuse').on('click', function () {
+            var data = $.fn_dataChecked(1, '<?= $this->language('l_orderwarning1') ?>');
+            if (data && data.length > 0) {
+                if ($(this).attr('data-action') == 'true' && $($.elt_popup + ' .confirm').is(':visible')) {
+                    $.fn_confirm(false);
+                    $.fn_changestatus(data);
+                    $(this).removeAttr('data-action');
+                } else {
+                    $.fn_confirm(true, {'class': 'changestatus', 'data-action': 'confirmuse'}, '<?= $this->language('l_orderwarning3') ?>');
+                    $($.elt_popup).find('.back').val("취소");
+                    $($.elt_popup).find('.continue').val("확인");
+                    $(this).attr('data-action', 'true');
+                }
+            }
+        });
+        // Thực hiện khôi phục
+        $('#confirmrestore').on('click', function () {
+            var data = $.fn_dataChecked(2, '<?= $this->language('l_orderwarning2') ?>');
+            if (data && data.length > 0) {
+                if ($(this).attr('data-action') == 'true' && $($.elt_popup + ' .confirm').is(':visible')) {
+                    $.fn_confirm(false);
+                    $.fn_changestatus(data);
+                    $(this).removeAttr('data-action');
+                } else {
+                    $.fn_confirm(true, {'class': 'changestatus', 'data-action': 'confirmrestore'}, '<?= $this->language('l_orderwarning4') ?>');
+                    $($.elt_popup).find('.back').val("취소");
+                    $($.elt_popup).find('.continue').val("확인");
+                    $(this).attr('data-action', 'true');
+                }
+            }
+        });
+        // Thực hiện thay đổi từng dòng
+        $('#tableorder tbody input[type="button"]').on('click', function () {
+            var element = $(this).closest('tr');
+            var status = $(element).attr('data-status');
+            if (status > -1 && status < 3) {
+                $(element).find('input[type="checkbox"]').get(0).checked = true;
+                if (status == 1) {
+                    $('#confirmuse').click();
+                } else {
+                    $('#confirmrestore').click();
+                }
+            }
+        });
+        // Tiếp tục thực hiện thay đổi trạng thái
+        $($.elt_popup).on('click', '.confirm .changestatus .continue', function () {
+            $('#' + $(this).attr('data-action')).click();
+        });
+        $.fn_dataChecked = function (status, contentAlert) {
+            var formdata = [];
+            var elemnt = '#tableorder tbody input[type="checkbox"]:checked';
+            if ($(elemnt).length > 0) {
+                $(elemnt).each(function () {
+                    var tbtr = $(this).closest('tr');
+                    var cid = $(tbtr).attr('data-id');
+                    var cstatus = $(tbtr).attr('data-status');
+                    var crestore = $(tbtr).attr('data-restore');
+                    if (status == cstatus) {
+                        formdata.push({'id': cid, 'status': cstatus, 'restore': crestore});
+                    } else {
+                        $.fn_alert(true, true, contentAlert);
+                        formdata = [];
+                        return false;
+                    }
+                });
+            } else {
+                $.fn_alert(true, true, '<?= $this->language('l_listproduct7') ?>');
+            }
+            return formdata;
+        }
+        $.fn_changestatus = function (data) {
+            $.fn_ajax('changeStatus', {'status': data}, function (result) {
+                if (result.flag == true) {
+                    $.each(result.id, function (index, value) {
+                        var element = '#tableorder tbody tr[data-id="' + value + '"]';
+                        $(element).attr({
+                            'data-status': result.statusid[index],
+                            'data-restore': result.restoreid[index]
+                        });
+                        $(element).find('input[type="checkbox"]').get(0).checked = false;
+                        $(element).find('input[type="button"]').val(result.action);
+                        $(element).find('td:nth-child(2)').text(result.status);
+                        $(element).find('td:nth-child(3)').text(result.restore);
+                    });
+                }
+            }, true);
+        }
+        // Thực hiện tại xuất file excel
+        $('button.downloadExcel').on('click', function (result) {
+            var tbody = $('.table').find('td.empty');
+            if (tbody.length > 0) {
+                //
+            } else {
+                var titleName = $('#contents .ct_head h3').text();
+                var description = $('#contents .ct_head p').text();
+                if (titleName && description) {
+                    window.open(encodeURI(jsData.urlAjax + 'downloadExcel?titleName=' + titleName + '&description=' + description));
+                }
+            }
+
+        });
+        
+    });
+    
+    window.onload = function () {
+        document.multiselect('#channelSelect');
+    };
+
+
+
+
+
+</script>
+
+<?php
+//$sqlheader  = 'SELECT tp.*,tk.statusTicket,tk.restoreTicket,  sc.travelProductId,   sp.sellerProductId,  sp.`name` as productname, c.channel_name ';
+//           
+//$sql= $_SESSION['sqlorder'] ;
+//  
+//echo $sqlheader.$sql;
+?>
+<div class="ct_content">
+    <div class="form_group clearfix order" style="padding: 5px;">		
+        <div class="t_header_qldh">
+            <a href="<?= $this->route('dashboard') ?>">
+                <img src="<?= URL_PUBLIC ?>temple_mobile/img/back.png" alt=""/>
+            </a>
+            <h2><?= $this->language('l_manageorder') ?></h2>
+        </div>
+        <div class="t_menu_qldh">
+            <ul>
+                <li style="width: 12%" <?php if($this->_params['method']=="sale"){?> class="t_active"<?php }?>><a href="<?=$this->route('order', ['method'=>'sale'])?>"><?=$this->language("l_toanbo")?></a></li>
+                <li style="width: 17%" <?php if($this->_params['method']=="done"){?> class="t_active"<?php }?>><a href="<?= $this->route('order', ['method'=>'done']) ?>"><?=$this->language("l_orderdone")?></a></li>
+                <li style="width: 17%" <?php if($this->_params['method']=="use"){?> class="t_active"<?php }?>><a href="<?= $this->route('order', ['method'=>'use']) ?>"><?=$this->language("l_orderusedone")?></a></li>
+                <li style="width: 17%" <?php if($this->_params['method']=="refundmoney"){?> class="t_active"<?php }?>><a href="<?= $this->route('order', ['method'=>'refundmoney']) ?>"><?=$this->language("l_orderrefundmoney")?></a></li>
+                <li style="width: 17%" <?php if($this->_params['method']=="returnprice"){?> class="t_active"<?php }?>><a href="<?= $this->route('order', ['method'=>'returnprice']) ?>"><?=$this->language("l_orderreturnprice")?></a></li>
+                <li style="width: 20%" <?php if($this->_params['method']=="die"){?> class="t_active"<?php }?>><a href="<?= $this->route('order', ['method'=>'die']) ?>"><?=$this->language("l_orderdie")?></a></li>                
+            </ul>
+        </div>
+        <div class="t_search_qldh">
+            <form action="<?= $this->route('order', ['method' => 'sale']) ?>" method="POST" id="nf" name="nf">
+                <p><input type="text" name="text_ten_phone_mave" id="text_ten_phone_mave" value="<?=$text_ten_phone_mave?>" placeholder="<?=$this->language("l_textsearch")?>" /></p>
+                <p class="t_qldh_p_select" id="myBtn" style="position: relative;">
+                    <input style="text-align: center;" type="text" id="show_text_search" value="<?=$text_input_boloc?>" disabled="" />
+                    <img style="position: absolute; top: 17px; right: 9px; width: 25px;" src="<?= URL_PUBLIC ?>temple_mobile/img/ic_boloc.png" alt=""/>
+                </p>
+                <!-- The Modal -->
+                <div id="myModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3><?=$this->language("l_dieukien")?>  &nbsp;&nbsp;<input class="button_reset" type="button" value="Reset" /></h3>
+                        <div class="tt_search">
+                            <h4><?=$this->language("l_timefind")?></h4>
+                            <input name="thoigian" type="radio" id="toanbo" value="0" <?php if($thoigian==0){?> checked="checked" <?php }?> />
+                            <input name="thoigian" type="radio" id="homqua" value="1" <?php if($thoigian==1){?> checked="checked" <?php }?> />
+                            <input name="thoigian" type="radio" id="homnay" value="2" <?php if($thoigian==2){?> checked="checked" <?php }?> />
+                            <input name="thoigian" type="radio" id="7ngay" value="3" <?php if($thoigian==3){?> checked="checked" <?php }?> />
+                            <input name="thoigian" type="radio" id="1thang" value="4" <?php if($thoigian==4){?> checked="checked" <?php }?> />
+                            <input name="thoigian" type="radio" id="3thang" value="5" <?php if($thoigian==5){?> checked="checked" <?php }?> />
+                            <input name="thoigian" type="radio" id="6thang" value="6" <?php if($thoigian==6){?> checked="checked" <?php }?> />
+                            <input name="thoigian" type="radio" id="tructiep" value="7" <?php if($thoigian==7){?> checked="checked" <?php }?> />
+                            <p class="toanbo <?php if($thoigian==0){echo 'selected';}?>"><?=$this->language("l_toanbo")?></p>
+                            <p class="homqua <?php if($thoigian==1){echo 'selected';}?>"><?=$this->language("l_homqua")?></p>
+                            <p class="homnay <?php if($thoigian==2){echo 'selected';}?>"><?=$this->language("l_homnay")?></p>
+                            <p class="7ngay <?php if($thoigian==3){echo 'selected';}?>" style="margin-right: 0px; width: 25%;"><?=$this->language("l_7ngay")?></p>
+                            <p class="1thang <?php if($thoigian==4){echo 'selected';}?>"><?=$this->language("l_1thang")?></p>
+                            <p class="3thang <?php if($thoigian==5){echo 'selected';}?>"><?=$this->language("l_3thang")?></p>
+                            <p class="6thang <?php if($thoigian==6){echo 'selected';}?>"><?=$this->language("l_6thang")?></p>
+                            <p class="tructiep <?php if($thoigian==7){echo 'selected';}?>" style="margin-right: 0px; width: 25%;">
+                                <?=$this->language("l_tructiep")?>
+                            </p><div style="clear: both;"></div>
+                            <div class="divdate" style="background: #d9d9d9; padding: 10px;<?php if($thoigian==7){echo 'display:block';}?>">
+                                <div style="width: 32%; margin-right: 2%; float: left;">
+                                    <b style="font-size: 18px;"><?=$this->language("l_tructiepthoigian")?></b>
+                                </div>
+                                <div style="width: 30%; margin-right: 2%; float: left;">
+                                    <input name="datestart" class="datepick" style="width: 100%; height: 30px;" type="text" value="<?=$m_start?>" />
+                                </div>
+                                <div style="width: 2%; float: left; height: 30px; line-height: 30px; margin-right: 2%;">-</div>
+                                <div style="width: 30%; float: left;">
+                                    <input name="dateend" class="datepick" style="width: 100%; height: 30px;" type="text" value="<?=$m_end?>" />
+                                </div><div class="cl"></div>
+                            </div>
+                        </div>
+                        <div class="k_search">
+                            <h4><?=$this->language("l_kenhsearch")?></h4>
+                            <p id="pchannel0" <?php if(in_array(0, $mang_kenh)){?> class="selectedkenh" <?php }?> onclick="mycheckbox(0, <?= count($list_channel) ?>)">
+                                <input class="checked_kenh" name="checked_kenh[]" id="channel0" type="checkbox"  <?php if(in_array(0, $mang_kenh)){?> checked="checked" <?php }?> value="0_<?=$this->language("l_toanbo")?>"/> <?=$this->language("l_toanbo")?>
+                            </p>
+                            <?php $i = 1; ?>
+                            <?php foreach ($list_channel as $value => $giatri) { ?>
+                                <p <?php if(in_array($giatri['channel_id'], $mang_kenh)){?> class="selectedkenh" <?php }?> id="pchannel<?= $i ?>" onclick="mycheckbox(<?= $i ?>, <?= count($list_channel) ?>)">
+                                    <input <?php if(in_array($giatri['channel_id'], $mang_kenh)){?> checked="checked" <?php }?> class="checked_kenh" name="checked_kenh[]" id="channel<?= $i ?>" type="checkbox" value="<?= $giatri['channel_id'] . "_" . $giatri['channel_name'] ?>"/> 
+                                    <?= $giatri['channel_name'] ?>
+                                </p>
+                                <?php
+                                $i++;
+                            }
+                            ?>
+                        </div><div class="cl"></div>
+                        <div id="ncc_search" class="ncc_search">
+                            <h4><?=$this->language("l_supplier")?></h4>
+                            <p id="ncc0" onclick="selectncc(0,<?php echo count($list_supplier); ?>)" <?php if($ncc_id==0){?> class="selectedncc" <?php }?> >
+                                <input type="radio" name="check_ncc" id="nccinput0" <?php if($ncc_id==0){?> checked="checked"<?php }?> value="0_<?=$this->language("l_toanbo")?>"/> <?=$this->language("l_toanbo")?>
+                            </p>
+                            <?php $i = 1; ?>
+                            <?php foreach ($list_supplier as $value => $giatri) { ?>
+                                <p <?php if($ncc_id==$giatri['idx']){?> class="selectedncc" <?php }?> id="ncc<?= $i ?>" onclick="selectncc(<?= $i ?>,<?php echo count($list_supplier); ?>)">
+                                    <input name="check_ncc" id="nccinput<?= $i ?>" type="radio"  <?php if($ncc_id==$giatri['idx']){?> checked="checked"<?php }?> value="<?= $giatri['idx'] . "_" . $giatri['company'] ?>"/> 
+                                    <?= $giatri['company'] ?>
+                                </p>
+                                <?php
+                                $i++;
+                            }
+                            ?><div class="cl"></div>
+                        </div>
+                        <div class="div_apdung_search">
+                            <input class="apdung_search" type="button" value="<?=$this->language("l_apdung")?>" />
+                        </div>
+                        <div class="cl"></div>
+                    </div>
+                </div>
+                <!-- end The Modal -->
+                <?php if($text_ten_phone_mave!=""){?>
+                <img id="reset_text_search" style="position: absolute; top: 20px; right: 51px; width: 16px;" src="<?= URL_PUBLIC ?>temple_mobile/img/reset_text.png" alt=""/>
+                <?php }?>
+                <input type="hidden" name="m_search_mobi" value="" />
+                <input type="submit"  class="btn_submit_search" value="" />
+                <div class="cl"></div>
+            </form>
+        </div>
+        <div class="table_head bgwhite">
+            <div class="ctrl_head clearfix">
+                <div class="title t_action">
+                    <p class="p_t_action_1"><?= $this->language('l_mbtotal') . $this->getData('total') ?> <?= $this->language('l_notification16') ?></p>
+                    <p class="p_t_action_2"> 
+                        
+                        <?php if($this->_params['method']=="sale"){?>
+                        <button style="padding: 4px 5px 9px 5px; border: 1px solid #a9a9a9; font-weight:bold;" type="button" id="checkall">
+                            <input type="checkbox" name="checkbox" id="tbcheckall" value="all">
+                            <?= $this->language('l_checkall') ?>
+                        </button>
+                        <button type="button" name="confirmuse" id="confirmuse" class="btn hover"><?= $this->language('l_confirmuse') ?></button>
+                        <button type="button" name="confirmrestore" id="confirmrestore" class="btn hover"><?= $this->language('l_confirmrestore') ?></button>
+                        <?php }?>
+                        <?php if($this->_params['method']=="done"){?>
+                        <button style="padding: 4px 5px 9px 5px; border: 1px solid #a9a9a9; font-weight:bold;" type="button" id="checkall">
+                            <input type="checkbox" name="checkbox" id="tbcheckall" value="all">
+                            <?= $this->language('l_checkall') ?>
+                        </button>
+                        <button type="button" name="confirmuse" id="confirmuse" class="btn hover"><?= $this->language('l_confirmuse') ?></button>                        
+                        <?php }?>
+                        <?php if($this->_params['method']=="use"){?>
+                        <button style="padding: 4px 5px 9px 5px; border: 1px solid #a9a9a9; font-weight:bold;" type="button" id="checkall">
+                            <input type="checkbox" name="checkbox" id="tbcheckall" value="all">
+                            <?= $this->language('l_checkall') ?>
+                        </button>
+                        <button type="button" name="confirmrestore" id="confirmrestore" class="btn hover"><?= $this->language('l_confirmrestore') ?></button>
+                        <?php }?>
+                        <?php if($this->_params['method']=="refundmoney"){?>
+                        <button style="padding: 4px 5px 9px 5px; border: 1px solid #a9a9a9; font-weight:bold;" type="button" id="checkall">
+                            <input type="checkbox" name="checkbox" id="tbcheckall" value="all">
+                            <?= $this->language('l_checkall') ?>
+                        </button>
+                        <button type="button" name="confirmrestore" id="confirmrestore" class="btn hover"><?= $this->language('l_confirmrestore') ?></button>
+                        <?php }?>
+                        <?php if($this->_params['method']=="returnprice"){?>
+                        <button style="padding: 4px 5px 9px 5px; border: 1px solid #a9a9a9; font-weight:bold;" type="button" id="checkall">
+                            <input type="checkbox" name="checkbox" id="tbcheckall" value="all">
+                            <?= $this->language('l_checkall') ?>
+                        </button>
+                        <?php }?>
+                        <?php if($this->_params['method']=="die"){?>
+                        <button style="padding: 4px 5px 9px 5px; border: 1px solid #a9a9a9; font-weight:bold;" type="button" id="checkall">
+                            <input type="checkbox" name="checkbox" id="tbcheckall" value="all">
+                            <?= $this->language('l_checkall') ?>
+                        </button>
+                        <?php }?>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <table class="table" id="tableorder">            
+            <style>                
+                .table tr{background: #fff !important; margin-bottom: 10px !important; border: 1px solid #a9a9a9;}
+                .table td{text-align: left; padding-left: 10px; border: 0px;}
+            </style>
+            <tbody>                          
+                <?= $this->getData('ordertbody_mobi') ?>
+            </tbody>
+        </table>
+
+    </div>
+    <?= $this->getData('pagination') ?>
+</div>
+<div class="t_home_short">
+    <p>티브리지(주)  대표이사 : 000</p>
+    <p>사업자 등록번호 000-00-00000</p>
+    <p>서울시 000 00000</p>
+    <div class="t_home_short_a">
+        <button style="border: 0px; background: none;" type="button" name="popdieukhoan" id="popdieukhoan">⏐ <?= $this->language('l_dieukhoan') ?></button>
+        &nbsp;&nbsp;
+        <button style="border: 0px; background: none;" type="button" name="popchinhsach" id="popchinhsach">⏐ <?= $this->language('l_chinhsach') ?></button>                            
+    </div>
+
+</div>
+<div class="t_footer">
+    <div class="t_footer_1">
+        <a href="<?= $this->route('logout') ?>" title="<?= $this->language('l_areyousure') ?>" onclick="return confirm('<?= $this->language('l_areyousure') ?>');"><?= $this->language('l_logout') ?></a>
+    </div>
+    <div class="t_footer_2">
+        <input type="button" class="pcversion" value="<?=$this->language( 'l_pcversion')?>" />
+    </div>
+</div><div class="cl"></div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#popdieukhoan").on('click', function () {
+            $.fn_popup(true, 'popdieukhoan');
+            $("#rule1").addClass("active");
+            $("#rule2").removeClass("active");
+            $('.tab_content > div').hide();
+            $("#tab1a").show();
+        });
+        $("#popchinhsach").on('click', function () {
+            $.fn_popup(true, 'popdieukhoan');
+            $("#rule2").addClass("active");
+            $("#rule1").removeClass("active");
+            $('.tab_content > div').hide();
+            $("#tab2a").show();
+        });
+        if (location.hash) {
+            $('.tab_head a').removeClass('active');
+            $('.tab_head a[href=' + location.hash + ']').addClass('active');
+            $('.tab_content > div').hide();
+            $(location.hash + 'a').show();
+        }
+        $(".form_tab .tab_head").on('click', 'a', function () {
+            var id = $(this).attr('data-tab');
+            if (id) {
+                $(this).closest('ul').find('a').removeClass('active');
+                $(this).addClass('active');
+                $('.tab_content > div').hide();
+                $('#' + id + 'a').show();
+            }
+        });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        $('.pcversion').on('click', function () {
+            $.fn_ajax('setversion', {}, function (result) {
+                window.location="<?= $this->route('dashboard')?>";
+                return false;
+            }, true);
+        });
+    });
+</script>
+<style>
+    div.form_tab .tab_head li a.active {
+        background: #fff;
+        border-bottom: 3px solid red;
+        border-right: 0px;
+        color: red;
+    }
+    div.form_tab .tab_head li a {
+        background: #fff;
+        color: #000;
+        border: 0px;
+        height:44px;
+    }
+    div.form_tab .tab_content {border-top: 0px !important;}
+</style>
+
+<script>
+    function selectncc(giatri, countlist) {
+        $('input:radio[name=ncc_search]').each(function () {
+            $(this).prop('checked', false);
+        });
+        for (var i = 0; i < countlist + 1; i++) {
+            $("#ncc" + i).removeClass('selectedncc');
+        }
+        $("#ncc" + giatri).addClass('selectedncc');
+        document.getElementById("nccinput" + giatri).checked = true;
+    }
+</script>
+<script language="javascript">
+    function mycheckbox(vitri, soluong) {
+        //$("#pchannel" + vitri).addClass('selected');
+        //$("#channel"+vitri).prop('checked', true);
+        if (vitri == 0) {
+            for (var i = 1; i < soluong + 1; i++) {
+                $("#channel" + i).prop('checked', false);
+                $("#pchannel" + i).removeClass('selectedkenh');
+            }
+        } else {
+            var checkBox = document.getElementById("channel" + vitri);
+            if (checkBox.checked == true) {
+                $("#pchannel" + vitri).removeClass('selectedkenh');
+                $("#channel" + vitri).prop('checked', false);
+            } else {
+                $("#pchannel" + vitri).addClass('selectedkenh');
+                $("#channel" + vitri).prop('checked', true);
+            }
+            $("#pchannel0").removeClass('selectedkenh');
+            $("#channel0").prop('checked', false);
+        }
+        //alert(vitri);
+        var checkBox = document.getElementById("channel" + vitri);
+        if (checkBox.checked == true) {
+            $("#pchannel" + vitri).addClass('selectedkenh');
+            $("#channel" + vitri).prop('checked', true);
+        } else {
+            $("#pchannel" + vitri).removeClass('selectedkenh');
+            $("#channel" + vitri).prop('checked', false);
+        }
+
+
+        var flag = 0;
+        for (var i = 0; i < soluong + 1; i++) {
+            var checkBox = document.getElementById("channel" + i);
+            if (checkBox.checked == true) {
+                flag = 1;
+            }
+        }
+        if (flag == 0) {
+            $("#pchannel0").addClass('selectedkenh');
+            $("#channel0").prop('checked', true);
+        }
+    }
+</script>
+<script>
+    var modal = document.getElementById("myModal");
+    var btn = document.getElementById("myBtn");
+    var span = document.getElementsByClassName("close")[0];
+    btn.onclick = function () {
+        modal.style.display = "block";
+    }
+    span.onclick = function () {
+        modal.style.display = "none";
+    }
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+<script>
+    $(document).ready(function () {
+        $("#checkall").click(function () {
+            var checkBox = document.getElementById("tbcheckall");
+            if (checkBox.checked == true) {
+                $("#tbcheckall").prop('checked', false);
+                $('#tableorder tbody input[type="checkbox"]').each(function () {
+                    $(this).get(0).checked = false;
+                });
+            }else{
+                $("#tbcheckall").prop('checked', true);
+                $('#tableorder tbody input[type="checkbox"]').each(function () {
+                    $(this).get(0).checked = true;
+                });
+            }
+        });
+        $("#reset_text_search").click(function () {
+            document.getElementById("text_ten_phone_mave").value = "";
+            $('#reset_text_search').remove();
+        });// end button apdung
+        $(".apdung_search").click(function () {
+            var thoigian;
+            var radios = document.getElementsByName('thoigian');
+            for (var i = 0, length = radios.length; i < length; i++) {
+                if (radios[i].checked) {
+                    thoigian = radios[i].value;
+                }
+            }
+            var text_show_thoigian = "";
+            if (thoigian == 0) {
+                text_show_thoigian = "<?=$this->language("l_toanbo")?>";
+            }
+            if (thoigian == 1) {
+                text_show_thoigian = "<?=$this->language("l_homqua")?>";
+            }
+            if (thoigian == 2) {
+                text_show_thoigian = "<?=$this->language("l_homnay")?>";
+            }
+            if (thoigian == 3) {
+                text_show_thoigian = "<?=$this->language("l_7ngay")?>";
+            }
+            if (thoigian == 4) {
+                text_show_thoigian = "<?=$this->language("l_1thang")?>";
+            }
+            if (thoigian == 5) {
+                text_show_thoigian = "<?=$this->language("l_3thang")?>";
+            }
+            if (thoigian == 6) {
+                text_show_thoigian = "<?=$this->language("l_6thang")?>";
+            }
+            if (thoigian == 7) {
+                text_show_thoigian = "<?=$this->language("l_tructiep")?>";
+            }
+
+            var checked_kenh = "";
+            var checked_kenh_name = "";
+            var inputElements = document.getElementsByClassName('checked_kenh');
+            for (var i = 0; inputElements[i]; ++i) {
+                if (inputElements[i].checked) {
+                    var str = inputElements[i].value;
+                    var res = str.split("_");
+                    checked_kenh = checked_kenh + res[0] + ",";
+                    checked_kenh_name = checked_kenh_name + res[1] + ",";
+                }
+            }
+            var check_ncc = "";
+            var check_ncc_name = "";
+            var radios = document.getElementsByName('check_ncc');
+            for (var i = 0, length = radios.length; i < length; i++) {
+                if (radios[i].checked) {
+                    var str = radios[i].value;
+                    var res = str.split("_");
+                    check_ncc = res[0];
+                    check_ncc_name = res[1];
+                }
+            }
+            document.getElementById("show_text_search").value = "#" + text_show_thoigian + " # " + checked_kenh_name + " # " + check_ncc_name;
+            document.getElementById("myModal").style.display = "none";            
+            $('#nf').submit();
+        });// end button apdung
+
+        $(".button_reset").click(function () {
+            document.getElementById("toanbo").checked = true;
+            document.getElementById("homqua").checked = false;
+            document.getElementById("homnay").checked = false;
+            document.getElementById("7ngay").checked = false;
+            document.getElementById("1thang").checked = false;
+            document.getElementById("3thang").checked = false;
+            document.getElementById("6thang").checked = false;
+            document.getElementById("tructiep").checked = false;
+            $(".selected").removeClass('selected');
+            $(".toanbo").addClass('selected');
+            $('.divdate').css("display", "none");
+
+            for (var k = 0; k <<?= count($list_channel) ?> + 1; k++) {
+                if (k == 0) {
+                    $("#pchannel" + k).addClass('selectedkenh');
+                    $("#channel" + k).prop('checked', true);
+                } else {
+                    $("#pchannel" + k).removeClass('selectedkenh');
+                    $("#channel" + k).prop('checked', false);
+                }
+
+            }
+            for (var j = 0; j <<?= count($list_supplier) ?> + 1; j++) {
+                if (j == 0) {
+                    $("#ncc" + j).addClass('selectedncc');
+                    document.getElementById("nccinput" + j).checked = true;
+                } else {
+                    $("#ncc" + j).removeClass('selectedncc');
+                    document.getElementById("nccinput" + j).checked = false;
+                }
+            }
+
+        });// end button reset
+
+        $(".toanbo").click(function () {
+            document.getElementById("toanbo").checked = true;
+            document.getElementById("homqua").checked = false;
+            document.getElementById("homnay").checked = false;
+            document.getElementById("7ngay").checked = false;
+            document.getElementById("1thang").checked = false;
+            document.getElementById("3thang").checked = false;
+            document.getElementById("6thang").checked = false;
+            document.getElementById("tructiep").checked = false;
+            $(".selected").removeClass('selected');
+            $(this).addClass('selected');
+            $('.divdate').css("display", "none");
+        });
+        $(".homqua").click(function () {
+            document.getElementById("toanbo").checked = false;
+            document.getElementById("homqua").checked = true;
+            document.getElementById("homnay").checked = false;
+            document.getElementById("7ngay").checked = false;
+            document.getElementById("1thang").checked = false;
+            document.getElementById("3thang").checked = false;
+            document.getElementById("6thang").checked = false;
+            document.getElementById("tructiep").checked = false;
+            $(".selected").removeClass('selected');
+            $(this).addClass('selected');
+            $('.divdate').css("display", "none");
+        });
+        $(".homnay").click(function () {
+            document.getElementById("toanbo").checked = false;
+            document.getElementById("homqua").checked = false;
+            document.getElementById("homnay").checked = true;
+            document.getElementById("7ngay").checked = false;
+            document.getElementById("1thang").checked = false;
+            document.getElementById("3thang").checked = false;
+            document.getElementById("6thang").checked = false;
+            document.getElementById("tructiep").checked = false;
+            $(".selected").removeClass('selected');
+            $(this).addClass('selected');
+            $('.divdate').css("display", "none");
+        });
+        $(".7ngay").click(function () {
+            document.getElementById("toanbo").checked = false;
+            document.getElementById("homqua").checked = false;
+            document.getElementById("homnay").checked = false;
+            document.getElementById("7ngay").checked = true;
+            document.getElementById("1thang").checked = false;
+            document.getElementById("3thang").checked = false;
+            document.getElementById("6thang").checked = false;
+            document.getElementById("tructiep").checked = false;
+            $(".selected").removeClass('selected');
+            $(this).addClass('selected');
+            $('.divdate').css("display", "none");
+        });
+        $(".1thang").click(function () {
+            document.getElementById("toanbo").checked = false;
+            document.getElementById("homqua").checked = false;
+            document.getElementById("homnay").checked = false;
+            document.getElementById("7ngay").checked = false;
+            document.getElementById("1thang").checked = true;
+            document.getElementById("3thang").checked = false;
+            document.getElementById("6thang").checked = false;
+            document.getElementById("tructiep").checked = false;
+            $(".selected").removeClass('selected');
+            $(this).addClass('selected');
+            $('.divdate').css("display", "none");
+        });
+        $(".3thang").click(function () {
+            document.getElementById("toanbo").checked = false;
+            document.getElementById("homqua").checked = false;
+            document.getElementById("homnay").checked = false;
+            document.getElementById("7ngay").checked = false;
+            document.getElementById("1thang").checked = false;
+            document.getElementById("3thang").checked = true;
+            document.getElementById("6thang").checked = false;
+            document.getElementById("tructiep").checked = false;
+            $(".selected").removeClass('selected');
+            $(this).addClass('selected');
+            $('.divdate').css("display", "none");
+        });
+        $(".6thang").click(function () {
+            document.getElementById("toanbo").checked = false;
+            document.getElementById("homqua").checked = false;
+            document.getElementById("homnay").checked = false;
+            document.getElementById("7ngay").checked = false;
+            document.getElementById("1thang").checked = false;
+            document.getElementById("3thang").checked = false;
+            document.getElementById("6thang").checked = true;
+            document.getElementById("tructiep").checked = false;
+            $(".selected").removeClass('selected');
+            $(this).addClass('selected');
+            $('.divdate').css("display", "none");
+        });
+        $(".tructiep").click(function () {
+            document.getElementById("toanbo").checked = false;
+            document.getElementById("homqua").checked = false;
+            document.getElementById("homnay").checked = false;
+            document.getElementById("7ngay").checked = false;
+            document.getElementById("1thang").checked = false;
+            document.getElementById("3thang").checked = false;
+            document.getElementById("6thang").checked = false;
+            document.getElementById("tructiep").checked = true;
+            $(".selected").removeClass('selected');
+            $(this).addClass('selected');
+            $('.divdate').toggle(500);
+        });
+    });
+</script>

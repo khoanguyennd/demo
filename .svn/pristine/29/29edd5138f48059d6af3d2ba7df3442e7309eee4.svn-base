@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Tbridge - Màn hình chính</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            *{margin: 0px; padding: 0px;}
+            .cl{clear: both;}
+            @media (min-width: 1200px){
+            }
+            @media (min-width: 992px) and (max-width: 1200px){
+
+            }
+            @media (min-width: 768px) and (max-width: 992px){
+
+            }
+            @media (min-width: 500px) and (max-width: 768px){
+                .t_search{padding: 10px;border-bottom: 1px solid #a9a9a9; position: fixed; top: 0px; left: 0px; width: 100%; background: #fff;}
+                .t_c_logo{width: 30%; float: left;}
+                .t_c_logo img{padding:15px 0px;}
+                .t_c_search{width: 67%; float: left; margin-top: 10px; margin-right: 3%;}
+                .t_c_search div{position: relative;}
+                .t_c_search_input{width: 99%;border: 1px solid #a9a9a9;height: 40px;line-height: 40px;}
+                .t_c_search_submit{background: url('img/search1.png') no-repeat 0px 0px; width: 40px; position: absolute; top: 2px; right: 2px; border: 0px; height: 40px;}
+                .t_maincontent{padding: 105px 20px 20px 20px; border-bottom: 1px solid #a9a9a9;}
+                
+                .t_ketqua_col1{width: 48%; padding: 20px 0px; float: left; margin-right: 2%; text-align: center; border: 1px solid #000;}
+                .t_ketqua_col1_title{font-size: 20px; font-weight: bold; text-decoration: underline; padding-bottom: 5px;}
+                .t_ketqua_col1{font-weight: bold;}
+                .t_ketqua_col2{width: 49%; border: 1px solid #000; padding: 20px 0px; float: left; text-align: center;}
+                .t_ketqua_col2_title{font-size: 20px; font-weight: bold; text-decoration: underline; padding-bottom: 5px;}
+                .t_ketqua_col2{font-weight: bold;}
+                .t_tinhhinh{margin-top: 2%; padding: 20px 0px;}
+                .t_allorder{margin-top: 2%; padding: 20px 0px; text-align: center; color: red; border: 1px solid red;}
+                .t_allorder a{color: red; text-decoration: none; font-size: 18px; font-weight: bold;}
+                .t_bieudo{ margin-top: 20px;}                
+                .tb_th{width: 100%;border-collapse:collapse; margin-top: 15px;}
+                .tb_th th{padding: 7px; border-bottom: 1px solid #000; border-right: 1px solid #000; border-top: 1px solid #000;}
+                .tb_th td{padding: 7px; border-bottom: 1px solid #000; border-right: 1px solid #000; border-top: 1px solid #000;}
+                .t_mess ul{list-style: none;}
+                .t_mess ul li{padding: 5px 2px;}
+                .t_mess ul li a{color: #000;}
+                .t_bieudo h3{padding: 10px 0px; border-bottom: 1px solid #a9a9a9; margin-bottom: 10px;}
+                .t_home_short{text-align: center; padding: 50px 0px 0px 0px; color: #7f7f7f; font-size: 13px;}
+                .t_home_short_a{padding: 20px 0px;}
+                .t_home_short_a a{color: #7f7f7f; text-decoration: none; font-size: 14px;}                
+                .t_mess{margin-top: 2%; padding: 10px; border: 1px solid #a9a9a9;}
+                .t_footer{padding: 20px;}
+                .t_footer_1{width: 48%; float: left; margin-right: 4%; text-align: right;}
+                .t_footer_2{width: 48%; float: left;}
+                .t_footer_1 a{text-decoration: none;border: 1px solid #a9a9a9;padding: 8px 10px;color: #000;}
+                .t_footer_2 input{padding: 9px;border: 1px solid #a9a9a9;margin-top: -9px;background: #fff;}
+            }
+            @media (min-width: 350px) and (max-width: 500px){
+                .t_search{padding: 10px;border-bottom: 1px solid #a9a9a9; position: fixed; top: 0px; left: 0px; width: 100%; background: #fff;}
+                .t_c_logo{width: 30%; float: left;}
+                .t_c_logo img{padding:15px 0px;}
+                .t_c_search{width: 67%; float: left; margin-top: 10px; margin-right: 3%;}
+                .t_c_search div{position: relative;}
+                .t_c_search_input{width: 99%;border: 1px solid #a9a9a9;height: 40px;line-height: 40px;}
+                .t_c_search_submit{background: url('img/search1.png') no-repeat 0px 0px; width: 40px; position: absolute; top: 2px; right: 2px; border: 0px; height: 40px;}
+                .t_maincontent{padding: 105px 20px 20px 20px; border-bottom: 1px solid #a9a9a9;}
+                
+                .t_ketqua_col1{width: 48%; padding: 20px 0px; float: left; margin-right: 2%; text-align: center; border: 1px solid #000;}
+                .t_ketqua_col1_title{font-size: 20px; font-weight: bold; text-decoration: underline; padding-bottom: 5px;}
+                .t_ketqua_col1{font-weight: bold;}
+                .t_ketqua_col2{width: 49%; border: 1px solid #000; padding: 20px 0px; float: left; text-align: center;}
+                .t_ketqua_col2_title{font-size: 20px; font-weight: bold; text-decoration: underline; padding-bottom: 5px;}
+                .t_ketqua_col2{font-weight: bold;}
+                .t_tinhhinh{margin-top: 2%; padding: 20px 0px;}
+                .t_allorder{margin-top: 2%; padding: 20px 0px; text-align: center; color: red; border: 1px solid red;}
+                .t_allorder a{color: red; text-decoration: none; font-size: 18px; font-weight: bold;}
+                .t_bieudo{ margin-top: 20px;}                
+                .tb_th{width: 100%;border-collapse:collapse; margin-top: 15px;}
+                .tb_th th{padding: 7px; border-bottom: 1px solid #000; border-right: 1px solid #000; border-top: 1px solid #000;}
+                .tb_th td{padding: 7px; border-bottom: 1px solid #000; border-right: 1px solid #000; border-top: 1px solid #000;}
+                .t_mess ul{list-style: none;}
+                .t_mess ul li{padding: 5px 2px;}
+                .t_mess ul li a{color: #000;}
+                .t_bieudo h3{padding: 10px 0px; border-bottom: 1px solid #a9a9a9; margin-bottom: 10px;}
+                .t_home_short{text-align: center; padding: 50px 0px 0px 0px; color: #7f7f7f; font-size: 13px;}
+                .t_home_short_a{padding: 20px 0px;}
+                .t_home_short_a a{color: #7f7f7f; text-decoration: none; font-size: 14px;}                
+                .t_mess{margin-top: 2%; padding: 10px; border: 1px solid #a9a9a9;}
+                .t_footer{padding: 20px;}
+                .t_footer_1{width: 48%; float: left; margin-right: 4%; text-align: right;}
+                .t_footer_2{width: 48%; float: left;}
+                .t_footer_1 a{text-decoration: none;border: 1px solid #a9a9a9;padding: 8px 10px;color: #000;}
+                .t_footer_2 input{padding: 9px;border: 1px solid #a9a9a9;margin-top: -9px;background: #fff;}
+            }
+            @media (max-width: 350px){  
+                .t_search{padding: 10px;border-bottom: 1px solid #a9a9a9; position: fixed; top: 0px; left: 0px; width: 100%; background: #fff;}
+                .t_c_logo{width: 30%; float: left;}
+                .t_c_logo img{padding:15px 0px;}
+                .t_c_search{width: 67%; float: left; margin-top: 10px; margin-right: 3%;}
+                .t_c_search div{position: relative;}
+                .t_c_search_input{width: 99%;border: 1px solid #a9a9a9;height: 40px;line-height: 40px;}
+                .t_c_search_submit{background: url('img/search1.png') no-repeat 0px 0px; width: 40px; position: absolute; top: 2px; right: 2px; border: 0px; height: 40px;}
+                .t_maincontent{padding: 105px 20px 20px 20px; border-bottom: 1px solid #a9a9a9;}
+                
+                .t_ketqua_col1{width: 48%; padding: 20px 0px; float: left; margin-right: 2%; text-align: center; border: 1px solid #000;}
+                .t_ketqua_col1_title{font-size: 20px; font-weight: bold; text-decoration: underline; padding-bottom: 5px;}
+                .t_ketqua_col1{font-weight: bold;}
+                .t_ketqua_col2{width: 49%; border: 1px solid #000; padding: 20px 0px; float: left; text-align: center;}
+                .t_ketqua_col2_title{font-size: 20px; font-weight: bold; text-decoration: underline; padding-bottom: 5px;}
+                .t_ketqua_col2{font-weight: bold;}
+                .t_tinhhinh{margin-top: 2%; padding: 20px 0px;}
+                .t_allorder{margin-top: 2%; padding: 20px 0px; text-align: center; color: red; border: 1px solid red;}
+                .t_allorder a{color: red; text-decoration: none; font-size: 18px; font-weight: bold;}
+                .t_bieudo{ margin-top: 20px;}                
+                .tb_th{width: 100%;border-collapse:collapse; margin-top: 15px;}
+                .tb_th th{padding: 7px; border-bottom: 1px solid #000; border-right: 1px solid #000; border-top: 1px solid #000;}
+                .tb_th td{padding: 7px; border-bottom: 1px solid #000; border-right: 1px solid #000; border-top: 1px solid #000;}
+                .t_mess ul{list-style: none;}
+                .t_mess ul li{padding: 5px 2px;}
+                .t_mess ul li a{color: #000;}
+                .t_bieudo h3{padding: 10px 0px; border-bottom: 1px solid #a9a9a9; margin-bottom: 10px;}
+                .t_home_short{text-align: center; padding: 50px 0px 0px 0px; color: #7f7f7f; font-size: 13px;}
+                .t_home_short_a{padding: 20px 0px;}
+                .t_home_short_a a{color: #7f7f7f; text-decoration: none; font-size: 14px;}                
+                .t_mess{margin-top: 2%; padding: 10px; border: 1px solid #a9a9a9;}
+                .t_footer{padding: 20px;}
+                .t_footer_1{width: 48%; float: left; margin-right: 4%; text-align: right;}
+                .t_footer_2{width: 48%; float: left;}
+                .t_footer_1 a{text-decoration: none;border: 1px solid #a9a9a9;padding: 8px 10px;color: #000;}
+                .t_footer_2 input{padding: 9px;border: 1px solid #a9a9a9;margin-top: -9px;background: #fff;}
+            }
+        </style>
+    </head>
+    
+    <body>
+        <div class="t_wraper">
+            <div class="t_search">
+                <div class="t_c_logo">
+                    <img src="img/logo_c.jpg" alt=""/>
+                </div>
+                <div class="t_c_search">
+                    <div>
+                        <input class="t_c_search_input" type="text" placeholder="Tìm tên/số điện thoại/mã vé" />
+                        <input class="t_c_search_submit" type="submit" value="" />
+                    </div>
+                </div>
+                <div class="cl"></div>
+            </div>
+            <div class="t_maincontent">                
+                <div style="padding-bottom: 15px;">
+                    <div class="namecompany" style="width: 50%; float: left;font-size: 20px;font-weight: bold;">
+                        에버랜드 님,
+                    </div>
+                    <div class="t_refresh" style="width: 50%; float: left; text-align: right;font-size: 20px;font-weight: bold;">
+                        <span>최근 01:39</span>
+                        <img style="width: 25px; margin-bottom: -5px; padding-left: 5px;" src="img/refresh.png" alt=""/>
+                    </div><div class="cl"></div>
+                </div>
+                <div class="t_ketqua">
+                    <div class="t_ketqua_col1">
+                        <p class="t_ketqua_col1_title">50 건</p>
+                        <p>Số vé chưa bán</p>
+                    </div>
+                    <div class="t_ketqua_col2">
+                        <p class="t_ketqua_col2_title">125 건</p>
+                        <p>Số câu hỏi chưa trả lời</p>
+                    </div><div class="cl"></div>
+                </div>
+                <div class="t_tinhhinh">
+                    <h3 style="padding: 10px 0px; border-bottom: 1px solid #a9a9a9;">Tình hình bán vé</h3>
+                    <table class="tb_th" >
+                        <tr>
+                            <th style="border-top: 1px solid #fff;border-left: 1px solid #fff;">&nbsp;</th>
+                            <th style="text-align: left; background: #000; color: #fff;">Hôm qua 04.02</th>
+                            <th style="text-align: left; background: #000; color: #fff;">Hôm nay 04.03</th>
+                        </tr>
+                        <tr>
+                            <td style="border-left: 1px solid #000;">Số tiền bán thực</td>
+                            <td>2,000,000</td>
+                            <td>3,000,000</td>
+                        </tr>
+                        <tr>
+                            <td style="border-left: 1px solid #000;">Số tiền xử lý sử dụng</td>
+                            <td>100,000</td>
+                            <td>50,000</td>
+                        </tr>
+                        <tr>
+                            <td style="border-left: 1px solid #000;">Số vé bán</td>
+                            <td>10</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td style="border-left: 1px solid #000;">Số vé sử dụng</td>
+                            <td>12</td>
+                            <td>10</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="t_allorder">
+                    <p><a href="">Xem toàn bộ đơn hàng ></a></p>
+                </div>
+                <div class="t_bieudo">
+                    <h3>Biểu đồ so sánh số lượng bán theo tuần</h3>
+                    <img style="width: 100%" src="img/bd.jpg" alt=""/>
+                </div>
+                <div class="t_mess">
+                    <h3>Thông báo</h3>
+                    <ul>
+                        <li><a href="">03.02  수수료가 변경되었습니다</a></li>
+                        <li><a href="">01.27  시스템 점검 안내 (1.27 00시~02시)</a></li>
+                        <li><a href="">03.12  수수료가 변경되었습니다</a></li>
+                        <li><a href="">12.27  시스템 점검 안내 (1.27 00시~02시)</a></li>
+                        <li><a href="">11.27  시스템 점검 안내 (1.27 00시~02시)</a></li>
+                    </ul>
+                </div>
+                <div class="t_home_short">
+                    <p>티브리지(주)  대표이사 : 000</p>
+                    <p>사업자 등록번호 000-00-00000</p>
+                    <p>서울시 000 00000</p>
+                    <div class="t_home_short_a">
+                        <a href="">⏐ Điều khoản sử dụng</a> &nbsp;&nbsp;
+                        <a href="">⏐ Chính sách sử dụng thông tin cá nhân</a>
+                    </div>
+                </div>
+                <div class="cl"></div>
+            </div>
+            <div class="t_footer">
+                <div class="t_footer_1">
+                    <a href="">Logout</a>
+                </div>
+                <div class="t_footer_2">
+                    <input type="button" value="PC version" />
+                </div>
+            </div><div class="cl"></div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,1 @@
+<div id="footer">Copyright © Fashion Shop Since 2014. All rights reserved.</div>

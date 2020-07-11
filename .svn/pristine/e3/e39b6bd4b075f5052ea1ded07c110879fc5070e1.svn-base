@@ -1,0 +1,6 @@
+extension = "curl.so"
+extension = "mongo.so"
+extension = "imagick.so"
+extension = "intl.so"
+extension = "fileinfo.so"
+extension = "redis.so"
