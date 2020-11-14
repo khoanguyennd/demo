@@ -1,0 +1,137 @@
+import React, { Component } from 'react';
+import { View, Text, StyleSheet, ScrollView, Dimensions, AsyncStorage } from 'react-native';
+import { TabView, SceneMap } from 'react-native-tab-view';
+import { Header } from 'react-native-elements';
+import { Left, Right, Icon } from 'native-base';
+import { ActivityIndicator, FlatList } from 'react-native';
+import { data } from './define';
+const server = data[0];
+
+const allRoute = () => (
+  <ScrollView  style={styles.stypeScroll}>
+      <View style={styles.container}>
+        <View style={styles.mainItem}>
+            <View style={styles.titleTop}>
+                <Text style={{color: '#fff'}}>WMAKE</Text>
+            </View>
+            <View style={styles.content}>
+                <Text style={{color: '#000'}}>2984486</Text>
+                <Text style={{color: '#000'}}>22020-07-07 15:35:52</Text>
+                <Text style={{color: '#000'}}>질문~~~테스트~</Text>
+            </View>
+            <View style={styles.buttonItem}>
+                <Text style={{color: '#DB4437'}}>답변</Text>
+            </View>
+        </View>
+      </View>
+      <View style={styles.container}>
+          <View style={styles.mainItem}>
+              <View style={styles.titleTop}>
+                    <Text style={{color: '#fff'}}>WMAKE</Text>
+              </View>
+          </View>
+      </View>
+
+  </ScrollView>
+);
+const coupangRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} />
+);
+
+const wmakeRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} />
+);
+const tmonRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} >
+    <Text>It is a tmon Screen</Text>
+  </View>
+);
+
+const gmktRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} >
+    <Text>It is a gmkt Screen</Text>
+  </View>
+);
+const auctionRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} >
+    <Text>It is a auction Screen</Text>
+  </View>
+);
+
+const stRoute = () => (
+<ScrollView>
+    <View style={{flex: 1, alignItems: "center", borderColor: '#ccc'}}>
+      <View style={{width: '95%', height: 120, borderWidth: 1, marginTop: 10, justifyContent: "center", alignItems: "center" }}>
+          <View>
+                <Text style={{backgroundColor: 'green', justifyContent: "center", alignItems: "center"}}>WMAKE</Text>
+          </View>
+      </View>
+    </View>
+</ScrollView>
+);
+
+const styles = StyleSheet.create({
+    scene: {flex: 1,},
+    stypeScroll: { flex: 1, padding: 10, backgroundColor: '#fff' },
+    container: { flex: 1, alignItems: "center" },
+    mainItem: { width: '95%', height: 100, borderWidth: 1, borderColor: '#ccc', marginTop: 10, justifyContent: "center", alignItems: "center" },
+    titleTop:{position: 'absolute', top:0, left:0, width: '25%',height: 25, backgroundColor: '#376092', justifyContent: "center", alignItems: "center"},
+    content:{},
+    buttonItem:{position: 'absolute', right:10, bottom:10, width: 50,height: 30, borderWidth: 1, borderColor: '#ccc', backgroundColor: '#ffffff', justifyContent: "center", alignItems: "center"},
+});
+
+export default class Question extends Component {
+  static navigationOptions = {
+         title: 'Quản lý Question',
+         headerStyle: {
+           color: '#DB4437'
+         },
+         headerTintColor: '#DB4437',
+         headerTitleStyle: {
+            fontWeight: 'bold',
+         },
+    };
+  constructor(props) {
+       super(props);
+       this.state = {
+         dataApi: [],
+         isLoading: true,
+         username: "",
+         index: 0,
+         routes:[
+            { key: 'all', title: '전체' },
+            { key: 'coupang', title: 'COUPANG'},
+            { key: 'wmake', title: 'WMAKE' },
+            { key: 'tmon', title: 'TMON' },
+            { key: 'gmkt', title: 'GMKT' },
+            { key: 'auction', title: 'AUCTION' },
+            { key: 'st', title: '11ST' },
+         ]
+       };
+  }
+  renderScene = SceneMap({
+        all: allRoute,
+        coupang: coupangRoute,
+        wmake: wmakeRoute,
+        tmon: tmonRoute,
+        gmkt: gmktRoute,
+        auction: auctionRoute,
+        st: stRoute,
+  });
+  handleIndexChange = (index: number) => {
+      this.setState({
+         index,
+      });
+  }
+  render () {
+      return (
+          <TabView
+             navigationState={this.state}
+             renderScene={this.renderScene}
+             onIndexChange={this.handleIndexChange}
+             initialLayout={{ width: Dimensions.get('window').width, height: Dimensions.get('window').height}}
+          />
+      );
+  }
+}
+

@@ -1,0 +1,171 @@
+import React, { Component, useState, useEffect } from 'react';
+import { ScrollView, View, StyleSheet, TextInput, Button, Text, TouchableOpacity } from 'react-native';
+import { Animation } from 'react-native-popup-dialog';
+// data mặc định
+import { data } from './define';
+const server = data[0];
+export default class LoginScreen extends Component {
+    constructor(props) {
+    super(props);
+    this.state = {
+              username : 'orchipro',
+              password : '123456@a',
+              buttonLogin : 'Login'
+        };
+    }
+    submitLogin(event) {
+    
+      console.log('username: ', this.state.username);
+      console.log('password: ', this.state.password);
+
+      fetch(server+'loginApi.html', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            username: this.state.username,
+            password: this.state.password
+        }),
+      })
+     .then((response) => response.json())
+     .then((responseJson) => {
+        if (responseJson.result) {
+            this.props.navigation.navigate('Main');
+            console.log(responseJson);
+        }else{
+            alert('Please, input email and password correct!')
+        }
+     })
+     .catch((error) => {
+        console.log('error');
+        console.error(error);
+     });
+
+    }
+    render() {
+      return (
+        <ScrollView contentContainerStyle={styles.container}>
+            <View style={{width: 300, alignItems: 'center', justifyContent: 'center'}}>
+               <Text style={styles.textInfo}>T-Bridge</Text>
+               <Text style={styles.textInfo1}>여행 / 티켓 판매자를 위한 통합솔루션</Text>
+           </View>
+           <TextInput
+               style={styles.input}
+               onChangeText={ (text) => this.setState({username:text}) }
+               value={ this.state.username }
+               placeholder="아이디"
+           />
+            <TextInput
+               style={styles.input}
+               onChangeText={ (pass) => this.setState({password:pass}) }
+               value={ this.state.password }
+               placeholder="비밀번호"
+               secureTextEntry
+            />
+             <View style= {{  color: '#CCC', margin : 5 }}>
+                  <TouchableOpacity activeOpacity={0.95} style={styles.button} onPress={this.submitLogin.bind(this)} >
+                      <Text style={styles.text}>Login</Text>
+                  </TouchableOpacity>
+            </View>
+             <View style= {{ alignItems: 'center', color: '#CCC', width: 300, height : 20 , marginTop: 10 }}>
+                <View style={{flex: 1, flexDirection: 'row'}}>
+                    <View style={{width: '75%'}} >
+                        <Text style={{fontSize: 10}}>Để tìm ID/PW, vui lòng sử dụng PC version.</Text>
+                    </View>
+                    <View style={{ alignItems: 'center', justifyContent: 'center', width: '25%', borderColor: '#DB4437',  borderWidth: 1, borderRadius: 5}} >
+                        <Text style={{fontSize: 10,  color: '#DB4437'}}>PC version</Text>
+                    </View>
+                </View>
+            </View>
+        </ScrollView>
+      );
+    }
+
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  input: {
+    height: 40,
+    width: 300,
+    borderColor: '#CCC',
+    borderWidth: 1,
+    marginTop: 20,
+    padding: 2,
+    borderBottomColor: "#CCC",
+    //borderBottomWidth: StyleSheet.hairlineWidth,
+    borderStyle:  'dashed'
+  },
+  textInfo: {
+     fontSize: 30,
+     backgroundColor: 'transparent',
+     borderRadius: 50,
+     fontWeight: 'bold'
+  },
+  textInfo1: {
+     fontSize: 16,
+     backgroundColor: 'transparent',
+     paddingBottom: 10,
+     borderRadius: 50,
+  },
+  buttonLogin: {
+    width: 300,
+    height: 100,
+    //padding: 20,
+    //borderWidth: 300,
+    color: 'red',
+    fontSize: 160,
+    //backgroundColor: 'transparent',
+    alignItems: 'center',
+    //justifyContent: 'center',
+    backgroundColor: '#F035E0',
+    borderRadius: 20,
+    zIndex: 100,
+  },
+  login_content: {
+      width: 500,
+      borderColor: '#CCC',
+      borderRadius: 8,
+      backgroundColor: '#FFF',
+  },
+  login_head: {
+      borderWidth: 1,
+      //borderStyle: 'solid',
+      borderColor: '#DB4437',
+      padding: 15,
+      backgroundColor: '#DB4437',
+      borderTopLeftRadius: 8,
+      borderTopRightRadius: 8,
+      color: '#FFF',
+      alignItems: 'center',
+      lineHeight: 30,
+  },
+  parent: {
+          width: 300,
+          height: 500,
+          backgroundColor: 'red',
+          margin: 50,
+  },
+  button: {
+      flexDirection: 'row',
+      width: 300,
+      height: 40,
+      backgroundColor: '#DB4437',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 12,
+      elevation:3,
+      borderRadius: 5
+  },
+  text: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: '#fff'
+  }
+});

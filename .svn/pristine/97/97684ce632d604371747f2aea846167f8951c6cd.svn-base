@@ -1,0 +1,79 @@
+import * as React from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { TabView, SceneMap } from 'react-native-tab-view';
+import { Header } from 'react-native-elements';
+const allRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} />
+);
+const coupangRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} />
+);
+
+const wmakeRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} />
+);
+const tmonRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} >
+    <Text>It is a tmon Screen</Text>
+  </View>
+);
+
+const gmktRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} >
+    <Text>It is a gmkt Screen</Text>
+  </View>
+);
+const auctionRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} >
+    <Text>It is a auction Screen</Text>
+  </View>
+);
+
+const stRoute = () => (
+  <View style={[styles.scene, { backgroundColor: '#ffffff' }]} >
+    <Text>It is a stRoute Screen</Text>
+  </View>
+);
+const initialLayout = { width: Dimensions.get('window').width };
+
+export default function Question() {
+  const [index, setIndex] = React.useState(0);
+  const [routes] = React.useState([
+    { key: 'all', title: '전체' },
+    { key: 'coupang', title: 'COUPANG'},
+    { key: 'wmake', title: 'WMAKE' },
+    { key: 'tmon', title: 'TMON' },
+    { key: 'gmkt', title: 'GMKT' },
+    { key: 'auction', title: 'AUCTION' },
+    { key: 'st', title: '11ST' },
+  ]);
+
+  const renderScene = SceneMap({
+    all: allRoute,
+    coupang: coupangRoute,
+    wmake: wmakeRoute,
+    tmon: tmonRoute,
+    gmkt: gmktRoute,
+    auction: auctionRoute,
+    st: stRoute,
+  });
+
+  return (
+    <TabView
+      navigationState={{ index, routes }}
+      renderScene={renderScene}
+      onIndexChange={setIndex}
+      initialLayout={initialLayout}
+    ></TabView>
+  );
+}
+
+const styles = StyleSheet.create({
+  scene: {
+    flex: 1,
+  },
+  navigationBarTitleStyle: {
+      backgroundColor: 'red',
+      color: '#DB4437'
+  }
+});

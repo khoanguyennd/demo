@@ -1,0 +1,23 @@
+//rootProject.name = 'widgetReact'
+//include ':app', ':react-native'
+//project(':react-native').projectDir = new File(rootProject.projectDir, '../node_modules/react-native/android')
+
+
+//rootProject.name = 'widgetReact'
+//include ':react-native'
+//project(':react-native').projectDir = new File(rootProject.projectDir, '../node_modules/react-native/android')
+//
+// include ':app'
+
+
+
+rootProject.name = 'widgetReact'
+
+apply from: 'C:/tmobile/node_modules/react-native-unimodules/gradle.groovy'
+includeUnimodulesProjects()
+
+apply from: file("C:/tmobile/node_modules/@react-native-community/cli-platform-android/native_modules.gradle");
+applyNativeModulesSettingsGradle(settings)
+
+
+include ':app'

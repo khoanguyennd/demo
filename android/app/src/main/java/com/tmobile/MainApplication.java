@@ -1,5 +1,7 @@
 package com.tmobile;
 
+import com.tmobile.CustomReactPackages;
+
 import android.app.Application;
 import android.content.Context;
 import android.net.Uri;
@@ -43,6 +45,8 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       List<ReactPackage> packages = new PackageList(this).getPackages();
       packages.add(new ModuleRegistryAdapter(mModuleRegistryProvider));
+      //packages.add(new CustomReactPackages());
+      packages.add(new CustomReactPackages());
       return packages;
     }
 
