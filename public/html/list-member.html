@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Billiard List Member</title>
+	<meta charset="utf-8">
+	<!-- Place your kit's code here -->
+    <script src="https://kit.fontawesome.com/8aee9abc8a.js" crossorigin="anonymous"></script>
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="stylesheet" type="text/css" href="style-1.css">
+	<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+	<!-- -----------------------------dang ky thanh vien----------------------------------------------------->
+	<div class="modal fade" id="dangkytvModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document" style="margin-top: 10%">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+        	<div class="title text-center pb-3 b-line"><h3>Đăng ký thành viên</h3></div>
+			<div class="list-luot-co t-line pt-4 pb-4">
+				<div class="row">
+					<div class="w-85 m-auto m-0 pl-5 pr-5">
+						<div class="form-row">
+						    <div class="form-group col-md-12">
+						      <label for="recipient-name" class="col-form-label">Họ & tên <span class="required">*</span></label>
+						      <input type="text" class="form-control from-c" id="validationCustom01" placeholder="Nhập họ tên của bạn ...">
+						    </div>
+						    <div class="form-group col-md-12">
+						      <label class="col-form-label" for="#">Số điện thoại <span class="required">*</span></label>
+						      <input type="@" class="form-control from-c" id="#" placeholder="Nhập số điện thoại của bạn ...">
+						    </div>
+						    <div class="form-group col-md-12">
+						      <label for="recipient-name" class="col-form-label">Điểm chấp</label>
+						      <input type="text" class="form-control from-c" id="validationCustom01" placeholder="Nhập họ điểm chấp">
+						    </div>
+						</div>
+					</div>
+				</div>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <button type="button" class="btn btn-primary btn-blue" data-dismiss="modal">Đóng</button>
+		        <button type="button" class="btn btn-primary btn-blue" data-dismiss="modal">Đăng ký</button>
+	    	</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!----------------------------------dang ky thanh vien-------------------------------------->
+	<div class="container-fluid bgt-mode">
+		<div class="row">
+			<div class="col-md-4 logo">
+				<img src="images/logo-1.png" alt="Billiard">
+			</div>
+			<div class="col-md-4 text-center">
+				<div class="float-left pt-70 w-100">
+					<h2 class="title_header">Danh sách thành viên CLB</h2>
+				</div>
+			</div>
+			<div class="col-md-4 pt-70 text-right">
+				<div class="float-right text-right m-0">
+					<a type="button" class="btn btn-warning btn-orange-sm float-right" data-toggle="modal" data-target="#dangkytvModal">Đăng ký thành viên</a>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="row main-bgt">
+					<div class="col-12 bgt-blue p-0">
+						<div class="title b-line">
+							<div class="row">
+								<div class="col-md-6">
+									<h3>Tổng số thành viên: 79</h3>
+								</div>
+								<div class="col-md-3">
+								</div>								
+								<div class="col-md-3 w-25 p-2">
+									<form role="search" class="bd-search d-flex align-items-center">
+								  		<input type="search" class="form-control ds-input" id="search-input" placeholder="Tìm tên hoặc số điện thoại" >
+								  		<button class="btn bd-search-docs-toggle d-md-none p-0 ml-3" type="button" data-toggle="collapse" data-target="#" ></button>
+									</form>
+								</div>
+							</div>
+						</div>	
+						<div class="main-ct">
+							<div class="row">
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+								<div class="col-md-3">
+									<a href="mode-2.html">
+									<div class="thanh-vien-item">
+										<div class="circle"><img src="images/thanh-vien-1.png"></div>
+										<div class="thanh-vien-ct">
+											<div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">Trần Quyết chiến</div>
+											<div class="w-50 float-left text-center">
+												AVG: <span class="color-or">2.32</span>
+											</div>
+											<div class="w-50 float-left text-center">
+												High: <span class="color-or">5</span>
+											</div>
+										</div>	
+										<div class="circle-sm">20</div>
+									</div>
+									</a>
+								</div>
+							</div>
+						</div>									
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12 margin0 ">
+				<div class="margin0 d-table w-auto pt-30">
+					<a type="button" class="btn btn-primary btn-blue shadow_button" href="index.html">Quay lại</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+<script type="text/javascript" src="jquery-3.5.1.min.js"></script>
+<script type="text/javascript" src="js/popper.min.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+<script type="text/javascript" src="js/script.js"></script>
+</body>
+</html>

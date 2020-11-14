@@ -1,0 +1,229 @@
+$(document).ready(function(){ 
+
+    $('#btnRegister').on('click', function() {
+        if(!$("#registerForm").valid()) return false;
+        var userName = $("#userName").val();
+        var email = $("#email").val();
+        var point = $("#point").val();
+        if(point =='') point = 0;
+
+        var url = $baseUrl + '/registerUser.html'; 
+        $.blockUI({
+                message: '<h1><img src="' + $baseUrl + '/public/img/busy.gif" /></h1>',
+                baseZ: 999999,
+                css: {
+                    paddingBottom: '15px',
+                }
+            });
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                name:userName,
+                email:email,
+                point:point
+            },
+            dataType:'text',
+            success:function(data){             
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == false){
+                    $("#msg_err_home").html(jsonData.msg);
+                    $.unblockUI();                                        
+                    return false;
+                } else {
+                    document.getElementById("userName").value="";
+                    document.getElementById("email").value="";
+                    document.getElementById("point").value="";
+                    $("#msg_err_home").html(jsonData.msg);
+                    $("#totalUser").html(jsonData.total);
+                    $('.tv_rows:first-child').before(jsonData.adduser);
+                    $('.keyboard').css("display","none");
+                    $.unblockUI(); 
+                    $("#msg_err_home").html(jsonData.msg);                                      
+                    setTimeout(function() { $('#dangkytvModal').modal('hide'); }, 4000);
+                }
+            }
+        });
+    });
+    $('#btnRegister_close').on('click', function() {        
+        $('.keyboard_register').addClass('keyboard--hidden_register');
+        $('#dangkytvModal').modal('hide');
+    });
+    
+    $('#btnRegistersetting').on('click', function() {
+        if(!$("#registerFormsetting").valid()) return false;
+        var userName = $("#userNamesetting").val();
+        var email = $("#emailsetting").val();
+        var point = $("#pointsetting").val();
+        if(point =='') point = 0;
+        var url = $baseUrl + '/registersettingUser.html'; 
+        $.blockUI({
+	        message: '<h1><img src="' + $baseUrl + '/public/img/busy.gif" /></h1>',
+	        baseZ: 999999,
+	        css: {
+	            paddingBottom: '15px',
+	        }
+	    });
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                name:userName,
+                email:email,
+                point:point
+            },
+            dataType:'text',
+            success:function(data){            	
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == false){
+                    $("#msg_err").html(jsonData.msg);
+                    $.unblockUI();                                        
+                    return false;
+                } else {
+                    document.getElementById("userNamesetting").value="";
+                    document.getElementById("emailsetting").value="";
+                    document.getElementById("pointsetting").value=""; 
+                    $("#msg_err").html(jsonData.msg);
+                    $(".number_clb").html(jsonData.total);
+                    $('.tv_rows:first-child').before(jsonData.adduser);
+                    $('.keyboard').css("display","none");
+                    $.unblockUI();                                       
+                    setTimeout(function() { $('#registersettingModal').modal('hide'); }, 2000);
+                }
+            }
+        });
+
+    });
+    $('#btnRegistersetting_close').on('click', function() {
+        $('.keyboard_registersetting').addClass('keyboard--hidden_registersetting');
+        $('#registersettingModal').modal('hide');
+    });
+    $('#btnRegisterlistmember').on('click', function() {
+        if(!$("#registerFormlistmember").valid()) return false;
+        var userName = $("#userNamelistmember").val();
+        var email = $("#emaillistmember").val();
+        var point = $("#pointlistmember").val();
+        if(point =='') point = 0;
+        var url = $baseUrl + '/registerlistmemberUser.html'; 
+        $.blockUI({
+	        message: '<h1><img src="' + $baseUrl + '/public/img/busy.gif" /></h1>',
+	        baseZ: 999999,
+	        css: {
+	            paddingBottom: '15px',
+	        }
+	    });
+
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                name:userName,
+                email:email,
+                point:point
+            },
+            dataType:'text',
+            success:function(data){            	
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == false){                    
+                    $("#msg_err_listmember").html(jsonData.msg);
+                    $.unblockUI();                                        
+                    return false;
+                } else {
+                    document.getElementById("userNamelistmember").value="";
+                    document.getElementById("emaillistmember").value="";
+                    document.getElementById("pointlistmember").value="";                
+                    $("#msg_err_listmember").html(jsonData.msg);
+                    $("#totalUser").html(jsonData.total);
+                    $('.tv_rows:first-child').before(jsonData.adduser);
+                    //$(".show").removeClass("show");
+                    //$('.keyboard_register_listmember').addClass('keyboard--hidden_register_listmember');
+                    $.unblockUI();                                       
+                    setTimeout(function() { $('#dangkytvModal_ds').modal('hide'); }, 2000);
+                }
+            }
+        });
+
+    });
+    $('#btnRegisterlistmember_close').on('click', function() {
+        $('.keyboard_register_listmember').addClass('keyboard--hidden_register_listmember');
+        $('#dangkytvModal_ds').modal('hide');
+    });
+
+    
+
+    $("#registerForm").validate({
+    	rules: {
+    		name: {
+                required: true,
+                normalizer: function( value ) {
+                    return $.trim( value );
+                  }
+            },
+    		email: {
+                        required: true,
+                        email: true
+                },
+                point:{
+                        required: true,
+                        number: true,
+                        min: 1
+                }
+    	},
+            messages: {
+                    name: "Please enter your name",
+                    email: "Please enter a valid email address",
+                    point: "Please enter numberic and numberic > 0",
+            }
+    })
+    $("#registerFormsetting").validate({
+    	rules: {
+    		name: {
+                required: true,
+                normalizer: function( value ) {
+                    return $.trim( value );
+                  }
+            },
+    		email: {
+                        required: true,
+                        email: true
+                },
+                point:{
+                    required: true,
+                        number: true,
+                        min: 1
+                }
+    	},
+            messages: {
+                    name: "Please enter your name",
+                    email: "Please enter a valid email address",
+                    point: "Please enter numberic and numberic > 0",
+            }
+    })
+    
+    $("#registerFormlistmember").validate({
+    	rules: {
+    		name: {
+                required: true,
+                normalizer: function( value ) {
+                    return $.trim( value );
+                  }
+            },
+    		email: {
+                        required: true,
+                        email: true
+                },
+                point:{
+                    required: true,
+                        number: true,
+                        min: 1
+                }
+    	},
+            messages: {
+                    name: "Please enter your name",
+                    email: "Please enter a valid email address",
+                    point: "Please enter numberic and numberic > 0",
+            }
+    })
+})

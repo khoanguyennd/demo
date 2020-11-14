@@ -1,0 +1,739 @@
+<?php
+if(isset($_SESSION["trandau_id"])){
+    $trandau_id=$_SESSION["trandau_id"];
+    $popup_khaicuoc_user=$_SESSION["popup_khaicuoc_user"];
+    $trandau = $this->getData('trandau');
+    $trandau_thanhvien = $this->getData('trandau_thanhvien');
+    $thanhvien1 = $this->getData('thanhvien1');
+    $thanhvien2 = $this->getData('thanhvien2');
+    foreach ($trandau_thanhvien as $key=>$value){
+        if($thanhvien1['id']==$value['thanhvien_id']){
+            $diem_ketthuc_player1=$value['diem'];
+        }
+        if($thanhvien2['id']==$value['thanhvien_id']){
+            $diem_ketthuc_player2=$value['diem'];
+        }
+    }
+
+    $infoInnering = $this->getData('innering');
+    $innering = $infoInnering['innering'];
+    $currentUser = $infoInnering['user_current'] ? $infoInnering['user_current'] : 0;
+    $totalTime = $this->getData('totalTime') > 0 ? $this->getData('totalTime') : 0;
+    
+    $currentPointUser1 = $this->getData('currentPointUser1');
+    $currentPointUser2 = $this->getData('currentPointUser2');
+    
+    $historyPointUser1 = $this->getData('historyPointUser1');
+    $historyPointUser2 = $this->getData('historyPointUser2');
+    $hour = 0;
+    if($totalTime >= 3600) $hour = round($totalTime/ (60*60));
+
+    $secondRemain = $totalTime - $hour * (60*60);
+    $minutes = round($secondRemain/60);
+    $statisticalUser = $this->getData('statisticalUser');
+?>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.0.0/animate.min.css"/>
+<script>
+    $(document).ready(function () {
+        var vid = document.getElementById("main_video");
+        vid.autoplay = true;
+        vid.load();
+        $(".cbutton").click(function () {
+            var strDiv1Content = document.getElementById('start_player1').innerHTML;
+            var strDiv2Content = document.getElementById('start_player2').innerHTML;
+            strDiv1Content.replace('start_player_diem_span1', 'start_player_diem_span2');
+            strDiv2Content.replace('start_player_diem_span2', 'start_player_diem_span1');
+            document.getElementById('start_player1').innerHTML = strDiv2Content;
+            document.getElementById('start_player2').innerHTML = strDiv1Content;
+            const element = document.querySelector('#start_player1');
+            element.classList.add('animate__animated', 'animate__fadeInLeft');
+            element.addEventListener('animationend', () => {
+                element.classList.remove('animate__animated', 'animate__fadeInLeft');
+            });
+            const element2 = document.querySelector('#start_player2');
+            element2.classList.add('animate__animated', 'animate__fadeInRight');
+            element2.addEventListener('animationend', () => {
+                element2.classList.remove('animate__animated', 'animate__fadeInRight');
+            });
+        });        
+    });
+    
+     var play_pause_status = "play";
+     function play_pause(button) {
+         $(button).toggleClass('fa-volume-up fa-volume-off');
+         var video_screen = document.getElementById('main_video');
+         if (play_pause_status == "pause") {
+             video_screen.play();
+             play_pause_status = "play";
+         } else {
+             video_screen.pause();
+             play_pause_status = "pause";
+         }
+     }    
+</script>
+<video id="main_video" width="320" height="40" controls="controls" autoplay="" muted="">
+    <source src="<?= URL_PUBLIC ?>/img/s875.mp3" type="audio/mpeg">
+</video>
+<style>
+    #main_video{display: none;}
+</style>
+<div class="start_top">
+    <input type="hidden" id="khaicuoc_user" value="<?=$trandau['khaicuoc_user']?>"/>
+    <input type="hidden" id="trandau_id" value="<?=$trandau['id']?>"/>
+    <input type="hidden" id="player_active" value="1"/>
+    <input type="hidden" id="user1" value="<?=$thanhvien1['id']?>"/>
+    <input type="hidden" id="user2" value="<?=$thanhvien2['id']?>"/>
+    <input type="hidden" id="user_active" value="<?=$trandau['khaicuoc_user']?>"/>
+    <input type="hidden" id="oneAddPoint" value="0"/>
+    <input type="hidden" id="timeUser" value="0"/>
+
+    <input type="hidden" id="pointEndUser<?=$thanhvien1['id']?>" value="<?=$diem_ketthuc_player1?>"/>
+    <input type="hidden" id="pointEndUser<?=$thanhvien2['id']?>" value="<?=$diem_ketthuc_player2?>"/>
+    <input type="hidden" id="pointCurrentUser<?=$thanhvien1['id']?>" value="0"/>
+    <input type="hidden" id="pointCurrentUser<?=$thanhvien2['id']?>" value="0"/>
+    <div id="start_player1" class="col-xs-4 start_player">
+        <div class="start_player_top">
+            <div class="col-xs-6 start_player_top1">
+                <div class="start_player_top1_div1">
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                </div>
+                <div class="start_player_top1_div2">
+                    <span><?=$thanhvien1['name']?></span>
+                </div><div class="cl"></div>
+            </div>
+            <div class="col-xs-6 paddingleftright10 start_player_top2" data-toggle="modal" data-target="#chitietthanhvien">
+                <div class="start_player_top2_div1">
+                    <span><?=$diem_ketthuc_player1?></span>
+                </div>
+                <div class="start_player_top2_div2">
+                    <p><span><?=$this->language("l_avg")?> : </span><?=$thanhvien1['avg']?></p>
+                    <p><span><?=$this->language("l_detail_high")?> : </span><?=$thanhvien1['highrun']?></p>
+                </div><div class="cl"></div>
+            </div>
+            <?php include( PATH_APPLICATION . 'view/part/player_info.php'); ?>
+            <div class="cl"></div> 
+        </div>
+        <div id="player1" class="start_player_diem <?php if($trandau['khaicuoc_user'] == $thanhvien1['id']) echo 'start_player_diem_active';?>">
+            <p>
+                <span id="point<?=$thanhvien1['id']?>">00</span>
+                <span class="start_player_diem_span1" id="timeCurrentUser<?=$thanhvien1['id']?>" style="display: none">00</span>
+            </p>                    
+        </div>
+        <div class="start_player_button" id="buttonPoint<?=$thanhvien1['id']?>">
+            <div class="col-xs-6 paddingleftright5" style="text-align: right">
+                <button class="button_minus"  data-id= "<?=$thanhvien1['id']?>">
+                    <i class="fa fa-minus" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="col-xs-6 paddingleftright5">
+                <button class="button_plus" data-id= "<?=$thanhvien1['id']?>">
+                    <i class="fa fa-plus" aria-hidden="true"></i>
+                </button>
+            </div><div class="cl"></div> 
+        </div>
+        <div class="start_player_button" id="textPoint<?=$thanhvien1['id']?>">
+            <div class="col-xs-12 paddingleftright5" style="text-align: center">
+                <button class="add_diemchodoithu" data-id="<?=$thanhvien2['id']?>">
+                    +<span id="addPoint<?=$thanhvien1['id']?>">1</span> <?=$this->language("l_point_competitor")?>
+                </button>
+            </div>
+            <div class="cl"></div> 
+        </div>
+        <div class="start_player_thongke">
+            <div class="col-xs-3 paddingleftright5 rows_thongke">
+                <p id="avg<?=$thanhvien1['id']?>">0</p>
+                <p><?=$this->language("l_avg")?></p>
+            </div>
+            <div class="col-xs-3 paddingleftright5 rows_thongke">
+                <p id="hight<?=$thanhvien1['id']?>">0</p>
+                <p><?=$this->language("l_detail_high")?></p>
+            </div>
+            <div class="col-xs-3 paddingleftright5 rows_thongke">
+                <p id="sobicham<?=$thanhvien1['id']?>">0</p>
+                <p><?=$this->language("l_numbercham")?></p>
+            </div>
+            <div class="col-xs-3 paddingleftright5 rows_thongke">
+                <p id="time<?=$thanhvien1['id']?>">0s</p>
+                <p><?=$this->language("l_time_avg")?></p>
+            </div><div class="cl"></div> 
+        </div>
+        <div class="start_player_history">
+            <?php include( PATH_APPLICATION . 'view/part/start_player_history1.php'); ?>
+            <div class="cl"></div>                  
+        </div>
+        <div class="cl"></div> 
+    </div>
+    <div class="col-xs-4 paddingleftright start_luot">
+        <div class="start_luot_top">
+            <div class="col-xs-3 paddingleftright start_luot_top1">
+                <i onclick="play_pause(this)" class="fa fa-volume-up" aria-hidden="true"></i>
+            </div>
+            <div class="col-xs-6 paddingleftright start_luot_top2">
+                <p id="countTimeMarch">00:00</p>
+            </div>
+            <div class="col-xs-3 paddingleftright start_luot_top3">
+                <!--<i class="fa fa-plus" aria-hidden="true"></i>-->
+            </div><div class="cl"></div>
+        </div>
+        <div class="start_luot_content">
+            <p class="number_inning" id="number_inning">1</p>
+            <p class="text_inning"><?=$this->language("l_luotmuctieu")?></p>
+            <div class="change_position_help">
+                <div class="change_position_help_change">
+                    <img class="cbutton" src="<?= URL_PUBLIC ?>img/ic_tranfer1.png"/>
+                </div>
+                <div class="change_position_help_help">
+                    <i id="poplink" class="fa fa-info-circle" aria-hidden="true"></i>                    
+                    <div class="pop-title">Title here</div>
+                    <div class="pop-content">Content here</div>                    
+                    <script>
+                        $(document).ready(function () {
+                            $("#poplink").popover({
+                                html: true,
+                                placement: "right",
+                                title: function () {
+                                    return $(".pop-title").html();
+                                },
+                                content: function () {
+                                    return $(".pop-content").html();
+                                }
+                            });
+                        });
+                    </script>
+                </div>
+                <div class="cl"></div>
+            </div>
+        </div>                
+        <div class="center_button">
+            <div class="col-xs-12 paddingleftright5 group_button">
+                <div class="col-xs-6 paddingleftright div_button_tranfer">
+                    <button class="button_tranfer">
+                        <img src="<?= URL_PUBLIC ?>img/ic_tranfer.png"/> <?=$this->language("l_button_tranfer_model2")?>
+                    </button>
+                </div>
+                <div class="col-xs-2 paddingleftright div_button_cancel">
+                    <button class="button_cancel">
+                        <img src="<?= URL_PUBLIC ?>img/ic_huy.png"/>
+                    </button>
+                </div>
+                <div class="col-xs-2 paddingleftright div_button_pause">
+                    <button class="button_pause">
+                        <i class="fa fa-pause" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="col-xs-2 paddingleftright div_button_stop">
+                    <button class="button_stop"> 
+                        <i class="fa fa-stop" aria-hidden="true"></i>
+                    </button>
+                </div>
+                
+                <div class="cl"></div>
+                <div class="col-xs-12 div_button_reset" style="display: none">
+                    <button class="button_pause resettime" style="width: 100%"> 
+                        <i class="fa fa-repeat" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div style="height: 30%; overflow: hidden;">
+            <img style="width: 100%;" src="<?= URL_PUBLIC ?>img/bida.jpg" /><div class="cl"></div>
+        </div><div class="cl"></div>
+    </div>
+    <div id="start_player2" class="col-xs-4 start_player">
+        <div class="start_player_top">
+            <div class="col-xs-6 start_player_top1">
+                <div class="start_player_top1_div1">
+                    <i class="fa fa-user" aria-hidden="true"></i>
+                </div>
+                <div class="start_player_top1_div2">
+                    <span><?=$thanhvien2['name']?></span>
+                </div><div class="cl"></div>
+            </div>
+            <div class="col-xs-6 paddingleftright10 start_player_top2" data-toggle="modal" data-target="#chitietthanhvien2">
+                <div class="start_player_top2_div1">
+                    <span><?=$diem_ketthuc_player2?></span>
+                </div>
+                <div class="start_player_top2_div2">
+                    <p><span><?=$this->language("l_avg")?> : </span><?=$thanhvien2['avg']?></p>
+                    <p><span><?=$this->language("l_detail_high")?> : </span><?=$thanhvien2['highrun']?></p>
+                </div><div class="cl"></div>
+            </div>
+            <?php include( PATH_APPLICATION . 'view/part/player_info2.php'); ?>
+            <div class="cl"></div> 
+        </div>
+        <div id="player2" class="start_player_diem <?php if($trandau['khaicuoc_user'] == $thanhvien2['id']) echo 'start_player_diem_active';?>">
+            <p>
+                <span id="point<?=$thanhvien2['id']?>">00</span>
+                <span class="start_player_diem_span2" id="timeCurrentUser<?=$thanhvien2['id']?>" style="display: none">00</span>
+            </p>
+            <div class="cl"></div> 
+        </div>
+
+        <div class="start_player_button" id="buttonPoint<?=$thanhvien2['id']?>">
+            <div class="col-xs-6 paddingleftright5" style="text-align: right">
+                <button class="button_minus"  data-id= "<?=$thanhvien2['id']?>">
+                    <i class="fa fa-minus" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="col-xs-6 paddingleftright5">
+                <button class="button_plus" data-id= "<?=$thanhvien2['id']?>">
+                    <i class="fa fa-plus" aria-hidden="true"></i>
+                </button>
+            </div><div class="cl"></div> 
+        </div>
+        <div class="start_player_button" id="textPoint<?=$thanhvien2['id']?>">
+            <div class="col-xs-12 paddingleftright5" style="text-align: center">
+                <button class="add_diemchodoithu" data-id="<?=$thanhvien1['id']?>">
+                    +<span id="addPoint<?=$thanhvien2['id']?>">1</span> <?=$this->language("l_point_competitor")?>
+                </button>
+            </div><div class="cl"></div> 
+        </div>
+        <div class="start_player_thongke">
+            <div class="col-xs-3 paddingleftright5 rows_thongke">
+                <p id="avg<?=$thanhvien2['id']?>">0</p>
+                <p><?=$this->language("l_avg")?></p>
+            </div>
+            <div class="col-xs-3 paddingleftright5 rows_thongke">
+                <p id="hight<?=$thanhvien2['id']?>">0</p>
+                <p><?=$this->language("l_detail_high")?></p>
+            </div>
+            <div class="col-xs-3 paddingleftright5 rows_thongke">
+                <p id="sobicham<?=$thanhvien2['id']?>">0</p>
+                <p><?=$this->language("l_numbercham")?></p>
+            </div>
+            <div class="col-xs-3 paddingleftright5 rows_thongke">
+                <p id="time<?=$thanhvien2['id']?>">0s</p>
+                <p><?=$this->language("l_time_avg")?></p>
+            </div><div class="cl"></div> 
+        </div>
+        <div class="start_player_history">
+            <?php include( PATH_APPLICATION . 'view/part/start_player_history2.php'); ?>
+            <div class="cl"></div>                  
+        </div><div class="cl"></div>  
+    </div>
+    <div class="cl"></div>
+</div>
+<?php include( PATH_APPLICATION . 'view/part/conform_stop.php'); ?>
+
+<script type="text/javascript">    
+    var minutes = 0;
+    var hour = 0;
+    var time;
+    var timerOn = 0;
+    var minutesPlay = <?=$trandau['thoigian']?>;
+
+    function timedCount()
+    {
+        hour = parseInt(hour);
+        minutes = parseInt(minutes);        
+                
+        if(minutes < 10) {
+            txtMinutes = '0' + parseInt(minutes);
+        } else {
+            txtMinutes = parseInt(minutes);
+        }
+        if(hour < 10) {
+            txtHour = '0' + parseInt(hour);
+        } else {
+            txtHour = parseInt(hour);   
+        }
+
+        $('#countTimeMarch').html(txtHour + ':' + txtMinutes);
+
+        minutes = minutes+1;
+        if (minutes%60==0){
+            hour+=1;
+            minutes=0;
+        }
+        if (minutes%60==0){
+            hour+=1;
+            minutes=0;
+        }
+
+        minutesExpired = minutesPlay * 60;
+        minutesCurrent = hour * 3600 + minutes * 60;
+        if(minutesExpired > 0 &&  minutesExpired < minutesCurrent){
+            calculateTheEndMarch();
+            $('#conformStop').modal();
+        };
+
+        time = setTimeout("timedCount()",60000);
+    }
+
+    function start()
+    {
+        if (!timerOn)
+        {
+            timerOn =1;
+            timedCount();
+        }
+    }
+
+    function stop() {
+        if (time) {
+            timerOn=0;
+            clearTimeout(time);
+        }
+    }
+
+    // Caculater time User 
+    var secondUseCurrent = 0;
+    var timeUse;
+    var timerOnUser = 0;
+    var user1 = <?=$thanhvien1['id']?>;
+    var user2 = <?=$thanhvien2['id']?>;    
+    var currentUser = <?=$trandau['khaicuoc_user']?>;  
+    function timedCountCurrentUser()
+    {
+        if(secondUseCurrent < 10) {
+            txtSecond = '0' + parseInt(secondUseCurrent);
+        } else {
+            txtSecond = parseInt(secondUseCurrent);   
+        }
+        secondUseCurrent = secondUseCurrent + 1;
+        $('#timeCurrentUser' + currentUser).html(txtSecond);
+        $('#timeCurrentUser' + currentUser).show(); 
+        $('#timeUser').val(secondUseCurrent);     
+        timeUse = setTimeout("timedCountCurrentUser()",1000);
+    }
+    function startCountTimeUser()
+    {
+        if (!timerOnUser)
+        {
+            timerOnUser =1;
+            timedCountCurrentUser();
+        }
+    }
+
+    function stopCountTimeUser() {        
+       
+        if (timeUse) {
+            timerOnUser=0;
+            clearTimeout(timeUse);
+        }
+    }
+    
+    function calculateTheEndMarch(){
+        var userId1 = $('#user1').val();
+        var userId2 = $('#user2').val();
+        var pointEndUser1 = parseInt($('#pointEndUser' + userId1).val());
+        var pointEndUser2 = parseInt($('#pointEndUser' + userId2).val());
+
+        var currentPointUser1 = parseInt($('#point' + userId1).html());
+        var currentPointUser2 = parseInt($('#point' + userId2).html());
+        var luotcodangdanh = $('#number_inning').html();
+        
+        if(currentPointUser1 < pointEndUser1 && currentPointUser2 < pointEndUser2){
+            if(currentPointUser1 > currentPointUser2){
+                $('.pointend' + userId1).addClass('activeplay');
+                $('.pointend' + userId2).removeClass('activeplay');    
+            } else if(pointEndUser1 < pointEndUser2){
+                $('.pointend' + userId2).addClass('activeplay');
+                $('.pointend' + userId1).removeClass('activeplay');
+            }    
+        } else {
+            if(currentPointUser1 == pointEndUser1){
+                $('.pointend' + userId1).addClass('activeplay');
+                $('.pointend' + userId2).removeClass('activeplay');
+            }
+
+            if(currentPointUser2 == pointEndUser2){
+                $('.pointend' + userId2).addClass('activeplay');
+                $('.pointend' + userId1).removeClass('activeplay');
+            }
+        }
+        
+
+        if(currentPointUser1 == currentPointUser2 && currentPointUser1 < pointEndUser1 & currentPointUser2 < pointEndUser2){
+            var userkhaicuoc = $('#khaicuoc_user').val();
+            $('.pointend' + userId1).removeClass('activeplay');
+            $('.pointend' + userId2).removeClass('activeplay');
+            $('.pointend' + userkhaicuoc).addClass('activeplay');
+        }
+
+        if(currentPointUser1 < 10) currentPointUser1 = '0' + currentPointUser1;
+        if(currentPointUser2 < 10) currentPointUser2 = '0' + currentPointUser2;
+        
+        $('.pointend' + userId1).html(currentPointUser1);
+        $('.pointend' + userId2).html(currentPointUser2);
+        $('.luotcodangdanh').html(luotcodangdanh);
+    }
+
+    $('body').on('click', '.button_tranfer', function(){
+        $.blockUI();
+        var time = $('#timeUser').val();
+        secondUseCurrent = 0;
+        hidden = currentUser;
+        if(currentUser == user1) {
+            currentUser = user2;
+        } else {
+            currentUser = user1;
+        }
+
+        //luot show
+        var currentluotco = parseInt($("#number_inning").html());
+        var user_khaicuoc = $('#khaicuoc_user').val();
+        if(user_khaicuoc == currentUser){
+            $("#number_inning").html(currentluotco + 1);
+        }
+
+        $('#timeCurrentUser' + hidden).hide();
+        $('#timeCurrentUser' + currentUser).show();
+        stopCountTimeUser();
+        startCountTimeUser();
+
+        var idTrandau = $('#trandau_id').val();
+        var idUser = hidden;
+        var point = $('#oneAddPoint').val();
+        $('#oneAddPoint').val(0);                                                                                                                           
+        $('#buttonPoint' + currentUser).show();
+        $('#textPoint' + currentUser).hide();
+        $('#buttonPoint' + hidden).hide();
+        $('#textPoint' + hidden).show();
+
+        var strload='<img class="imagesload_wait_button_change_turn" src="'+$baseUrl+'/public/img/load.gif" />';
+        var url = $baseUrl + '/changeturns.html';
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                trandau_id:idTrandau,
+                thanhvien_id:idUser,
+                diem:point,
+                time:time,
+                status: 1
+            },
+            dataType:'text',
+            beforeSend: function() {
+                $('.button_tranfer').after(strload);
+                $('.button_tranfer').attr('disabled', true);
+                $('.button_cancel').attr('disabled', true);
+            },
+            success:function(data){             
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == true){
+                    //update history
+                    $('.imagesload_wait_button_change_turn').remove();
+                    $('.button_tranfer').attr('disabled', false);
+                    $('.button_cancel').attr('disabled', false);
+                    
+                    $('.rowUser' + hidden).removeClass('rowUser' + hidden);
+                    str = '<div class="col-xs-12 rows_history rowUser' + hidden +'">';
+                       str += '<div class="col-xs-3 paddingleftright5"><p>&nbsp;</p></div>';
+                       str += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.inning + '</p></div>';
+                       str += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.score + '</p></div>';
+                       str += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.shot + '</p></div>';
+                       str +='<div class="cl"></div>';
+                    str +='</div>';
+                    $(str).insertBefore('.rowshow' + hidden);
+                    $('.rowshow' + hidden).remove(); 
+
+                    $('#user_active').val(currentUser);
+                    
+                    $("#pointCurrentUser" + hidden).val(jsonData.diem);
+                    
+                    if(currentluotco < parseInt(jsonData.luotco)){
+                        $("#number_inning").html(jsonData.luotco);
+                        strshowuser1 = '<div class="col-xs-12 rows_history rowshow' + hidden +'">';
+                           strshowuser1 += '<div class="col-xs-3 paddingleftright5"><p>&nbsp;</p></div>';
+                           strshowuser1 += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.luotco + '</p></div>';
+                           strshowuser1 += '<div class="col-xs-3 paddingleftright5"><p class="rowshowPoint' + hidden + '">0</p></div>';
+                           strshowuser1 += '<div class="col-xs-3 paddingleftright5"><p class="rowshowTime' + hidden + '">0</p></div>';
+                           strshowuser1 +='<div class="cl"></div>';
+                        strshowuser1 +='</div>';
+                        $(strshowuser1).insertBefore('.rowUser' + hidden);                                                                 
+
+                        strshowuser2 = '<div class="col-xs-12 rows_history rowshow' + currentUser +'">';
+                           strshowuser2 += '<div class="col-xs-3 paddingleftright5"><p>&nbsp;</p></div>';
+                           strshowuser2 += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.luotco + '</p></div>';
+                           strshowuser2 += '<div class="col-xs-3 paddingleftright5"><p class="rowshowPoint' + currentUser + '">0</p></div>';
+                           strshowuser2 += '<div class="col-xs-3 paddingleftright5"><p class="rowshowTime' + currentUser + '">0</p></div>';
+                           strshowuser2 +='<div class="cl"></div>';
+                        strshowuser2 +='</div>';
+                        $(strshowuser2).insertBefore('.rowUser' + currentUser); 
+                    }  
+
+                    $('#avg' + hidden).html(jsonData.avg);
+                    $('#hight' + hidden).html(jsonData.hight);
+                    $('#sobicham' + hidden).html(jsonData.number_balltouches);
+                    $('#time' + hidden).html(jsonData.total_time + 's');  
+                    
+                    if(parseInt(jsonData.the_end)==1){
+                        $('#timeCurrentUser' + currentUser).hide();
+                        $('#btnExit').show();
+                        $('#btnStop').hide();
+                        $('#btnCancel').hide();
+                        $('.div_button_tranfer').hide();
+                        $('.div_button_cancel').hide();
+                        $('.div_button_pause').hide();
+                        $('.div_button_stop').hide();
+                        $('.button_plus').attr('disabled', true);
+                        $('.button_minus').attr('disabled', true);
+                        $('.add_diemchodoithu').attr('disabled', true);
+                        $('.div_button_reset').attr('disabled', true); 
+                        $('.div_button_reset').show(); 
+                        stop();
+                        stopCountTimeUser();
+                        calculateTheEndMarch();
+                        $('#conformStop').modal();
+                        return false;
+                    }   
+                    
+                } else {                    
+                    return false;
+                }
+            }
+        });
+        $.unblockUI();        
+    });
+
+    $('body').on('click', '.button_cancel', function(){
+        var time = $('#timeUser').val();
+        secondUseCurrent = 0;
+        hidden = currentUser;
+        if(currentUser == user1) {
+            currentUser = user2;
+        } else {
+            currentUser = user1;
+        } 
+
+        //luot show
+        var currentluotco = parseInt($("#number_inning").html());
+        var user_khaicuoc = $('#khaicuoc_user').val();
+        if(user_khaicuoc == currentUser){
+            $("#number_inning").html(currentluotco + 1);
+        }
+
+        $('#timeCurrentUser' + hidden).hide();
+        $('#timeCurrentUser' + currentUser).show();
+        stopCountTimeUser();
+        startCountTimeUser();
+            
+        var idTrandau = $('#trandau_id').val();
+        var idUser = hidden;
+        var point = $('#oneAddPoint').val();        
+        $('#buttonPoint' + currentUser).show();
+        $('#textPoint' + currentUser).hide();
+        $('#buttonPoint' + hidden).hide();
+        $('#textPoint' + hidden).show();
+        var url = $baseUrl + '/changeturns.html';
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                trandau_id:idTrandau,
+                thanhvien_id:idUser,
+                diem:point,
+                time:time,
+                status: 0
+            },
+            dataType:'text',
+            success:function(data){             
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == true){  
+                    if(parseInt(jsonData.diem) < 10){
+                        jsonData.diem = '0' + jsonData.diem; 
+                    }
+                    $('.rowUser' + hidden).removeClass('rowUser' + hidden);
+                    str = '<div class="col-xs-12 rows_history rows_history_cancel rowUser' + hidden +'">';
+                       str += '<div class="col-xs-3 paddingleftright5"><p>&nbsp;</p></div>';
+                       str += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.inning + '</p></div>';
+                       str += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.score + '</p></div>';
+                       str += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.shot + '</p></div>';
+                       str +='<div class="cl"></div>';
+                    str +='</div>';
+                    $(str).insertBefore('.rowshow' + hidden);
+                    $('.rowshow' + hidden).remove();
+
+                    $('#user_active').val(currentUser);
+                    $('#oneAddPoint').val(0);                        
+                    $('#point' + hidden).html(jsonData.diem)                                                                              
+                    $("#pointCurrentUser" + hidden).val(jsonData.diem);   
+                    
+                    if(currentluotco < parseInt(jsonData.luotco)){
+                        $("#number_inning").html(jsonData.luotco);
+                        strshowuser1 = '<div class="col-xs-12 rows_history rowshow' + hidden +'">';
+                           strshowuser1 += '<div class="col-xs-3 paddingleftright5"><p>&nbsp;</p></div>';
+                           strshowuser1 += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.luotco + '</p></div>';
+                           strshowuser1 += '<div class="col-xs-3 paddingleftright5"><p class="rowshowPoint' + hidden + '">0</p></div>';
+                           strshowuser1 += '<div class="col-xs-3 paddingleftright5"><p class="rowshowTime' + hidden + '">0</p></div>';
+                           strshowuser1 +='<div class="cl"></div>';
+                        strshowuser1 +='</div>';
+                        $(strshowuser1).insertBefore('.rowUser' + hidden);                                                                 
+
+                        strshowuser2 = '<div class="col-xs-12 rows_history rowshow' + currentUser +'">';
+                           strshowuser2 += '<div class="col-xs-3 paddingleftright5"><p>&nbsp;</p></div>';
+                           strshowuser2 += '<div class="col-xs-3 paddingleftright5"><p>' + jsonData.luotco + '</p></div>';
+                           strshowuser2 += '<div class="col-xs-3 paddingleftright5"><p class="rowshowPoint' + currentUser + '">0</p></div>';
+                           strshowuser2 += '<div class="col-xs-3 paddingleftright5"><p class="rowshowTime' + currentUser + '">0</p></div>';
+                           strshowuser2 +='<div class="cl"></div>';
+                        strshowuser2 +='</div>';
+                        $(strshowuser2).insertBefore('.rowUser' + currentUser); 
+                    }                                                                                              
+                } else {                    
+                    return false;              
+                }
+            }
+        });
+    })
+
+    $('.button_stop').on('click', function(){        
+        calculateTheEndMarch();
+        $('#btnStop').show();
+        $('#btnExit').hide();
+        $("#conformStop").modal();
+    })
+
+
+    $('.button_pause').on('click', function(){
+        $('.div_button_tranfer').hide();
+        $('.div_button_cancel').hide();
+        $('.div_button_pause').hide();
+        $('.div_button_stop').hide();
+        $('.button_plus').attr('disabled', true);
+        $('.button_minus').attr('disabled', true);
+        $('.add_diemchodoithu').attr('disabled', true);
+        $('.div_button_reset').show();
+        stopCountTimeUser();
+    })
+
+    $('.resettime').on('click', function(){
+        $('.div_button_tranfer').show();
+        $('.div_button_cancel').show();
+        $('.div_button_pause').show();
+        $('.button_plus').attr('disabled', false);
+        $('.button_minus').attr('disabled', false);
+        $('.add_diemchodoithu').attr('disabled', false);
+        $('.div_button_stop').show();
+        $('.div_button_reset').hide();
+        secondUseCurrent =0;
+        startCountTimeUser();
+    })
+
+    $('#btnResetGame').on('click', function(){        
+        window.location = $baseUrl + '/resetgame.html';
+    })
+    $( document ).ready(function() {
+        var userActiveTrandau = <?=$trandau['khaicuoc_user']?>;
+        var user1 = <?=$thanhvien1['id']?>;
+        var user2 = <?=$thanhvien2['id']?>;
+        if(userActiveTrandau == user1)
+        {
+            var otherUser = user2;
+        } else {
+            var otherUser = user1;
+        }
+        $('#buttonPoint' + userActiveTrandau).show();
+        $('#textPoint' + userActiveTrandau).hide();
+        $('#timeCurrentUser' + userActiveTrandau).show();
+
+        $('#buttonPoint' + otherUser).hide();
+        $('#textPoint' + otherUser).show(); 
+
+        start();
+        timedCountCurrentUser(); 
+
+    });
+</script>
+<?php }?>
+<script src="<?=URL_PUBLIC?>js/march.js"></script>

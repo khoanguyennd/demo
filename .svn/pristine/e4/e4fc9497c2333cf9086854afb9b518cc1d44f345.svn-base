@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<title><?= $this->language('l_tbbida') ?></title>
+    	<meta charset="utf-8">
+    	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    	<link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>temple_mobile/bootstrap/css/bootstrap.min.css">
+    	<link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>temple_mobile/style.css">
+        <link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>temple_mobile/css/customer.css" />
+    	<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        
+        <script src="<?= URL_PUBLIC ?>temple_mobile/js/jquery-3.5.1.min.js"></script> 
+        <script src="<?= URL_PUBLIC ?>temple_mobile/js/jquery.main.min.js"></script>
+        <script src="<?= URL_PUBLIC ?>temple_mobile/js/jquery.validate.js"></script>
+        <script src="<?= URL_PUBLIC ?>temple_mobile/js/jquery.blockUI.min.js"></script>
+        <script src="<?= URL_PUBLIC ?>temple_mobile/js/jquery.countdown.min.js"></script>
+        <script src="<?= URL_PUBLIC ?>temple_mobile/js/customer.js"></script>
+        <script src="<?= URL_PUBLIC ?>temple_mobile/js/hangul.js"></script>
+        <script src="<?= URL_PUBLIC ?>temple_mobile/js/vietuni.js"></script>
+        <script>
+            <?php echo 'jsData=' . json_encode($this->getData('jsData')); ?>
+        </script>
+        <script type="text/javascript">
+            <?php 
+            if (isset($_SESSION['lang'])){ 
+                if($_SESSION['lang']=="VN"){
+                    $lang="vn";
+                }
+                if($_SESSION['lang']=="EN"){
+                    $lang="en";
+                }
+                if($_SESSION['lang']=="KR"){
+                    $lang="kr";
+                }
+            }else{
+                $lang="en";
+            }?>
+            var lang="<?=$lang?>";
+        </script>
+        <script type="text/javascript">
+            var $baseUrl = "<?= URL_BASE; ?>";
+        </script>
+    	<?php if (isset($_SESSION['lang']) && $_SESSION['lang'] == 'KR') { ?>
+            <!-- load font KR -->
+            <style>
+                body {
+                    
+                    font-family: 'Nanum Gothic', 'Roboto', sans-serif;
+                }
+            </style>
+        <?php }?>  
+    </head>
+    <body class="bodydoc">        
+        <input type="hidden" id="pos_number" value=""/>
+        <input type="hidden" id="pos_char" value=""/>
+    	<div class="container-fluid">
+    		<div class="row">
+                    <div class="col-md-12 login_logo">
+                        <img src="<?= URL_PUBLIC ?>images/logo.png" alt="Billiard">
+                    </div>
+    		</div>
+            <?php require  $this->_fileView; ?>		
+    	</div>
+    	
+        <div class="div_load_alert">
+            <div class="main_mess">
+                <p><?= $this->language("l_main_mess") ?></p>
+                <img style="width: 200px;" src="<?= URL_PUBLIC ?>img/load.gif" />
+            </div>
+        </div>
+        <style>
+            .login_logo{margin: 20px 0 10px 0; text-align: center;}
+            .login_logo img{width: 200px;}
+            .from-c_mobi{padding: 5px; border-radius: 5px;}
+            .submitlogin {background: #cb7309;border: #f69929 1px solid;box-shadow: #222 0px 6px 8px;font-size: 24px;font-weight: bold;text-transform: uppercase;border-radius: 5px;text-shadow:none;font-family: utm avo;font-weight: 500;color: #fff;}
+            .submitlogin:hover {background-color: #d39e00;border-color: #c69500;}
+            .form_item_error{text-align: center; color: red;}
+            @media (min-width: 1200px) and (max-width: 1366px){
+                #login_area{width: 450px; margin: 0px auto;}
+            }
+            @media (min-width: 992px) and (max-width: 1200px){
+                #login_area{width: 450px; margin: 0px auto;}
+            }
+            @media (min-width: 768px) and (max-width: 992px){
+                #login_area{width: 450px; margin: 0px auto;}
+            }
+            @media (min-width: 520px) and (max-width: 768px){
+                #login_area{width: 450px; margin: 0px auto;}
+            }
+            @media (min-width: 350px) and (max-width: 520px){
+                
+            }
+            @media (max-width: 350px){
+                
+            }
+        </style>
+    <script type="text/javascript" src="<?= URL_PUBLIC ?>bootstrap/js/bootstrap.js"></script>
+    </body>
+</html>

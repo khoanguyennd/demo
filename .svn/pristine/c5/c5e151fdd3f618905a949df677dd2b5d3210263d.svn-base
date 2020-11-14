@@ -1,0 +1,82 @@
+<?php include_once(PATH_APPLICATION . 'view/popup/register_member.php') ?>
+<input type="hidden" id="language" name="language" value="<?= Session::get('accountshopping')['area'] ?>">
+<div class="container-fluid bgt-mode">
+    <div class="row">
+        <div class="col-md-4 logo">
+            <img src="<?= URL_PUBLIC ?>images/logo-1.png" alt="Billiard">
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="float-left pt-70 w-100">
+                <h2 class="title_header"><?=$this->language("l_listmember")?></h2>
+            </div>
+        </div>
+        <div class="col-md-4 pt-70 text-right">
+            <div class="float-right text-right m-0">
+                <a type="button" class="btn btn-warning btn-orange-sm float-right" onclick="registerlistmember()"><?=$this->language("l_registermember")?></a>
+            </div>
+        </div>        
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row main-bgt">
+                <div class="col-12 bgt-blue p-0">
+                    <div class="title b-line">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h3><?=$this->language("m_total_member")?>: <span id="totalUser"><?= $this->getData('totalMember'); ?></span></h3>
+                            </div>
+                            <div class="col-md-3">
+                            </div>								
+                            <div class="col-md-3 w-25 p-2">                                
+                                    <input type="search" class="form-control ds-input use-keyboard-input-search-user-listmember" id="search-input" placeholder="<?=$this->language("l_search_text_placeholder")?>" >
+                                    <button class="btn bd-search-docs-toggle d-md-none p-0 ml-3" type="button" data-toggle="collapse" data-target="#" ></button>                                
+                            </div>
+                        </div>
+                    </div>	
+                    <div class="main-ct">
+                        <div class="hide-scroll">
+                                <div class="viewport" style="margin-top: 0px;height: 630px">
+                                    <div class="row rows_list" >                            
+                                    <?php
+                                    $listUser = $this->getData('listUser');
+                                    foreach ($listUser as $key => $val) {
+                                    ?>
+                                    <div class="col-md-3 tv_rows">
+                                        <div class="thanh-vien-item">
+                                            <div class="circle"><img src="<?= URL_PUBLIC ?>images/thanh-vien-1.png"></div>
+                                            <div class="thanh-vien-ct">
+                                                <div class="name-thanh-vien color-w text-center w-100 p-0 lh-40"><?= $val['name']; ?></div>
+                                                <div class="w-50 float-left text-center">
+                                                    <?=$this->language("l_avg")?>: <span class="color-or"><?= $val['avg']; ?></span>
+                                                </div>
+                                                <div class="w-50 float-left text-center">
+                                                    <?=$this->language("l_detail_high")?>: <span class="color-or"><?= $val['highrun']; ?></span>
+                                                </div>
+                                            </div>	
+                                            <div class="circle-sm"><?= $val['diem']; ?></div>
+                                        </div>
+                                    </div>
+                                    <?php }?>
+                                </div>
+                            </div>                            
+                        </div>
+                    </div>									
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 margin0 ">
+            <div class="margin0 d-table w-auto pt-30">
+                <a type="button" class="btn btn-primary btn-blue shadow_button" href="<?= $this->route('home') ?>"><?=$this->language("m_back")?></a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="<?= URL_PUBLIC ?>js/keyboard.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_search_user_listmember.js"></script>
+<style>    
+    .viewport {overflow: auto;margin-right: -18px;margin-top: 20px;}
+    .hide-scroll {overflow: hidden;position: relative;}
+    .hide-scroll:after {content: '';height: 2em;position: absolute;bottom: 0;left: 0;right: 0;}    
+</style>

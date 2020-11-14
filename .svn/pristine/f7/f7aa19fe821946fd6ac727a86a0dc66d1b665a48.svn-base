@@ -1,0 +1,685 @@
+<!---------------------------------- end chon nguoi choi va nhap diem ket thuc-------------------------------------->
+<div class="container-fluid bgt-mode">
+    <div class="row">
+        <div class="col-2 col-sm-2 col-md-2 col-xl-2 logo">
+            <img src="<?= URL_PUBLIC ?>images/logo-1.png" alt="Billiard" class="img-responsive">
+        </div>
+        <div class="col-3 col-sm-3 col-md-3 col-xl-3 text-center">
+            <div class="pt-70 text-center m-0 m-auto">
+                <h2 class="title_header"><?= $this->language("l_mode2_dg") ?></h2>
+            </div>
+        </div>
+        <div class="col-7 col-sm-7 col-md-7 col-xl-7 m-0 m-auto">
+            <a type="button" class="btn btn-primary btn-blue" onclick="closeWin() "><?= $this->language("l_mode2_close") ?></a>
+            <a type="button" class="btn button_start btn-primary btn-or-5"><?= $this->language("l_start") ?></a>
+        </div>	
+    </div>
+    <div class="row">
+        <div class="container-sm pt-lg-2 pb-lg-5" id = "topM2">
+            <div class="row main-bgt w-85 m-0 m-auto" >
+                <div class="col-12 bgt-blue p-0">
+                    <div class="title b-line text-center"><h3><?= $this->language("l_dg_select_name_point") ?></h3></div>
+                    <input type="hidden" id="number_player_mode3" value="2" />
+                    <div class="main-ct list-luot-co b-line">
+                        <div class="row">
+                            <!-- <div class="chon_nkc m-0 m-auto"> -->
+                                <div class="chon_nkc col-6 col-sm-6 col-md-6 mt-4 mb-4">
+                                    <a type="button" class="w-100" onclick="showpopupuser(1)">
+                                    <div class="thanh-vien-item box-shadow">
+                                        <div class="w-100 text-center mt-3">
+                                            <div class="circle-big-center"><img src="<?= URL_PUBLIC ?>images/thanh-vien-2.png" class="img-people"></div>
+                                        </div>
+                                        <div class="thanh-vien-ct w-100" >
+                                            <div class="name name1 name-thanh-vien text-center w-100 p-0 lh-40 pt-2 mt-2"><?= $this->language("mode3_dg1") ?> 1</div>
+                                            <div class="detail_tv mt-2">
+                                                <div class="w-100 float-left text-center">
+                                                    <p class="point point1 diem-chap-sm m-0">10</p>
+                                                </div>
+                                            </div>
+                                        </div>	
+                                    </div>
+                                    <input type="hidden" id="settingname1" value="<?= $this->language("mode3_dg1") ?> 1" />
+                                    <input type="hidden" id="settingpoint1" value="10" />   
+                                    </a>
+                                </div>
+                                <!-- <div class="w-10 float-left text-center mt-4 mb-4">
+                                    
+                                </div> -->
+                                <div  class="chon_nkc col-6 col-sm-6 col-md-6 mt-4 mb-4">
+                                    <a type="button" class="w-100"  onclick="showpopupuser(2)">
+                                    <div class="thanh-vien-item box-shadow">
+                                        <div class="w-100 text-center mt-3">
+                                            <div class="circle-big-center"><img src="<?= URL_PUBLIC ?>images/thanh-vien-2.png" class="img-people"></div>
+                                        </div>
+                                        <div class="thanh-vien-ct w-100">
+                                            <div class="name name2 name-thanh-vien text-center w-100 p-0 lh-40 pt-2 mt-2"><?= $this->language("mode3_dg1") ?> 2</div>
+                                            <div class="detail_tv mt-2">
+                                                <div class="w-100 float-left text-center">
+                                                    <p class="point point2 diem-chap-sm m-0">10</p>
+                                                </div>
+                                            </div>
+                                        </div>	
+                                    </div>
+                                    <input type="hidden" id="settingname2" value="<?= $this->language("mode3_dg1") ?> 2" />
+                                    <input type="hidden" id="settingpoint2" value="10" />
+                                    </a>
+                                </div>
+                            <!-- </div> -->
+                        </div>
+                    </div>
+                    <!-- <div class="modal-footer t-line pb-4 pt-4">
+                        <div class="col-12 col-sm-12 col-md-12 m-0 m-auto">
+                            <a type="button" class="btn btn-primary btn-blue" onclick="closeWin() "><?= $this->language("l_mode2_close") ?></a>
+                            <a type="button" class="btn button_start btn-primary btn-or-5"><?= $this->language("l_start") ?></a>
+                        </div>
+                    </div>									 -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!---------------------------------- xu ly js -------------------------------------->
+<?php include(PATH_APPLICATION . 'view/part/popup_mode2_mobi.php'); ?>
+<script>
+    function showpopupuser(pos) {
+        var name = document.getElementById("settingname" + pos).value;
+        var point = document.getElementById("settingpoint" + pos).value;
+        //document.getElementById("name" + pos).value = name;
+        //document.getElementById("diem" + pos).value = point;
+        $("#usernamepoint" + pos).modal('show');
+    }
+
+    function modecancel(pos) {
+        $('#usernamepoint' + pos).modal('hide');
+    }
+
+    function modeok(pos) {
+        var name = document.getElementById("name" + pos).value;
+        if(name==""){
+            name = "<?= $this->language("mode3_dg1") ?> " + pos;
+        }
+        document.getElementById("settingname" + pos).value = name;
+        $('.name' + pos).html(name);
+        var diem = document.getElementById("diem" + pos).value;
+        if(diem==""){
+            diem=10;
+        }
+        diem = parseInt(diem);
+        document.getElementById("settingpoint" + pos).value = diem;
+        $('.point' + pos).html(diem);
+        $('#usernamepoint' + pos).modal('hide');
+    }
+</script>
+<script type="text/javascript">
+	localStorage.removeItem("secondUseCurrent");
+    $(document).ready(function() {
+        $('.button_start').on('click', function() {
+            var number_player = document.getElementById("number_player_mode3").value;
+            var error = '';
+            var name = '';
+            var name1 = '';
+            var point = '';
+            var strname = '';
+            var strpoint = '';
+            for (var i = 1; i <= number_player; i++) {
+                name = document.getElementById("settingname" + i).value;
+                point = document.getElementById("settingpoint" + i).value;
+                name1 = name.replace(/\s/g, '');
+                if (name1 == "") {
+                    error += "<?= $this->language("mode3_dg3") ?> " + i + "<br/>";
+                }
+                if (name == "") {
+                    error += "<?= $this->language("mode3_dg3") ?> " + i + "<br/>";
+                }
+                if (point == "") {
+                    error += "<?= $this->language("mode3_dg4") ?> " + i + "<br/>";
+                }
+                if (parseInt(point) == 0) {
+                    error += name +": <?= $this->language("l_mode3_dg5") ?><br/>";
+                }
+                strname = name + "," + strname;
+                strpoint = point + "," + strpoint;
+            }
+
+            if (error != '') {
+                $("#mess").html(error);
+                $('#messModal').modal('show');
+            } else {
+                strname = strname.slice(0, -1);
+                strpoint = strpoint.slice(0, -1);
+                $('.div_load_alert').css("display", "block");
+                $.fn_ajax('setting2', { 'strname': strname, 'strpoint': strpoint, 'number_player': number_player }, function(result) {
+                    console.log(result)
+                    if (result.flag == true) {
+                        window.location = "<?= $this->route('start2') ?>/"+result.trandau_id;
+                    }
+                }, true);
+            }
+        });
+    });
+</script>
+<?php if ($_SESSION['mobile'] == 0) { ?>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name1.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem1.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name2.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem2.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem6.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name3.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem3.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name4.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem4.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name5.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem5.js"></script>
+<?php } ?>
+
+<style>
+    .keyboard__key_empty {
+        cursor: auto;
+        background: none;
+        font-size: 20px;
+        font-weight: bold;
+        height: 70px;
+        margin: 10px;
+    }
+
+    .keyboard__key1,
+    .keyboard__key2,
+    .keyboard__key3,
+    .keyboard__key4,
+    .keyboard__key5,
+    .keyboard__key6,
+    .keyboard__key7,
+    .keyboard__key8,
+    .keyboard__key9,
+    .keyboard__key0,
+    .keyboard__keybackspace,
+    .keyboard__keydone,
+    .keyboard__keyenter {
+        font-size: 20px;
+        font-weight: bold;
+        height: 70px;
+        margin: 10px;
+    }
+
+    .btnblue_endmode {
+        background: #013584;
+        border: #0868bb 1px solid;
+        /*box-shadow: #000 0px 6px 8px;*/
+        font-size: 18px;
+        text-transform: uppercase;
+        border-radius: 10px;
+        padding: 8px 25px;
+        font-family: utm avo;
+        font-weight: 500;
+        color: #fff;
+        line-height: 40px;
+        margin: 0 5px;
+    }
+    .btnblue_endmode:hover {
+        background: #0868bb;
+    }
+    .button_start{
+        background: #cb7309;
+        border: #f69929 1px solid;
+        /*box-shadow: #000 0px 6px 8px;*/
+        font-size: 18px;
+        text-transform: uppercase;
+        border-radius: 10px;
+        padding: 8px 25px;
+        font-family: utm avo;
+        font-weight: 500;
+        color: #fff;
+        line-height: 40px;
+        margin: 0 5px;
+    }
+    .button_start:hover{
+        color: #fff;
+        background-color: #d39e00;
+        border-color: #c69500;
+    }
+    
+    .circle-big-center {
+        background: #7bbff9;
+        border-radius: 200px;
+        text-align: center;
+        width: 60px;
+        height: 60px;
+        vertical-align: middle;
+        padding-top: 8px;
+        margin: 0 auto;
+    }
+
+    #topM2 {margin-top: 100px;}
+    .activetvgroup{border: #cb7309 1px solid;}
+
+    /* khoa */
+    @media screen and (min-device-width: 280px) and (max-device-width: 567px) {
+        /* #usernamepoint1, #usernamepoint2 {
+            width: 85% !important;
+            margin-left: 18px;
+        } */
+
+        .form-row {
+            margin: 0px !important;
+        }
+
+        .logo {
+            text-align: left;
+            margin: 20px 0 10px 0;
+        }
+
+        .img-people {
+            width: 28px !important;
+            height: 35px !important;
+        }
+
+        .circle-big-center {
+            width: 56px !important;
+            height: 58px !important;
+        }
+
+        .pt-70 {
+            padding-top: 32px !important;
+        }
+
+        .img-responsive {
+            width: 130px !important;
+            margin-left: 10px;
+        }
+
+        div.bgt-mode {
+            padding: 0 !important;
+        }
+
+        .mb-4, .my-4 {
+            margin-top: 0.5rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .title_header {
+            font-size: 10px !important; 
+            text-align: center !important;
+        }
+
+        .text-center {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase;
+        }
+
+        #topM2 {
+            margin-top: 5px !important;
+        }
+
+        .chon_nkc {
+            width: 50% !important;
+        }
+
+        .w-85 {
+            width: 98% !important;
+        }
+
+        .main-ct {
+            padding: 5px 10px;
+        }
+
+        .main-bgt {
+            padding: 5px !important;
+        }
+
+        .modal-footer {
+            justify-content: flex-start !important;
+            padding: .15rem !important;
+        }
+
+        .title {
+            padding: 0 !important;
+        }
+
+        .title h3 {
+            font-size: 11px !important;
+        }
+
+        a.btn-blue {
+            font-size: 14px !important;
+            width: 97% !important;
+            margin-bottom: 10px;
+            line-height: 40px !important;
+        }
+
+        a.btn-or-5 {
+            font-size: 14px !important;
+            width: 97% !important;
+            line-height: 26px !important;
+        }
+
+        .diem-chap-sm {
+            font-size: 18px !important;
+        }
+
+        .main-ct {
+            padding: 0px 35px !important;
+        }
+
+        .thanh-vien-item {
+            margin-bottom: 1px !important;
+            padding: 8px !important;
+        }
+
+        .mt-3, .my-3 {
+            margin-top: 0.1rem !important;
+        }
+        .lh-40 {
+            line-height: 20px !important;
+        }
+
+    }
+
+    @media screen and (min-device-width: 568px) and (max-device-width: 1924px) {
+        .row {
+            margin: 0px !important;
+        }
+
+        .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl {
+            padding: 0px !important; 
+        }
+
+        .form-row {
+            margin: 0px !important;
+        }
+
+        .logo {
+            /* margin: 6px 0 10px 0; */
+            margin-top: 6px !important;
+        }
+        .pt-70 {
+            padding-top: 18px !important;
+        }
+
+        div.bgt-mode {
+            padding: 6px 2px !important;
+            min-height: 280px !important;
+        }
+
+        .text-center {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase;
+        }
+
+        .img-responsive {
+            width: 100px !important;
+            margin-left: -11px;
+        }
+
+        .img-people {
+            width: 28px !important;
+            height: 35px !important;
+        }
+
+        .title_header {
+            font-size: 9px !important; 
+            text-align: center !important;
+        }
+
+        #topM2 {
+            margin-top: 16px !important;
+        }
+
+        .title h3 {
+            font-size: 10px !important;
+        }
+
+        .from-c {
+            padding: 0px 8px !important;
+        }
+
+        .w-85 {
+            width: 100% !important;
+        }
+
+        .chon_nkc {
+            width: 100% !important;
+        }
+
+        a.btn-blue{
+            font-size: 10px !important;
+            width: 43% !important;
+            line-height: 32px !important;
+            margin-left: 2%;
+        }
+
+        a.btn-or-5 {
+            font-size: 10px !important;
+            width: 47% !important;
+            line-height: 20px !important;
+        }
+
+        .diem-chap-sm {
+            font-size: 21px !important;
+        }
+
+        .main-ct {
+            padding: 12px 35px !important;
+        }
+
+        .thanh-vien-item {
+            margin-bottom: -7px !important;
+            padding: 6px !important;
+        }
+
+        .thanh-vien-item:hover {
+            padding: 6px !important;
+        }
+
+        .mt-3, .my-3 {
+            margin-top: 0.1rem !important;
+        }
+        .lh-40 {
+            line-height: 20px !important;
+        }
+
+        .mt-4, .my-4 {
+            margin: 0.5rem 0rem !important;
+        }
+
+        .pt-4, .py-4 {
+            padding: 0rem!important;
+        }
+    }
+
+    @media screen and (min-device-width: 568px) and (max-device-width: 1924px) {
+        .row {
+            margin: 0px !important;
+        }
+
+        .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl {
+            padding: 0px !important; 
+        }
+
+        .form-row {
+            margin: 0px !important;
+        }
+
+        .logo {
+            /* margin: 6px 0 10px 0; */
+            margin-top: 6px !important;
+        }
+        .pt-70 {
+            padding-top: 18px !important;
+        }
+
+        div.bgt-mode {
+            padding: 6px 2px !important;
+            min-height: 280px !important;
+        }
+
+        .text-center {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            text-transform: uppercase;
+        }
+
+        .img-responsive {
+            width: 100px !important;
+            margin-left: -11px;
+        }
+
+        .img-people {
+            width: 28px !important;
+            height: 35px !important;
+        }
+
+        .title_header {
+            font-size: 9px !important; 
+            text-align: center !important;
+        }
+
+        #topM2 {
+            margin-top: 16px !important;
+        }
+
+        .title h3 {
+            font-size: 10px !important;
+        }
+
+        .from-c {
+            padding: 0px 8px !important;
+        }
+
+        .w-85 {
+            width: 100% !important;
+        }
+
+        .chon_nkc {
+            width: 100% !important;
+        }
+
+        a.btn-blue{
+            font-size: 10px !important;
+            width: 43% !important;
+            line-height: 32px !important;
+            margin-left: 2%;
+        }
+
+        a.btn-or-5 {
+            font-size: 10px !important;
+            width: 47% !important;
+            line-height: 20px !important;
+        }
+
+        .diem-chap-sm {
+            font-size: 21px !important;
+        }
+
+        .main-ct {
+            padding: 12px 35px !important;
+        }
+
+        .thanh-vien-item {
+            margin-bottom: -7px !important;
+            padding: 6px !important;
+        }
+
+        .thanh-vien-item:hover {
+            padding: 6px !important;
+        }
+
+        .mt-3, .my-3 {
+            margin-top: 0.1rem !important;
+        }
+        .lh-40 {
+            line-height: 20px !important;
+        }
+
+        .mt-4, .my-4 {
+            margin: 0.5rem 0rem !important;
+        }
+
+        .pt-4, .py-4 {
+            padding: 0rem!important;
+        }
+    }
+
+    @media screen and (min-device-width: 410px) and (max-device-width: 568px) {
+        .title_header {
+            font-size: 8px !important;
+        }
+
+        .container, .container-sm {
+            max-width: 440px;
+        }
+    }
+
+    @media screen and (min-device-width: 667px) and (max-device-width: 667px) {
+        .img-responsive {
+            width: 110px !important;
+        }
+
+        #topM2 {
+            margin-top: 34px !important;
+        }
+
+        .main-ct {
+            padding: 30px !important;
+        }
+
+        a.btn-blue {
+            width: 45% !important;
+        }
+    }
+
+    @media screen and (min-device-width: 736px) and (max-device-width: 812px) {
+        .img-responsive {
+            width: 114px !important;
+        }
+
+        #topM2 {
+            margin-top: 34px !important;
+        }
+
+        .main-ct {
+            padding: 30px !important;
+        }
+
+        .title_header, a.btn-blue, a.btn-or-5, .title h3, .text-center  {
+            font-size: 11px !important;
+        }
+
+        a.btn-blue {
+            width: 45% !important;
+        }
+    }
+
+    @media screen and (min-device-width: 1024px) and (max-device-width: 1999px) {
+        .img-responsive {
+            width: 150px !important;
+        }
+
+        #topM2 {
+            margin-top: 34px !important;
+        }
+
+        .main-ct {
+            padding: 30px !important;
+        }
+
+        .title_header, a.btn-blue, a.btn-or-5, .title h3, .text-center  {
+            font-size: 13px !important;
+        }
+
+        a.btn-blue {
+            width: 47% !important;
+        }
+    }
+   
+    /* end khoa */
+
+</style>
+
+<div class="div_load_alert">
+    <div class="main_mess">
+        <p><?= $this->language("l_main_mess") ?></p>
+        <img style="width: 200px;" src="<?= URL_PUBLIC ?>img/load.gif" />
+    </div>
+</div>

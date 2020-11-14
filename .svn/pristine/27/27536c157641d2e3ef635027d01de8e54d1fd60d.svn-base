@@ -1,0 +1,152 @@
+<!-- Modal home_register -->
+<div class="modal fade" id="registerModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="h1register"><?= $this->language("l_registermember") ?></h1>
+            </div>
+            <div class="modal-body">
+                <form class="cmxform" id="registerForm" method="get" action="">
+                    <div id="msg_err_home" class="error_insert"></div>
+                    <div class="col-xs-12 paddingleftright">
+                        <label class="required"><?= $this->language("l_hoten") ?></label>
+                        <p>
+                            <input class="register_name use-keyboard-input-register main-input" id="userName" type="text" name="name" autocomplete="off" placeholder="<?= $this->language("l_hoten_placeholder") ?>" minlength="2" type="text" required>
+                        </p>
+                    </div>
+                    <div class="col-xs-12 paddingleftright">
+                        <label class="required"><?= $this->language("l_email") ?></label>
+                        <p>
+                            <input class="register_email use-keyboard-input-register main-input" id="email" type="text" name="email" autocomplete="off" placeholder="<?= $this->language("l_email_placeholder") ?>">
+                        </p>
+                    </div>
+                    <div class="col-xs-12 paddingleftright">
+                        <label><?= $this->language("l_point") ?></label>
+                        <p>
+                            <input class="register_diem use-keyboard-input-diemchap main-input" id="point" name="point" type="text" name="diem" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/,'')" placeholder="<?= $this->language("l_point_placeholder") ?>">
+                        </p>
+                    </div>
+                    <div class="cl"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="text-align: center;">
+                <button type="button" id="btnRegister_close" class="button_closehelp"><?= $this->language("l_close") ?></button>
+                <button type="button" id="btnRegister" class="button_closehelp"><?= $this->language("l_register") ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end modal home_register -->
+
+<!-- Modal home_register_listmember -->
+<div class="modal fade" id="registerlistmemberModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="h1register"><?= $this->language("l_registermember") ?></h1>
+            </div>
+            <div class="modal-body">
+                <form class="cmxform" id="registerFormlistmember" method="get" action="">
+                    <div id="msg_err_listmember" class="error_insert"></div>
+                    <div class="col-xs-12 paddingleftright">
+                        <label class="required"><?= $this->language("l_hoten") ?></label>
+                        <p>
+                            <input class="register_name use-keyboard-input-register-listmember main-input" id="userNamelistmember" type="text" name="name" autocomplete="off" placeholder="<?= $this->language("l_hoten_placeholder") ?>" minlength="2" type="text" required>
+                        </p>
+                    </div>
+                    <div class="col-xs-12 paddingleftright">
+                        <label class="required"><?= $this->language("l_email") ?></label>
+                        <p>
+                            <input class="register_email use-keyboard-input-register-listmember main-input" id="emaillistmember" type="text" name="email" autocomplete="off" placeholder="<?= $this->language("l_email_placeholder") ?>">
+                        </p>
+                    </div>
+                    <div class="col-xs-12 paddingleftright">
+                        <label><?= $this->language("l_point") ?></label>
+                        <p>
+                            <input class="register_diem use-keyboard-input-diemchap main-input" id="pointlistmember" name="point" type="text" name="diem" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/,'')" placeholder="<?= $this->language("l_point_placeholder") ?>">
+                        </p>
+                    </div>
+                    <div class="cl"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="text-align: center;">
+                <button type="button" id="btnRegisterlistmember_close" class="button_closehelp"><?= $this->language("l_close") ?></button>
+                <button type="button" id="btnRegisterlistmember" class="button_closehelp"><?= $this->language("l_register") ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end modal home_register_listmember -->
+
+<!-- Modal register user in setting -->
+<div class="modal fade" id="registersettingModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="h1register"><?= $this->language("l_registermember") ?></h1>
+            </div>
+            <div class="modal-body">
+                <form class="cmxform" id="registerFormsetting" method="get" action="">
+                    <div id="msg_err" class="error_insert"></div>
+                    <div class="col-xs-12 paddingleftright">
+                        <label class="required"><?= $this->language("l_hoten") ?></label>
+                        <p>
+                            <input class="register_name use-keyboard-input-register-setting" id="userNamesetting" type="text" name="name" autocomplete="off" placeholder="<?= $this->language("l_hoten_placeholder") ?>" minlength="2" type="text" required>
+                        </p>
+                    </div>
+                    <div class="col-xs-12 paddingleftright">
+                        <label class="required"><?= $this->language("l_email") ?></label>
+                        <p>
+                            <input class="register_email use-keyboard-input-register-setting" id="emailsetting" type="text" name="email" autocomplete="off" placeholder="<?= $this->language("l_email_placeholder") ?>">
+                        </p>
+                    </div>
+                    <div class="col-xs-12 paddingleftright">
+                        <label><?= $this->language("l_point") ?></label>
+                        <p>
+                            <input class="register_diem use-keyboard-input-diemchap" id="pointsetting" name="point" type="text" name="diem" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/,'')" placeholder="<?= $this->language("l_point_placeholder") ?>">
+                        </p>
+                    </div>
+                    <div class="cl"></div>
+                </form>
+            </div>
+            <div class="modal-footer" style="text-align: center;">
+                <button type="button" id="btnRegistersetting_close" class="button_closehelp"><?= $this->language("l_close") ?></button>
+                <button type="button" id="btnRegistersetting" class="button_closehelp"><?= $this->language("l_register") ?></button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end modal register user in setting -->
+<script src="<?= URL_PUBLIC ?>js/keyboard_diemchap.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_register.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_register_listmember.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_register_setting.js"></script>
+<style>
+    .keyboard__key_empty {
+        cursor: auto;
+        background: none;
+        font-size: 20px;
+        font-weight: bold;
+        height: 70px;
+        margin: 10px;
+    }
+
+    .keyboard__key1,
+    .keyboard__key2,
+    .keyboard__key3,
+    .keyboard__key4,
+    .keyboard__key5,
+    .keyboard__key6,
+    .keyboard__key7,
+    .keyboard__key8,
+    .keyboard__key9,
+    .keyboard__key0,
+    .keyboard__keybackspace,
+    .keyboard__keydone,
+    .keyboard__keyenter {
+        font-size: 20px;
+        font-weight: bold;
+        height: 70px;
+        margin: 10px;
+    }
+</style>

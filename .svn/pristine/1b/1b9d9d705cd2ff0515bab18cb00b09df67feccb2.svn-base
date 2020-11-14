@@ -1,0 +1,133 @@
+<?php
+$kiemtrangay = date("l");
+if ($kiemtrangay == "Sunday") {
+    $ngay = $this->language('h_cn');
+}
+if ($kiemtrangay == "Monday") {
+    $ngay = $this->language('h_t2');
+}
+if ($kiemtrangay == "Tuesday") {
+    $ngay = $this->language('h_t3');
+}
+if ($kiemtrangay == "Wednesday") {
+    $ngay = $this->language('h_t4');
+}
+if ($kiemtrangay == "Thursday") {
+    $ngay = $this->language('h_t5');
+}
+if ($kiemtrangay == "Friday") {
+    $ngay = $this->language('h_t6');
+}
+if ($kiemtrangay == "Saturday") {
+    $ngay = $this->language('h_t7');
+}
+$language = Session::get('lang');
+?>
+<style>
+.row {
+    margin-right: 0px;
+    margin-left: 0px;
+}
+</style>
+<script>
+    function registerhome() {
+        document.getElementById("userName").value = "";
+        document.getElementById("phone").value = "";
+        document.getElementById("point").value = "";
+        $(".error").html("");
+        $("#msg_err_home").html('');
+        $("#userName-error").html('');
+        $('#dangkytvModal').modal('show');
+    }
+</script>
+<div class="container-fluid bgt-home">
+    <input type="hidden" id="language" name="language" value="<?= Session::get('accountshopping')['area'] ?>">
+    <div class="row row_mobi_header">
+        <div class="col-md-6 paddingleftright5 logo">
+            <img style="max-width: 100%;" src="<?= URL_PUBLIC ?>images/logo-1.png" alt="Billiard">
+        </div>
+        <div class="col-md-6 paddingleftright" style="width: 59.5%; float: left;">
+            <div class="w-auto pt-4" style="padding-top: 15px !important; ">
+                <div class="pr-2" style="position: relative;">
+                    <span class="date"><?= date('d') ?>.<?= date('m') ?>(<?= $ngay ?>)</span>
+                    <span class="date"><?= date('H') ?>.<?= date('i') ?></span>	
+                </div>  
+                <nav class="navbar navbar-expand-lg navbar-inverse btn btn-primary btn-lag" style="margin: 0px; font-size: 14px; border-radius: 5px; padding: 0px 10px; position: absolute; top: 5px; right: 0px;">
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: block;">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <?php if ($language == "KR") { ?>
+                                        <img class="img-flag" src="<?= URL_PUBLIC ?>images/kr.png">
+                                    <?php } elseif ($language == "EN") { ?>
+                                        <img class="img-flag" src="<?= URL_PUBLIC ?>images/en.jpg">
+                                    <?php } else { ?>
+                                        <img class="img-flag" src="<?= URL_PUBLIC ?>images/vn.png">
+                                    <?php } ?>
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown" style="top: 50px;left: -115px;">
+                                    <a class="dropdown-item" onclick="changeLangue('KR')" style="padding-left: 0.5rem"><img class="img-flag" src="<?= URL_PUBLIC ?>images/kr.png"> <?= $this->language('l_language_KR') ?></a>
+                                    <a class="dropdown-item" onclick="changeLangue('VN')" style="padding-left: 0.5rem"><img class="img-flag" src="<?= URL_PUBLIC ?>images/vn.png"> <?= $this->language('l_language_VN') ?></a>
+                                    <a class="dropdown-item" onclick="changeLangue('EN')" style="padding-left: 0.5rem"><img class="img-flag" src="<?= URL_PUBLIC ?>images/en.jpg"> <?= $this->language('l_language_EN') ?></a>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+                <style>
+                    .dropdown-menu {position: absolute !important;}
+                </style>                
+            </div>
+        </div>
+        <div style="width: 100%" class="paddingleftright5">            
+            <div class="float-right" style="padding-top: 10px; width: 100%; text-align: center;">
+                <a type="button" href="<?= $this->route('danhsachtv') ?>" class="btn btn-primary btn-blue a_mobi_t"><?= $this->language('l_tbnumbertvclb') ?> (<span class="home_totalmember"><?= $this->getData('totalMember') ?></span>)</a>
+                <a class="btn btn-warning btn-orange-sm a_mobi_t" onclick="registerhome();"><?= $this->language("l_registermember") ?></a>                
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="container-th" style="padding-top: 20px;">
+            <div>
+                <div class="div_bida_table" >
+                    <a class="table-bd" href="<?= $this->route('setting') ?>">
+                        <div class="bida_table" style="position: relative; text-align: center">
+                            <img class="img_bida_table" src="<?= URL_PUBLIC ?>images/bida-table.png" alt="Billiard">
+                            <h3 class="h3_bida_table"><?= $this->language("l_mode2") ?></h3>
+                        </div>
+                    </a>
+                </div>
+                <div class="div_bida_table">
+                    <a class="table-bd" href="<?= $this->route('setting2') ?>">
+                        <div class="bida_table" style="position: relative; text-align: center">
+                            <img class="img_bida_table" src="<?= URL_PUBLIC ?>images/bida-table.png" alt="Billiard">
+                            <h3 class="h3_bida_table"><?= $this->language("l_mode2_dg") ?></h3>
+                        </div>
+                    </a>
+                </div>
+                <div class="div_bida_table" >
+                    <a class="table-bd" href="<?= $this->route('setting3') ?>">
+                        <div class="bida_table" style="position: relative; text-align: center">
+                            <img class="img_bida_table" src="<?= URL_PUBLIC ?>images/bida-table.png" alt="Billiard">
+                            <h3 class="h3_bida_table"><?= $this->language("l_mode3") ?></h3>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 margin0 ">
+            <div class="margin0 d-table w-auto" >
+                <a type="button" class="btn btn-primary btn-blue shadow_button shadow_button_mobi" data-toggle="modal" data-target="#trogiupModal"><?= $this->language("l_help") ?></a>
+                <a type="button" class="btn btn-primary btn-blue shadow_button shadow_button_mobi" href="<?= $this->route('logout') ?>"><?= $this->language("l_logout") ?></a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="div_load_alert">
+    <div class="main_mess">
+        <p><?= $this->language("l_main_mess") ?></p>
+        <img style="width: 200px;" src="<?= URL_PUBLIC ?>img/load.gif" />
+    </div>
+</div>

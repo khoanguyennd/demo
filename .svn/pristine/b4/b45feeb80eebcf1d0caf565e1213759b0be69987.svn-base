@@ -1,0 +1,21 @@
+<title>Bida Bootstrap</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="<?= URL_PUBLIC ?>css/style.css" />
+<script type="text/javascript" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+<script type="text/javascript" src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+
+<!--<link rel="stylesheet" type="text/css" href="<?=URL_PUBLIC?>css/reset.css">
+<link rel="stylesheet" type="text/css" href="<?=URL_PUBLIC?>css/site.css">
+<link rel="stylesheet" type="text/css" href="<?=URL_PUBLIC?>css/default.css">
+<script src="<?=URL_PUBLIC?>js/jquery-1.9.1.js"></script>
+<script src="<?=URL_PUBLIC?>js/fontawesome.js"></script>
+<link href="<?=URL_PUBLIC?>multiselect/styles/multiselect.css" rel="stylesheet" />
+<script src="<?=URL_PUBLIC?>multiselect/multiselect.min.js"></script>
+<script><?php echo 'jsData='.json_encode($this->getData('jsData'));?></script>-->
+<script src="<?=URL_PUBLIC?>js/jquery.main.min.js"></script>
+<script src="<?=URL_PUBLIC?>js/customer.js"></script>

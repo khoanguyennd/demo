@@ -1,0 +1,344 @@
+<?php include(PATH_APPLICATION . 'view/part/popup_mode3.php'); ?>
+
+<div class="container-fluid bgt-mode">
+    <div class="row">
+        <div class="col-md-4 logo">
+            <img src="<?= URL_PUBLIC ?>images/logo-1.png" alt="Billiard">
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="float-left w-100 pt-70">
+                <h2 class="title_header"><?=$this->language("l_mode_record_3_5")?></h2>
+            </div>
+        </div>
+        <div class="col-md-4 text-center"></div>
+    </div>
+    <div class="row">
+        <div class="w-80 m-0 m-auto">
+            <div class="row main-bgt " style="margin-top: 100px">
+                <div class="col-4 bgt-blue p-0">
+                    <div class="title b-line"><h3><?=$this->language("l_selectmode3")?></h3></div>
+                    <div class="main-ct pt-4">
+                        <input type="hidden" id="number_player_mode3" value="3" />
+                        <div id="tvgroup3" class="thanh-vien-group box-shadow activetvgroup" onclick="selectmode(3)">
+                            <div class="so-thanh-vien text-center b-line-grd w-100"><?=$this->language("l_mode3_3")?></div>
+                            <div class="main-so-thanh-vien m-0 m-auto t-line-grd">
+                                <div class="w-auto display-table m-0 m-auto pt-4 pb-4">	
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                </div>
+                            </div>									
+                        </div>
+
+                        <div id="tvgroup4" class="thanh-vien-group box-shadow" onclick="selectmode(4)">
+                            <div class="so-thanh-vien text-center b-line-grd w-100"><?=$this->language("l_mode3_4")?></div>
+                            <div class="main-so-thanh-vien m-0 m-auto t-line-grd">
+                                <div class="w-auto display-table m-0 m-auto pt-4 pb-4">	
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                </div>
+                            </div>									
+                        </div>
+                        <div id="tvgroup5" class="thanh-vien-group box-shadow" onclick="selectmode(5)">
+                            <div class="so-thanh-vien text-center b-line-grd w-100"><?=$this->language("l_mode3_5")?></div>
+                            <div class="main-so-thanh-vien m-0 m-auto t-line-grd">
+                                <div class="w-auto display-table m-0 m-auto pt-4 pb-4">	
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                    <div class="circle-sl"><img src="<?= URL_PUBLIC ?>images/thanh-vien-sl.png"></div>
+                                </div>
+                            </div>									
+                        </div>
+                    </div>									
+                </div>
+                <div class="col-8 pr-0">
+                    <div class="bgt-blue">
+                        <div class="title b-line"><h3><?=$this->language("l_dg_select_name_point")?></h3></div>
+                        <div class="main-ct pt-4 min-height-538">
+                            <div class="row rows_selectplayer">
+                                <div class="col-md-4" onclick="showpopupuser(1)">
+                                    <div class="thanh-vien-item box-shadow">
+                                        <div class="w-100 text-center mt-3">
+                                            <div class="circle-74 float-none m-0 m-auto"><img src="<?= URL_PUBLIC ?>images/thanh-vien-1.png"></div>
+                                        </div>
+                                        <div class="thanh-vien-ct w-100">
+                                            <div class="name-thanh-vien text-center w-100 p-0 lh-40 pt-1 mt-1">
+                                                <span id="name-thanh-vien1"><?=$this->language("mode3_dg1")?> 1</span>
+                                            </div>
+                                            <div class="detail_tv mt-2">
+                                                <div class="w-100 float-left text-center">
+                                                    <p class="diem-chap-sm m-0 s-30">
+                                                        <span class="point point1">10</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>	
+                                    </div>
+                                    <input type="hidden" id="settingname1" value="<?= $this->language("mode3_dg1") ?> 1" />
+                                    <input type="hidden" id="settingpoint1" value="10" />
+                                </div>
+                                <div class="col-md-4" onclick="showpopupuser(2)">                                    
+                                    <div class="thanh-vien-item box-shadow">
+                                        <div class="w-100 text-center mt-3">
+                                            <div class="circle-74 float-none m-0 m-auto"><img src="<?= URL_PUBLIC ?>images/thanh-vien-1.png"></div>
+                                        </div>
+                                        <div class="thanh-vien-ct w-100">
+                                            <div class="name-thanh-vien text-center w-100 p-0 lh-40 pt-1 mt-1">
+                                                <span id="name-thanh-vien2"><?=$this->language("mode3_dg1")?> 2</span>
+                                            </div>
+                                            <div class="detail_tv mt-2">
+                                                <div class="w-100 float-left text-center">
+                                                    <p class="diem-chap-sm m-0 s-30">
+                                                        <span class="point point2">10</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>	
+                                    </div>
+                                    <input type="hidden" id="settingname2" value="<?= $this->language("mode3_dg1") ?> 2" />
+                                    <input type="hidden" id="settingpoint2" value="10" />
+                                </div>
+                                <div class="col-md-4" onclick="showpopupuser(3)">
+                                    <div class="thanh-vien-item box-shadow">
+                                        <div class="w-100 text-center mt-3">
+                                            <div class="circle-74 float-none m-0 m-auto"><img src="<?= URL_PUBLIC ?>images/thanh-vien-1.png"></div>
+                                        </div>
+                                        <div class="thanh-vien-ct w-100">
+                                            <div class="name-thanh-vien text-center w-100 p-0 lh-40 pt-1 mt-1">
+                                                <span id="name-thanh-vien3"><?=$this->language("mode3_dg1")?> 3</span>
+                                            </div>
+                                            <div class="detail_tv mt-2">
+                                                <div class="w-100 float-left text-center">
+                                                    <p class="diem-chap-sm m-0 s-30">
+                                                        <span class="point point3">10</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>	
+                                    </div>
+                                    <input type="hidden" id="settingname3" value="<?= $this->language("mode3_dg1") ?> 3" />
+                                    <input type="hidden" id="settingpoint3" value="10" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 margin0 ">
+            <div class="margin0 d-table w-auto pt-30">                
+                <a href="<?= $this->route('home')?>">                    
+                    <button class="btnblue_endmode">
+                        <?= $this->language("l_mode3_endmode") ?>
+                    </button>
+                </a>
+                <button class="button_start">
+                    <?= $this->language("l_start") ?>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function selectmode(pos) {
+        //alert(pos);
+        var number = document.getElementById("number_player_mode3").value;
+        var strdiv = '';
+        var nameshow = '';
+        var pointshow = 0;
+        for (var i = 1; i <= pos; i++) {
+            if (i <= number) {
+                nameshow = document.getElementById("settingname" + i).value;
+                pointshow = document.getElementById("settingpoint" + i).value;
+            } else {
+                if (i == 1) {
+                    nameshow = "<?= $this->language("mode3_dg1")?> 1";
+                    pointshow = 10;
+                }
+                if (i == 2) {
+                    nameshow = "<?= $this->language("mode3_dg1") ?> 2";
+                    pointshow = 10;
+                }
+                if (i == 3) {
+                    nameshow = "<?= $this->language("mode3_dg1") ?> 3";
+                    pointshow = 10;
+                }
+                if (i == 4) {
+                    nameshow = "<?= $this->language("mode3_dg1") ?> 4";
+                    pointshow = 10;
+                }
+                if (i == 5) {
+                    nameshow = "<?= $this->language("mode3_dg1") ?> 5";
+                    pointshow = 10;
+                }
+            }
+            strdiv += '<div class="col-md-4" onclick="showpopupuser('+i+')"><div class="thanh-vien-item box-shadow">';
+                strdiv += '<div class="w-100 text-center mt-3">';
+                    strdiv += '<div class="circle-74 float-none m-0 m-auto"><img src="<?= URL_BASE ?>/public/images/thanh-vien-1.png"></div>';
+                strdiv += '</div>';
+                strdiv += '<div class="thanh-vien-ct w-100">';
+                    strdiv += '<div class="name-thanh-vien text-center w-100 p-0 lh-40 pt-1 mt-1"><span id="name-thanh-vien'+i+'">'+nameshow+'</span></div>';
+                    strdiv += '<div class="detail_tv mt-2">';
+                        strdiv += '<div class="w-100 float-left text-center">';
+                            strdiv += '<p class="diem-chap-sm m-0 s-30">';
+                                strdiv += '<span class="point point'+i+'">'+pointshow+'</span>';
+                            strdiv += '</p>';
+                        strdiv += '</div>';
+                    strdiv += '</div>';
+                strdiv += '</div>';
+            strdiv += '</div>';
+            strdiv += '<input type="hidden" id="settingname'+i+'" value="<?= $this->language("mode3_dg1") ?> '+i+'" />';
+            strdiv += '<input type="hidden" id="settingpoint'+i+'" value="'+pointshow+'" />';
+            strdiv += '</div>';
+        }
+        document.getElementById("number_player_mode3").value = pos;
+        $(".rows_selectplayer:last-child").html(strdiv);
+        $(".activetvgroup").removeClass("activetvgroup");
+        $("#tvgroup"+pos).addClass("activetvgroup");
+    }
+
+    function showpopupuser(pos) {
+        var name = document.getElementById("settingname" + pos).value;
+        var point = document.getElementById("settingpoint" + pos).value;
+        document.getElementById("name" + pos).value = name;
+        document.getElementById("diem" + pos).value = point;
+        $("#usernamepoint" + pos).modal('show');
+    }
+
+    function modecancel(pos) {
+        $('#usernamepoint' + pos).modal('hide');
+    }
+
+    function modeok(pos) {
+        var name = document.getElementById("name" + pos).value;
+        document.getElementById("settingname" + pos).value = name;
+        $('#name-thanh-vien' + pos).html(name);
+        var diem = document.getElementById("diem" + pos).value;
+        diem = parseInt(diem);
+        document.getElementById("settingpoint" + pos).value = diem;
+        $('.point' + pos).html(diem);
+        $('#usernamepoint' + pos).modal('hide');
+    }
+</script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.button_start').on('click', function() {
+            var number_player = document.getElementById("number_player_mode3").value;
+            var error = '';
+            var name = '';
+            var name1 = '';
+            var point = '';
+            var strname = '';
+            var strpoint = '';
+            var namecheck;
+            var arr_player = new Array();
+            for (var i = 1; i <= number_player; i++) {
+                name = document.getElementById("settingname" + i).value;
+                point = document.getElementById("settingpoint" + i).value;
+                name1 = name.replace(/\s/g, '');
+                if (name1 == "") {
+                    error += "<?= $this->language("mode3_dg3") ?> " + i + "<br/>";
+                }
+                if (name == "") {
+                    error += "<?= $this->language("mode3_dg3") ?> " + i + "<br/>";
+                }
+                if (point == "") {
+                    error += "<?= $this->language("mode3_dg4") ?> " + i + "<br/>";
+                }
+                if (parseInt(point) == 0) {
+                    error += name +": <?= $this->language("l_mode3_dg5") ?><br/>";
+                }
+                strname = name + "," + strname;
+                strpoint = point + "," + strpoint;
+            }
+            if (error != '') {
+                $("#mess").html(error);
+                $('#messModal').modal('show');
+            } else {
+                strname = strname.slice(0, -1);
+                strpoint = strpoint.slice(0, -1);
+                $('.div_load_alert').css("display", "block");
+                $.fn_ajax('setting3', {
+                    'strname': strname,
+                    'strpoint': strpoint,
+                    'number_player': number_player
+                }, function(result) {
+                    if (result.flag == true) {
+                        window.location = "<?= $this->route('start3') ?>";
+                    }
+                }, true);
+            }
+        });
+    });
+</script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name1.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem1.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name2.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem2.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem6.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name3.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem3.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name4.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem4.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_name5.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_mode3_diem5.js"></script>
+<style>
+    .keyboard__key_empty {cursor: auto;background: none;font-size: 20px;font-weight: bold;height: 70px;margin: 10px;}
+    .keyboard__key1,.keyboard__key2,.keyboard__key3,.keyboard__key4,.keyboard__key5,.keyboard__key6,.keyboard__key7,.keyboard__key8,
+    .keyboard__key9,.keyboard__key0,.keyboard__keybackspace,.keyboard__keydone,
+    .keyboard__keyenter {font-size: 20px;font-weight: bold;height: 70px; margin: 10px;}
+</style>
+<div class="div_load_alert">
+    <div class="main_mess">
+        <p><?= $this->language("l_main_mess") ?></p>
+        <img style="width: 200px;" src="<?= URL_PUBLIC ?>img/load.gif" />
+    </div>
+</div>
+<style>
+    .btnblue_endmode {
+        background: #013584;
+        border: #0868bb 1px solid;
+        box-shadow: #000 0px 6px 8px;
+        font-size: 18px;
+        text-transform: uppercase;
+        border-radius: 10px;
+        padding: 8px 25px;
+        font-family: utm avo;
+        font-weight: 500;
+        color: #fff;
+        line-height: 40px;
+        margin: 0 5px;
+    }
+    .btnblue_endmode:hover {
+        background: #0868bb;
+    }
+    .button_start{
+        background: #cb7309;
+        border: #f69929 1px solid;
+        box-shadow: #000 0px 6px 8px;
+        font-size: 18px;
+        text-transform: uppercase;
+        border-radius: 10px;
+        padding: 8px 25px;
+        font-family: utm avo;
+        font-weight: 500;
+        color: #fff;
+        line-height: 40px;
+        margin: 0 5px;
+    }
+    .button_start:hover{
+        color: #fff;
+        background-color: #0069d9;
+        border-color: #0062cc;
+    }
+    .activetvgroup{border: #cb7309 1px solid;}
+</style>
+
+
+

@@ -1,0 +1,608 @@
+<?php include_once(PATH_APPLICATION . 'view/part/popup_register.php') ?>
+<!-- Modal player 1 -->
+<div class="modal fade" id="playerModal" tabindex="-1" role="dialog" aria-labelledby="playerModal" aria-hidden="true" style="margin-top:-30px">
+    <div class="modal-dialog"  style="max-width: 95%;" role="document">
+        <div class="modal-content">            
+			<div class="row">
+		        <div class="col-md-12">
+		            <div class="row main-bgt" style="padding: 0px">
+		                <div class="col-12 bgt-blue p-0">
+		                    <div class="title b-line">
+		                        <div class="row">
+		                            <div class="col-md-6">
+		                                <h3><?= $this->language("l_total"); ?> <span id="totalUser"><?= $this->getData('totalMember'); ?></span> <?= $this->language("l_people"); ?>
+		                            </h3>
+		                            </div>
+		                            <div class="col-md-3">
+		                            </div>								
+		                            <div class="col-md-3 w-25 p-2">                                
+		                                    <input type="text" class="input_text_search form-control ds-input use-keyboard-input-search-user-setting main-input" id="searchMembersetting" placeholder="<?= $this->language("l_search_text_placeholder") ?>" name="textsearch" >
+		                                    <span style="position: absolute;top:-30px;right: -35px"><i style="font-size: 20px;" data-dismiss="modal" class="fa fa-times" aria-hidden="true"></i></span>
+		                            </div>
+		                        </div>
+		                    </div>
+					        <script>
+			                    function registersetting() {
+			                        $("#msg_err").html('');
+			                        $("#userNamesetting-error").html('');
+			                        $("#emailsetting-error").html('');
+			                        $("#pointsetting-error").html('');
+			                        $('#registersettingModal').modal('show');
+			                    }
+			                </script>
+			                <input type="hidden" id="popupplayer" value="1" />
+			                <div class="main-ct">
+			                	<div class="row rows_list" style="padding-right: 0px !important;">
+				                    <?php
+				                    $listUser = $this->getData('listUser');
+				                    foreach ($listUser as $key => $val) {
+				                    ?>                        
+				                        <div class="col-md-3 tv_rows" onclick="getPlayer('<?= $val['id']; ?>', '<?= $val['name']; ?>', '<?= $val['diem']; ?>', '<?= $val['avg']; ?>', '<?= $val['highrun']; ?>')">	                               
+			                                <div class="thanh-vien-item">
+			                                    <div class="circle"><img src="<?= URL_PUBLIC ?>images/thanh-vien-1.png"></div>
+			                                    <div class="thanh-vien-ct">
+			                                        <div class="name-thanh-vien color-w text-center w-100 p-0 lh-40"><?= $val['name']; ?></div>
+			                                        <div class="w-50 float-left text-center">
+			                                            AVG: <span class="color-or"><?= $val['avg']; ?></span>
+			                                        </div>
+			                                        <div class="w-50 float-left text-center">
+			                                            High: <span class="color-or"><?= $val['highrun']; ?></span>
+			                                        </div>
+			                                    </div>	
+			                                    <div class="circle-sm"><?= $val['diem']; ?></div>
+			                                </div>	                                
+			                            </div>
+				                    <?php } ?>	                    
+				                </div>
+			                </div>  
+		                </div>
+		            </div>
+		        </div>
+		    </div>          	     
+        </div>
+    </div>
+</div>
+<!-- end modal player 1 -->
+
+<!-- Modal diem1 -->
+<div class="modal fade" id="diem1Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+	    	<div class="title text-center pb-3 b-line"><h3><?= $this->language("l_pointend") ?></h3></div>
+			<div class="main-ct list-luot-co t-line">
+				<div class="row">
+					<div class="w-75 m-auto m-0">
+						<div class="form-group">
+				            <label for="recipient-name" class="col-form-label"><?= $this->language("l_pointend_input") ?></label>
+				            <input type="text" class="use-keyboard-input-diem2 main-input form-control from-c" name="diem1" id="diem1" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/,'')" value="0">
+			            </div>
+					</div>
+				</div>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <button type="button" type="button" class="button_cancel_diem button_header btn btn-primary btn-blue-5"  onclick="closecancel(1);"><?= $this->language("l_cancel") ?></button>
+		        <button type="button" type="button" class="button_ok_diem button_header btn btn-primary btn-blue-5" onclick="settingdiem(1)"><?= $this->language("l_ok") ?></button>
+	    	</div>
+	      </div>
+	    </div>
+	</div>
+</div>
+
+<div class="modal fade" id="diem2Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+	    	<div class="title text-center pb-3 b-line"><h3><?= $this->language("l_pointend") ?></h3></div>
+			<div class="main-ct list-luot-co t-line">
+				<div class="row">
+					<div class="w-75 m-auto m-0">
+						<div class="form-group">
+				            <label for="recipient-name" class="col-form-label"><?= $this->language("l_pointend_input") ?></label>
+				            <input type="text" class="use-keyboard-input-diem2 main-input form-control from-c" name="diem2" id="diem2" autocomplete="off" onkeyup="this.value=this.value.replace(/[^\d]/,'')" value="0">
+			            </div>
+					</div>
+				</div>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <button type="button" type="button" class="button_cancel_diem button_header btn btn-primary btn-blue-5"  onclick="closecancel(2);"><?= $this->language("l_cancel") ?></button>
+		        <button type="button" type="button" class="button_ok_diem button_header btn btn-primary btn-blue-5" onclick="settingdiem(2)"><?= $this->language("l_ok") ?></button>
+	    	</div>
+	      </div>
+	    </div>
+	</div>
+</div>
+<!----------------------------------end chon diem cho nguoi choi-------------------------------------->
+
+<!-- -----------------------------chon luot co ----------------------------------------------------->
+<div class="modal fade" id="luotcoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content bgt-blue">
+      <div class="modal-body p-0 b-line">
+    	<div class="title text-center pb-3 b-line"><h3><?= $this->language("l_luot") ?></h3></div>
+		<div class="list-luot-co t-line">
+			<ul style="list-style-type: none;" class="m-0">
+				<li onclick="settingluotco(0)" class="b-line lh-50 text-center"><?= $this->language("l_luot0") ?></li>
+				<li onclick="settingluotco(30)" class="t-line b-line lh-50 text-center">30 <?= $this->language("l_luotco") ?></li>
+				<li onclick="settingluotco(35)" class="t-line b-line lh-50 text-center">35 <?= $this->language("l_luotco") ?></li>
+				<li onclick="settingluotco(40)" class="t-line b-line lh-50 text-center">40 <?= $this->language("l_luotco") ?></li>
+				<li onclick="settingluotco(45)" class="t-line b-line lh-50 text-center">45 <?= $this->language("l_luotco") ?></li>
+				<li onclick="settingluotco(50)" class="t-line lh-50 text-center">50 <?= $this->language("l_luotco") ?></li>
+			</ul>
+		</div>	
+      </div>
+      <div class="modal-footer t-line pb-4 pt-4">
+      	<div class="m-0 m-auto">
+	        <a type="button" class="btn btn-primary btn-blue-5" data-dismiss="modal"><?= $this->language("l_cancel") ?></a>
+    	</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!----------------------------------end chon luot co-------------------------------------->
+<!-- -----------------------------thoi gian ket thuc tran ----------------------------------------------------->
+<div class="modal fade" id="ThoiGianModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content bgt-blue">
+      <div class="modal-body p-0 b-line">
+    	<div class="title text-center pb-3 b-line"><h3><?= $this->language("l_thoigian") ?></h3></div>
+		<div class="list-luot-co t-line">
+			<ul style="list-style-type: none;" class="m-0">
+				<li onclick="settingthoigian(0)" class="b-line lh-50 text-center"><?= $this->language("l_thoigian0") ?></li>
+				<li onclick="settingthoigian(20)" class="t-line b-line lh-50 text-center">20 <?= $this->language("l_thoigian1") ?></li>
+				<li onclick="settingthoigian(40)" class="t-line b-line lh-50 text-center">40 <?= $this->language("l_thoigian1") ?></li>
+				<li onclick="settingthoigian(60)" class="t-line b-line lh-50 text-center">60 <?= $this->language("l_thoigian1") ?></li>
+				<li onclick="settingthoigian(80)" class="t-line b-line lh-50 text-center">80 <?= $this->language("l_thoigian1") ?></li>
+				<li onclick="settingthoigian(100)" class="t-line b-line lh-50 text-center">100 <?= $this->language("l_thoigian1") ?></li>
+				<li onclick="settingthoigian(120)" class="t-line b-line lh-50 text-center">120 <?= $this->language("l_thoigian1") ?></li>
+				<li onclick="settingthoigian(140)" class="t-line b-line lh-50 text-center">140 <?= $this->language("l_thoigian1") ?></li>
+				<li onclick="settingthoigian(160)" class="t-line b-line lh-50 text-center">160 <?= $this->language("l_thoigian1") ?></li>
+				<li onclick="settingthoigian(180)" class="t-line lh-50 text-center">180 <?= $this->language("l_thoigian1") ?></li>
+			</ul>
+		</div>	
+      </div>
+      <div class="modal-footer t-line pb-4 pt-4">
+      	<div class="m-0 m-auto">
+	        <a type="button" class="btn btn-primary btn-blue-5" data-dismiss="modal"><?= $this->language("l_cancel") ?></a>
+    	</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!----------------------------------end thoi gian ket thuc tran-------------------------------------->
+<!-- -----------------------------chon nguoi khai cuoc ---------------------------------------------->
+<div class="modal fade" id="khaicuocModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document" style="max-width: 800px">
+    <div class="modal-content bgt-blue">
+      <div class="modal-body p-0 b-line">
+    	<div class="title text-center pb-3"><h3><?=$this->language("l_whostart")?></h3></div>
+		<div class="list-luot-co t-line">
+			<div class="row">
+				<input type="hidden" id="khaicuoc_user" value="0"/>
+				<div class="chon_nkc m-0 m-auto">
+					<div class="float-left w-40 mt-5 mb-5">
+						<div id="khaicuocuser_player1" onclick="activekhaicuoc(1)" class="thanh-vien-item box-shadow">							
+							<div class="w-100 text-center mt-3">
+								<div class="circle-big float-none m-0 m-auto"><img src="<?= URL_PUBLIC ?>images/thanh-vien-2.png"></div>
+							</div>
+							<div class="thanh-vien-ct w-100">
+								<div class="name-thanh-vien text-center w-100 p-0 lh-40 pt-2 mt-2 player_name_khaicuoc1"></div>
+								<div class="detail_tv mt-2">
+									<div class="w-50 float-left text-right">
+										<p class="diem-chap-sm m-0 diemchap-khaicuoc1">0</p>
+									</div>
+									<div class="w-50 float-left text-left">
+										<p class="m-0">AVG: <span class="color-or diemavg-khaicuoc1">0</span></p>
+										<p class="m-0">High: <span class="color-or diemHigh-khaicuoc1">0</span></p>
+									</div>
+								</div>
+							</div>	
+						</div>
+					</div>
+					<div class="w-20 float-left text-center mt-5 mb-5">
+						<img src="<?= URL_PUBLIC ?>images/vs.png">
+					</div>
+					<div  class="float-left w-40 mt-5 mb-5">
+						<div id="khaicuocuser_player2" onclick="activekhaicuoc(2)" class="thanh-vien-item box-shadow">						
+							<div class="w-100 text-center mt-3">
+								<div class="circle-big float-none m-0 m-auto"><img src="<?= URL_PUBLIC ?>images/thanh-vien-2.png"></div>
+							</div>
+							<div class="thanh-vien-ct w-100">
+								<div class="name-thanh-vien text-center w-100 p-0 lh-40 pt-2 mt-2 player_name_khaicuoc2"></div>
+								<div class="detail_tv mt-2">
+									<div class="w-50 float-left text-right">
+										<p class="diem-chap-sm m-0 diemchap-khaicuoc2">0</p>
+									</div>
+									<div class="w-50 float-left text-left">
+										<p class="m-0">AVG: <span class="color-or diemavg-khaicuoc2">0</span></p>
+										<p class="m-0">High: <span class="color-or diemHigh-khaicuoc2">0</span></p>
+									</div>
+								</div>
+							</div>	
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>	
+      </div>
+      <div class="modal-footer t-line pb-4 pt-4">
+      	<div class="m-0 m-auto">
+	        <a type="button" class="btn btn-primary btn-blue" data-dismiss="modal"><?= $this->language("l_cancel") ?></a>
+	        <a type="button" class="btn btn-primary btn-or-5 button_start"><?= $this->language("l_start") ?></a>
+    	</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!----------------------------------end chon nguoi khai cuoc-------------------------------------->
+<div class="container-fluid bgt-mode">
+	<div class="row">
+		<div class="col-md-4 logo">
+			<img src="<?= URL_PUBLIC ?>images/logo-1.png" alt="Billiard">
+		</div>
+		<div class="col-md-4 text-center">
+			<div class="float-left w-100 pt-70">
+				<h2 class="title_header"><?= $this->language("l_mode2") ?></h2>
+			</div>
+		</div>
+		<div class="col-md-4 ">
+			
+		</div>
+	</div>
+	<div class="row">
+		<div class="container pt-140">
+			<div class="row main-bgt ">
+				<div class="col-4 bgt-blue p-0">
+					<div class="title b-line"><h3 style="font-size: 23px"><?= $this->language("l_selectplayer") ?></h3></div>
+					<div class="main-ct">						
+						<div class="thanh-vien-item">
+							<div class="circle"><img src="<?= URL_PUBLIC ?>images/thanh-vien-1.png" alt="Billiard"></div>
+							<?php if (isset($userinfo1) && $userinfo1) : ?>
+								<div class="name-thanh-vien player_name player_name1"><?= $userinfo1['name']; ?></div>
+								<input type="hidden" id="settingplayer1" name="settingplayer1" value="<?= $userinfo1['id_thanhvien']; ?>" />
+							<?php else : ?>
+								<div class="name-thanh-vien player_name player_name1"><?= $this->language("l_player1") ?></div>
+								<input type="hidden" id="settingplayer1" name="settingplayer1" value="0" />
+							<?php endif; ?>
+							
+						</div>
+					
+						<div class="thanh-vien-item">
+							<div class="circle"><img src="<?= URL_PUBLIC ?>images/thanh-vien-1.png" alt="Billiard"></div>
+							<?php if (isset($userinfo2) && $userinfo2) : ?>
+								<div class="name-thanh-vien player_name player_name2"><?= $userinfo2['name']; ?></div>
+								<input type="hidden" id="settingplayer2" name="settingplayer2" value="<?= $userinfo2['id_thanhvien']; ?>" />
+							<?php else : ?>
+								<div class="name-thanh-vien player_name player_name2"><?= $this->language("l_player2") ?></div>
+								<input type="hidden" id="settingplayer2" name="settingplayer2" value="0" />
+							<?php endif; ?>								
+						</div>						
+					</div>									
+				</div>
+				<div class="col-8 pr-0">
+					<div class="bgt-blue">
+						<div class="title b-line"><h3 style="font-size: 23px"><?= $this->language("l_setting_point") ?></h3></div>
+						<div class="main-ct">
+							<div class="row mg-b-32 mg-t-20">
+								<div class="col-md-6">
+									<p class="mg-b-10"><?= $this->language("l_edit_point") ?></p>
+									<?php if (isset($userinfo1) && $userinfo1) : ?>
+										<button type="button" id="p1" class="pdiem pdiem1 point-end" data-toggle="modal" data-target="#diem1Modal"><?= $userinfo1['diem']; ?></button>
+										<input type="hidden" id="settingdiem1" name="settingdiem1" value="<?= $userinfo1['diem']; ?>" />
+									<?php else : ?>
+										<button type="button" id="p1" class="pdiem pdiem1 point-end" data-toggle="modal" data-target="#diem1Modal"><?= $this->language("l_select_point_player1") ?></button>
+										<input type="hidden" id="settingdiem1" name="settingdiem1" value="0" />
+									<?php endif; ?>	
+									
+								</div>
+								<div class="col-md-6">
+									<p class="mg-b-10"><?= $this->language("l_edit_point") ?></p>
+									<?php if (isset($userinfo2) && $userinfo2) : ?>
+										<button type="button" id="p2" class="pdiem pdiem2 point-end" data-toggle="modal" data-target="#diem2Modal"><?= $userinfo2['diem']; ?></button>
+										<input type="hidden" id="settingdiem2" name="settingdiem2" value="<?= $userinfo2['diem']; ?>" />
+									<?php else : ?>
+										<button type="button" id="p2" class="pdiem pdiem2 point-end" data-toggle="modal" data-target="#diem2Modal"><?= $this->language("l_select_point_player2") ?></button>
+										<input type="hidden" id="settingdiem2" name="settingdiem2" value="0" />
+									<?php endif; ?>	
+									
+								</div>
+							</div>
+							<div class="row mg-b-32 mg-t-20">
+								<div class="col-md-6">
+									<p class="mg-b-10"><?= $this->language("l_luotmuctieu") ?></p>
+									<?php if (isset($userinfo2) && $userinfo2) : ?>
+										<button type="button" class="point-end" data-toggle="modal" data-target="#luotcoModal">
+										<?php if ($trandau['luot'] == 0) {
+                                            echo $this->language("l_luot0");
+                                        } else {
+                                            echo $trandau['luot'];
+                                        } ?>
+                                        </button>
+                                        <input type="hidden" id="settingluotco" name="settingluotco" value="<?= $trandau['luot'] ?>" />
+									<?php else : ?>	
+										<button type="button" class="pluotco point-end" data-toggle="modal" data-target="#luotcoModal"><?= $this->language("l_luot0") ?></button>
+										<input type="hidden" id="settingluotco" name="settingluotco" value="0" />
+									<?php endif; ?>										
+								</div>
+								<div class="col-md-6">
+									<p class="mg-b-10"><?= $this->language("l_thoigianmuctieu") ?></p>
+									<button type="button" class="pthoigian point-end" data-toggle="modal" data-target="#ThoiGianModal"><?= $this->language("l_thoigian0") ?></button>
+									<input type="hidden" id="settingthoigian" name="settingthoigian" value="0" />
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-12">
+									<p class="mg-b-10"><?= $this->language("l_okview") ?></p>
+									<p class="col-xs-12 pstatistical">
+							            <input type="radio" name="statistical" id="yes" value="1" checked="checked">
+							            <label for="yes"><?= $this->language("l_yes") ?></label>
+							            &nbsp;&nbsp;
+							            <input type="radio" name="statistical" id="no" value="0">
+							            <label for="no"><?= $this->language("l_no") ?></label>
+							        </p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>								
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-12 margin0 ">
+			<div class="margin0 d-table w-auto pt-30 pb-100"> 
+				<a type="button" class="btn btn-primary btn-blue shadow_button" href="<?= $this->route('home') ?>"><?= $this->language("l_closemode") ?></a>
+				<a type="button" class="button_confirm btn btn-primary btn-orange-sm"><?= $this->language("l_start") ?></a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+    function closecancel(pos) {
+        $('#diem' + pos + 'Modal').modal('hide');
+        $('.keyboard_diem' + pos).addClass("keyboard--hidden_diem" + pos);
+    }
+
+    function settingluotco(settingluotco) {
+        document.getElementById("settingluotco").value = settingluotco;
+        $('#luotcoModal').modal('hide');
+        if (settingluotco != "0") {
+            $('.pluotco').html(settingluotco + ' <?= $this->language("l_luotco") ?>');
+        } else {
+            $('.pluotco').html('<?= $this->language("l_luot0") ?>');
+        }
+    }
+
+    function settingthoigian(settingthoigian) {
+        document.getElementById("settingthoigian").value = settingthoigian;
+        $('#ThoiGianModal').modal('hide');
+        if (settingthoigian != "0") {
+            $('.pthoigian').html(settingthoigian + ' <?= $this->language("l_thoigian1") ?>');
+        } else {
+            $('.pthoigian').html('<?= $this->language("l_thoigian0") ?>');
+        }
+    }
+
+    function settingdiem(pos) {
+        $('#diem' + pos + 'Modal').modal('hide');
+        var diem = document.getElementById("diem" + pos).value;
+        diem = parseInt(diem);
+        document.getElementById("settingdiem" + pos).value = diem;
+        $('.pdiem' + pos).html(diem + " <?= $this->language("l_pointtb") ?>");
+        $('.keyboard_diem' + pos).addClass("keyboard--hidden_diem1");
+    }
+
+    function close_popup_back_player() {
+        $('#playerModal').modal('hide');
+    }
+
+    function getPlayer(id, name, diem, avg, high) {
+        var popupplayer = document.getElementById("popupplayer").value;
+        $('#playerModal').modal('hide');
+        document.getElementById("settingplayer" + popupplayer).value = id;
+        $('.player_name' + popupplayer).html(name);
+        var settingdiem = document.getElementById("diem" + popupplayer).value;
+        if (settingdiem == 0) {
+            document.getElementById("settingdiem" + popupplayer).value = diem;
+            $('.pdiem' + popupplayer).html(diem + " <?= $this->language("l_pointtb") ?>");
+            document.getElementById("settingdiem" + popupplayer).value = diem;
+        }
+        $('.player_name_khaicuoc' + popupplayer).html(name);
+        $('.diemchap-khaicuoc' + popupplayer).html(diem);
+        $('.diemavg-khaicuoc' + popupplayer).html(avg);             
+
+    }
+
+    function activekhaicuoc(playeractive){        
+        $('.khaicuocuser_player_active').removeClass('khaicuocuser_player_active');
+        $("#khaicuocuser_player"+playeractive).addClass("khaicuocuser_player_active");
+        var user_khaicuoc = parseInt($('#settingplayer' + playeractive).val());
+        $('#khaicuoc_user').val(user_khaicuoc);       
+    }
+</script>
+	
+<script type="text/javascript">
+    $(document).ready(function() {
+
+        $('.player_name1').on('click', function() {
+            document.getElementById("popupplayer").value = 1;
+            var settingplayer = document.getElementById("settingplayer2").value;
+            if (settingplayer != 0) {
+                $.fn_ajax('loaduser', {
+                    'settingplayer': settingplayer
+                }, function(result) {
+                    if (result.flag == true) {
+                        $('.rows_list').html(result.data);
+                        $('#totalUser').html(result.countuser);
+                    }
+                }, true);
+            }
+            document.getElementById("searchMembersetting").value = "";
+            $('#playerModal').modal('show');
+        });
+        $('.player_name2').on('click', function() {
+            document.getElementById("popupplayer").value = 2;
+            var settingplayer = document.getElementById("settingplayer1").value;
+            if (settingplayer != 0) {
+                $.fn_ajax('loaduser', {
+                    'settingplayer': settingplayer
+                }, function(result) {
+                    if (result.flag == true) {
+                        $('.rows_list').html(result.data);
+                        $('#totalUser').html(result.countuser);
+                    }
+                }, true);
+            }
+            document.getElementById("searchMembersetting").value = "";
+            $('#playerModal').modal('show');
+        });
+        $('.pdiem1').on('click', function() {
+            var diem = document.getElementById("settingdiem1").value;
+            document.getElementById("diem1").value = diem;
+            var settingplayer1 = document.getElementById("settingplayer1").value;
+            if (settingplayer1 != 0) {
+                $('#diem1Modal').modal('show');
+            }
+        });
+        $('.pdiem2').on('click', function() {
+            var diem = document.getElementById("settingdiem2").value;
+            document.getElementById("diem2").value = diem;
+            var settingplayer2 = document.getElementById("settingplayer2").value;
+            if (settingplayer2 != 0) {
+                $('#diem2Modal').modal('show');
+            }
+
+        });
+        // confirm info
+        $('.button_confirm').on('click', function() {
+            var player1 = document.getElementById("settingplayer1").value;
+            var player2 = document.getElementById("settingplayer2").value;
+            var settingdiem1 = document.getElementById("settingdiem1").value;
+            var settingdiem2 = document.getElementById("settingdiem2").value;
+            var settingluotco = document.getElementById("settingluotco").value;
+            var settingthoigian = document.getElementById("settingthoigian").value;
+            
+            if (player1 == 0 || player2 == 0 || settingdiem1 == 0 || settingdiem2 == 0) {
+                if (player1 == 0) {
+                    $("#mess").html("<?= $this->language('l_noselect1') ?>");
+                } else {
+                    if (player2 == 0) {
+                        $("#mess").html("<?= $this->language('l_noselect2') ?>");
+                    } else {
+                        if (settingdiem1 == 0) {
+                            $("#mess").html("<?= $this->language('l_nopoint1') ?>");
+                        } else {
+                            if (settingdiem2 == 0) {
+                                $("#mess").html("<?= $this->language('l_nopoint2') ?>");
+                            }
+                        }
+                    }
+                }
+                $('#messModal').modal('show');
+            } else {
+            	$('#khaicuocModal').modal('show');
+                
+            }
+        });
+
+        //start setting
+        $('.button_start').on('click', function() {
+        	var player1 = document.getElementById("settingplayer1").value;
+            var player2 = document.getElementById("settingplayer2").value;
+            var settingdiem1 = document.getElementById("settingdiem1").value;
+            var settingdiem2 = document.getElementById("settingdiem2").value;
+            var settingluotco = document.getElementById("settingluotco").value;
+            var settingthoigian = document.getElementById("settingthoigian").value;
+            var khaicuoc_user = document.getElementById("khaicuoc_user").value;
+            var statistical = 0;
+            var radios = document.getElementsByName('statistical');
+            for (var i = 0, length = radios.length; i < length; i++) {
+                if (radios[i].checked) {
+                    statistical = radios[i].value;
+                    break;
+                }
+            }
+
+            if(khaicuoc_user ==0){
+            	$("#mess").html("<?= $this->language('l_whostart') ?>");
+            	$('#messModal').modal('show');
+            	return false;
+            }
+
+        	$('.div_load_alert').css("display", "block");
+            $.fn_ajax('setting', {
+                'player1': player1,
+                'player2': player2,
+                'settingdiem1': settingdiem1,
+                'settingdiem2': settingdiem2,
+                'settingluotco': settingluotco,
+                'statistical': statistical,
+                'settingthoigian': settingthoigian,
+                'khaicuoc_user' : khaicuoc_user
+            }, function(result) {
+
+                if (result.flag == true) {
+                    window.location = "<?= $this->route('start') ?>";
+                }
+            }, true);
+        });
+
+    });
+
+    $(document).on('show.bs.modal', '.modal', function(event) {
+        var zIndex = 1040 + (10 * $('.modal:visible').length);
+        $(this).css('z-index', zIndex);
+        setTimeout(function() {
+            $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack');
+        }, 0);
+    });
+</script>
+<script>
+    var langpoint = "<?= $this->language("l_pointtb") ?>";
+</script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_setting.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_diem1.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_diem2.js"></script>
+<script src="<?= URL_PUBLIC ?>js/keyboard_search_user_setting.js"></script>
+<style>
+    .keyboard__key_empty {
+        cursor: auto;
+        background: none;
+        font-size: 20px;
+        font-weight: bold;
+        height: 70px;
+        margin: 10px;
+    }
+
+    .keyboard__key1,
+    .keyboard__key2,
+    .keyboard__key3,
+    .keyboard__key4,
+    .keyboard__key5,
+    .keyboard__key6,
+    .keyboard__key7,
+    .keyboard__key8,
+    .keyboard__key9,
+    .keyboard__key0,
+    .keyboard__keybackspace,
+    .keyboard__keydone,
+    .keyboard__keyenter {
+        font-size: 20px;
+        font-weight: bold;
+        height: 70px;
+        margin: 10px;
+    }
+</style>
+
+
+<div class="div_load_alert">
+    <div class="main_mess">
+        <p>Đang xử lý. Vui lòng chờ trong giây lát ...</p>
+        <img style="width: 200px;" src="<?= URL_PUBLIC ?>img/load.gif" />
+    </div>
+</div>

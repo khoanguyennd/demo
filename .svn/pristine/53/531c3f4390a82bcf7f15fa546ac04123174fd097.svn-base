@@ -1,0 +1,1318 @@
+<?php
+    $trandau_id=$_SESSION["trandau_id"];
+    $trandau = $this->getData('trandau');
+    $trandau_thanhvien = $this->getData('trandau_thanhvien');
+    $thanhvien1 = $this->getData('thanhvien1');
+    $thanhvien2 = $this->getData('thanhvien2');
+    
+    foreach ($trandau_thanhvien as $key=>$value){
+        if($thanhvien1['id']==$value['thanhvien_id']){
+            $diem_ketthuc_player1=$value['diem'];
+        }
+        if($thanhvien2['id']==$value['thanhvien_id']){
+            $diem_ketthuc_player2=$value['diem'];
+        }
+    }
+
+    $infoInnering = $this->getData('innering');
+    $innering = $infoInnering['innering'];
+    $currentUser = $infoInnering['user_current'] ? $infoInnering['user_current'] : 0;
+    $totalTime = $this->getData('totalTime') > 0 ? $this->getData('totalTime') : 0;
+    
+    $currentPointUser1 = $this->getData('currentPointUser1');
+    $currentPointUser2 = $this->getData('currentPointUser2');
+    
+    // bảng lịch sử lượt đánh
+    $historyPointUser1 = $this->getData('historyPointUser1');
+    $historyPointUser2 = $this->getData('historyPointUser2');
+    
+    $hour = 0;
+    if($totalTime >= 3600) $hour = round($totalTime/ (60*60));
+    $secondRemain = $totalTime - $hour * (60*60);
+    $minutes = round($secondRemain/60);
+    $statisticalUser = $this->getData('statisticalUser');
+    
+?>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.0.0/animate.min.css"/>
+<script>
+    $(document).ready(function () {                    
+        $(".cbutton").click(function () {
+            var strDiv1Content = document.getElementById('start_player1').innerHTML;
+            var strDiv2Content = document.getElementById('start_player2').innerHTML;
+            strDiv1Content.replace('start_player_diem_span1', 'start_player_diem_span2');
+            strDiv2Content.replace('start_player_diem_span2', 'start_player_diem_span1');
+            document.getElementById('start_player1').innerHTML = strDiv2Content;
+            document.getElementById('start_player2').innerHTML = strDiv1Content;
+            const element = document.querySelector('#start_player1');
+            element.classList.add('animate__animated', 'animate__fadeInLeft');
+            element.addEventListener('animationend', () => {
+                element.classList.remove('animate__animated', 'animate__fadeInLeft');
+            });
+            const element2 = document.querySelector('#start_player2');
+            element2.classList.add('animate__animated', 'animate__fadeInRight');
+            element2.addEventListener('animationend', () => {
+                element2.classList.remove('animate__animated', 'animate__fadeInRight');
+            });
+        });        
+    });
+        
+</script>
+<script type="text/javascript">
+    $( document ).ready(function() {
+        var userActiveTrandau = <?=$trandau['khaicuoc_user']?>;
+        var user1 = <?=$thanhvien1['id']?>;
+        var user2 = <?=$thanhvien2['id']?>;
+        if(userActiveTrandau == user1)
+        {
+            var otherUser = user2;
+        } else {
+            var otherUser = user1;
+        }
+        $('.resettime').hide();
+        <?php if($currentUser ==1){?>        
+        $('.button2point' + userActiveTrandau).show();
+        $('#textPoint' + userActiveTrandau).hide();
+        $('#timeCurrentUser' + userActiveTrandau).show();
+
+        $('.button2point' + otherUser).hide();
+        $('#textPoint' + otherUser).show();
+        $('#timeCurrentUser' + otherUser).hide()          
+        <?php }?>
+
+        <?php if(!$currentUser){?>
+            $('.button2point' + userActiveTrandau).hide();
+            $('#textPoint' + userActiveTrandau).show();
+            $('#timeCurrentUser' + userActiveTrandau).hide();
+
+            $('.button2point' + otherUser).show();
+            $('#textPoint' + otherUser).hide();
+            $('#timeCurrentUser' + otherUser).show()         
+        <?php }?>
+        
+        start();
+        timedCountCurrentUser(); 
+    });
+</script>
+<style type="text/css">
+
+    .start_mobi_container{line-height:1.5;}
+    .title_history_mobi{background: #000d40};
+    .title_history_mobi p{margin-bottom: 0px; padding: 5px; font-size: 12px;}
+    @media (min-width: 992px) and (max-width: 1200px){
+        #conformStop .modal-dialog {max-width: 90%; margin-top: 5%}
+        .start_mobi_container{max-width: 100% !important;}
+        .start_mobi_container .item_col_player{width: 35%;}
+        .start_mobi_container .item_col_main{width: 30%;padding-right:4px; padding-left: 4px}
+        .start_mobi_container  button.btn-blue-n{padding: 6px 18px !important} 
+        .start_mobi_container .start_player_diem {
+            border-radius: 50%;
+            text-align: center;
+            font-size: 97px;
+            font-weight: bold;
+            color: #fff;
+            width: 165px;
+            margin: 0 auto;
+            vertical-align: middle;
+            font-family: utm avo !important;
+            text-shadow: rgb(0,0,0, 0.6) 6px 6px 2px;
+            position: relative;
+            display: table;
+        }
+        .start_mobi_container .main-bgt{background-color: rgba(0, 1, 51, 0.3); border: #056cc3 1px solid; border-radius: 10px; padding: 5px;}
+        .start_mobi_container .time_march{
+            font-size: 30px !important;
+            background: #001d6c;
+            border: #013181 1px solid;
+            color: #f7941d;
+            border-radius: 10px;
+            text-align: center;
+            font-family: digital-7 mono;
+        }
+        .start_mobi_container .start_luot_content {font-size:59px !important;}
+        .start_mobi_container .main_history_mobi{
+            font-size: 13px;
+            height: 100%;
+            overflow-y: scroll;
+            min-height: 45px !important;
+            max-height: 45px;
+        }
+        .start_mobi_container .start_luot_button{ background: #000d40; padding: 0px; border-radius: 5px}
+        .start_mobi_container .diem-chap-tv {
+            width: 40%;
+            float: left;
+            font-size: 38px;
+            color: #f7941d;
+            text-transform: uppercase;
+            text-align: center;
+            text-shadow: rgb(0,0,0, 0.6) 2px 2px 1px;
+            line-height: 30px;
+        }
+        .start_mobi_container .detail-tv{
+            width: 60%;
+            float: left;
+            font-size: 11px;
+            padding-left: 10px;
+            text-transform: uppercase;
+        }
+
+        #conformStop .list-diem-a {
+            background: linear-gradient(90deg, rgba(1,30,69,1) 0%, rgba(1,45,105,1) 35%, rgba(1,53,124,1) 100%);
+            border: #1e93f6 0px solid;padding: 5px 14px;border-radius: 8px;float: left;margin-bottom: 8px ;width: 100%;
+        }
+    }
+    @media (max-width: 992px) and (min-width: 768px){
+        #conformStop .modal-dialog {max-width: 90%; margin-top: 5%}
+        .start_mobi_container{max-width: 100% !important;}
+        .start_mobi_container .item_col_player{width: 35%;}
+        .start_mobi_container .item_col_main{width: 30%;padding-right:4px; padding-left: 4px}
+        .start_mobi_container  button.btn-blue-n{padding: 6px 18px !important} 
+        .start_mobi_container .start_player_diem {
+            border-radius: 50%;
+            text-align: center;
+            font-size: 97px;
+            font-weight: bold;
+            color: #fff;
+            width: 165px;
+            margin: 0 auto;
+            vertical-align: middle;
+            font-family: utm avo !important;
+            text-shadow: rgb(0,0,0, 0.6) 6px 6px 2px;
+            position: relative;
+            display: table;
+        }
+        .start_mobi_container .main-bgt{background-color: rgba(0, 1, 51, 0.3); border: #056cc3 1px solid; border-radius: 10px; padding: 5px;}
+        .start_mobi_container .time_march{
+            font-size: 30px !important;
+            background: #001d6c;
+            border: #013181 1px solid;
+            color: #f7941d;
+            border-radius: 10px;
+            text-align: center;
+            font-family: digital-7 mono;
+        }
+        .start_mobi_container .start_luot_content {font-size:59px !important;}
+        .start_mobi_container .main_history_mobi{
+            font-size: 13px;
+            height: 100%;
+            overflow-y: scroll;
+            min-height: 45px !important;
+            max-height: 45px;
+        }
+        .start_mobi_container .start_luot_button{ background: #000d40; padding: 0px; border-radius: 5px}
+        .start_mobi_container .diem-chap-tv {
+            width: 40%;
+            float: left;
+            font-size: 38px;
+            color: #f7941d;
+            text-transform: uppercase;
+            text-align: center;
+            text-shadow: rgb(0,0,0, 0.6) 2px 2px 1px;
+            line-height: 30px;
+        }
+        .start_mobi_container .detail-tv{
+            width: 60%;
+            float: left;
+            font-size: 11px;
+            padding-left: 10px;
+            text-transform: uppercase;
+        }
+
+        #conformStop .list-diem-a {
+            background: linear-gradient(90deg, rgba(1,30,69,1) 0%, rgba(1,45,105,1) 35%, rgba(1,53,124,1) 100%);
+            border: #1e93f6 0px solid;padding: 5px 14px;border-radius: 8px;float: left;margin-bottom: 8px ;width: 100%;
+        }
+    }
+    @media (min-width: 520px) and (max-width: 768px){
+        #conformStop .modal-dialog {max-width: 90%; margin-top: 5%}
+        .start_mobi_container{max-width: 100% !important;}
+        .start_mobi_container .item_col_player{width: 35%;}
+        .start_mobi_container .item_col_main{width: 30%;padding-right:4px; padding-left: 4px}
+        .start_mobi_container  button.btn-blue-n{padding: 4px 16px !important} 
+        .start_mobi_container .start_player_diem {
+            border-radius: 50%;
+            text-align: center;
+            font-size: 70px;
+            font-weight: bold;
+            color: #fff;
+            width: 130px;
+            margin: 0 auto;
+            vertical-align: middle;
+            font-family: utm avo !important;
+            text-shadow: rgb(0,0,0, 0.6) 6px 6px 2px;
+            position: relative;
+            display: table;
+        }
+        .start_mobi_container span.start_player_diem_span1 {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            font-size: 11px;
+            background: #cb7309;
+            padding: 5px 5px;
+            border-radius: 50%;
+            box-shadow: rgb(0,0,0, 0.3) 2px 2px 2px;
+            text-shadow: rgb(0,0,0, 0.3) 2px 2px 2px;
+            border: #f69929 1px solid;
+        }
+
+        .start_mobi_container span.start_player_diem_span2 {
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            font-size: 11px;
+            background: #cb7309;
+            padding: 5px 5px;
+            border-radius: 50%;
+            box-shadow: rgb(0,0,0, 0.3) 2px 2px 2px;
+            text-shadow: rgb(0,0,0, 0.3) 2px 2px 2px;
+            border: #f69929 1px solid;
+        }
+        .start_mobi_container .main-bgt{background-color: rgba(0, 1, 51, 0.3); border: #056cc3 1px solid; border-radius: 10px; padding: 5px;}
+        .start_mobi_container .time_march{
+            font-size: 30px !important;
+            background: #001d6c;
+            border: #013181 1px solid;
+            color: #f7941d;
+            border-radius: 10px;
+            text-align: center;
+            font-family: digital-7 mono;
+        }
+        .start_mobi_container .start_luot_content {font-size:59px !important;}
+        .start_mobi_container .main_history_mobi{
+            font-size: 13px;
+            height: 100%;
+            overflow-y: scroll;
+            min-height: 45px !important;
+            max-height: 45px;
+        }
+        .start_mobi_container .start_luot_button{ background: #000d40; padding: 0px; border-radius: 5px}
+        .start_mobi_container button.btn-blue-bn{
+            background: #0261b1;
+            border: #0485e9 1px solid;
+            box-shadow: #000 0px 6px 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+            border-radius: 10px;
+            padding: 1px 2px;
+            margin: 0 5px;
+            font-family: utm avo;
+            font-weight: 500;
+            line-height: 14px;
+        }
+        .start_mobi_container .diem-chap-tv {
+            width: 40%;
+            float: left;
+            font-size: 30px;
+            color: #f7941d;
+            text-transform: uppercase;
+            text-align: center;
+            text-shadow: rgb(0,0,0, 0.6) 2px 2px 1px;
+            line-height: 30px;
+        }
+        .start_mobi_container .detail-tv{
+            width: 60%;
+            float: left;
+            font-size: 10px;
+            padding-left: 3px;
+            text-transform: uppercase;
+        }
+
+        .start_mobi_container .start_player_thongke p {
+            margin-bottom: 0px !important;
+            font-size: 7px;
+        }
+
+        .start_mobi_container .title_history_mobi p {
+            margin-bottom: 0px;
+            padding: 5px;
+            font-size: 10px;
+        }
+
+        #conformStop .list-diem-a {
+            background: linear-gradient(90deg, rgba(1,30,69,1) 0%, rgba(1,45,105,1) 35%, rgba(1,53,124,1) 100%);
+            border: #1e93f6 0px solid;padding: 5px 14px;border-radius: 8px;float: left;margin-bottom: 8px ;width: 100%;
+        }
+        #conformStop a.btn-blue {
+            background: #013584;
+            border: #0868bb 1px solid;
+            box-shadow: rgb(0,0,0,0.5) 0px 0px 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+            border-radius: 10px;
+            padding: 2px 10px;
+            margin: 0 5px;
+            font-family: utm avo;
+            font-weight: 500;
+            line-height: 20px;
+        }
+        #conformStop .start_player_diem_sm {
+            border-radius: 50%;
+            text-align: center;
+            font-size: 65px;
+            font-weight: bold;
+            color: #fff;
+            width: 100px;
+            margin: 0 auto;
+            vertical-align: middle;
+            font-family: utm avo !important;
+            text-shadow: rgb(0,0,0, 0.6) 6px 6px 2px;
+            position: relative;
+            display: table;
+        }
+        #conformStop .list-diem-a p {font-size: 8px !important;}
+
+        .rows_tk {width: 32% !important; margin-right : 1px !important; margin-left : 1px !important;}
+    }
+
+    @media (min-width: 350px) and (max-width: 520px){
+        #conformStop .modal-dialog {max-width: 90%; margin-top: 5%}
+        .start_mobi_container{max-width: 100% !important;}
+        .start_mobi_container .item_col_player{width: 35%;}
+        .start_mobi_container .item_col_main{width: 30%;padding-right:4px; padding-left: 4px}
+        .start_mobi_container  button.btn-blue-n{padding: 4px 16px !important; font-size: 8px !important;} 
+        .start_mobi_container .start_player_diem {
+            border-radius: 50%;
+            text-align: center;
+            font-size: 40px;
+            font-weight: bold;
+            color: #fff;
+            width: 85px;
+            margin: 0 auto;
+            vertical-align: middle;
+            font-family: utm avo !important;
+            text-shadow: rgb(0,0,0, 0.6) 6px 6px 2px;
+            position: relative;
+            display: table;
+        }
+        .start_mobi_container span.start_player_diem_span1 {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            font-size: 9px;
+            background: #cb7309;
+            padding: 2px 2px;
+            border-radius: 50%;
+            box-shadow: rgb(0,0,0, 0.3) 2px 2px 2px;
+            text-shadow: rgb(0,0,0, 0.3) 2px 2px 2px;
+            border: #f69929 1px solid;
+        }
+
+        .start_mobi_container span.start_player_diem_span2 {
+            position: absolute;
+            top: 0px;
+            right: -7px;
+            font-size: 9px;
+            background: #cb7309;
+            padding: 2px 2px;
+            border-radius: 50%;
+            box-shadow: rgb(0,0,0, 0.3) 2px 2px 2px;
+            text-shadow: rgb(0,0,0, 0.3) 2px 2px 2px;
+            border: #f69929 1px solid;
+        }
+        .start_mobi_container .main-bgt{background-color: rgba(0, 1, 51, 0.3); border: #056cc3 1px solid; border-radius: 10px; padding: 5px;}
+        .start_mobi_container .time_march{
+            font-size: 30px !important;
+            background: #001d6c;
+            border: #013181 1px solid;
+            color: #f7941d;
+            border-radius: 10px;
+            text-align: center;
+            font-family: digital-7 mono;
+        }
+        .start_mobi_container .start_luot_content {font-size:59px !important;}
+        .start_mobi_container .main_history_mobi{
+            font-size: 13px;
+            height: 100%;
+            overflow-y: scroll;
+            min-height: 45px !important;
+            max-height: 45px;
+        }
+        .start_mobi_container .start_luot_button{ background: #000d40; padding: 0px; border-radius: 5px}
+        .start_mobi_container button.btn-blue-bn{
+            background: #0261b1;
+            border: #0485e9 1px solid;
+            box-shadow: #000 0px 6px 8px;
+            font-size: 9px;
+            text-transform: lowercase;
+            border-radius: 10px;
+            padding: 1px 2px;
+            margin: 0 5px;
+            font-family: utm avo;
+            font-weight: 500;
+            line-height: 12px;
+        }
+        .start_mobi_container .diem-chap-tv {
+            width: 40%;
+            float: left;
+            font-size: 22px;
+            color: #f7941d;
+            text-transform: uppercase;
+            text-align: center;
+            text-shadow: rgb(0,0,0, 0.6) 2px 2px 1px;
+            line-height: 30px;
+        }
+        .start_mobi_container .detail-tv{
+            width: 60%;
+            float: left;
+            font-size: 8px;
+            padding-left: 0px;
+            text-transform: uppercase;
+        }
+
+        .start_mobi_container .start_player_thongke p {
+            margin-bottom: 0px !important;
+            font-size: 7px;
+        }
+
+        .start_mobi_container .title_history_mobi p {
+            margin-bottom: 0px;
+            padding: 5px;
+            font-size: 8px;
+        }
+
+        #conformStop .list-diem-a {
+            background: linear-gradient(90deg, rgba(1,30,69,1) 0%, rgba(1,45,105,1) 35%, rgba(1,53,124,1) 100%);
+            border: #1e93f6 0px solid;padding: 5px 14px;border-radius: 8px;float: left;margin-bottom: 8px ;width: 100%;
+        }
+        #conformStop a.btn-blue {
+            background: #013584;
+            border: #0868bb 1px solid;
+            box-shadow: rgb(0,0,0,0.5) 0px 0px 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+            border-radius: 10px;
+            padding: 2px 10px;
+            margin: 0 5px;
+            font-family: utm avo;
+            font-weight: 500;
+            line-height: 20px;
+        }
+        #conformStop .start_player_diem_sm {
+            border-radius: 50%;
+            text-align: center;
+            font-size: 65px;
+            font-weight: bold;
+            color: #fff;
+            width: 100px;
+            margin: 0 auto;
+            vertical-align: middle;
+            font-family: utm avo !important;
+            text-shadow: rgb(0,0,0, 0.6) 6px 6px 2px;
+            position: relative;
+            display: table;
+        }
+        #conformStop .list-diem-a p {font-size: 8px !important;}
+
+        .rows_tk {width: 32% !important; margin-right : 1px !important; margin-left : 1px !important;}
+    }
+    
+</style>
+<div class="div_full"></div>
+<div class="container start_mobi_container">
+    <input type="hidden" id="khaicuoc_user" value="<?php if($trandau['khaicuoc_user']==0) echo $thanhvien1['id']; else echo $trandau['khaicuoc_user']; ?>"/>
+    <input type="hidden" id="trandau_id" value="<?=$trandau['id']?>"/>    
+    <input type="hidden" id="user1" value="<?=$thanhvien1['id']?>"/>
+    <input type="hidden" id="user2" value="<?=$thanhvien2['id']?>"/>
+    <input type="hidden" id="user_active" value="<?php if($trandau['khaicuoc_user']==0) echo $thanhvien1['id']; else echo $trandau['khaicuoc_user']; ?>"/>
+    <input type="hidden" id="oneAddPoint" value="0"/>
+    <input type="hidden" id="timeUser" value="0"/>
+
+    <input type="hidden" id="pointEndUser<?=$thanhvien1['id']?>" value="<?=$diem_ketthuc_player1?>"/>
+    <input type="hidden" id="pointEndUser<?=$thanhvien2['id']?>" value="<?=$diem_ketthuc_player2?>"/>
+    <input type="hidden" id="pointCurrentUser<?=$thanhvien1['id']?>" value="<?=$currentPointUser1?>"/>
+    <input type="hidden" id="pointCurrentUser<?=$thanhvien2['id']?>" value="<?=$currentPointUser2?>"/>
+
+    <div class="row start_mobi_2_user" style="padding: 4px">
+        <div id="start_player1" class="item_col_player">
+            <div class="bgt-blue">
+                <div class="star-player-top b-line pt-4 pb-3 pl-4">
+                    <div class="row">
+                        <div class="w-55 pr-0 pl-3">
+                            <h3 class="name-item"><?=$thanhvien1['name']?></h3>
+                        </div>
+                        <div class="w-45 pl-0" data-toggle="modal" data-target="#chitietthanhvien">
+                            <div class="diem-chap-tv">
+                                <span style="float: right;"><?=$diem_ketthuc_player1?></span>
+                            </div>
+                            <div class="detail-tv">
+                                <p class="mb-0">High: <span class="color-or"><?=$thanhvien1['avg']?></span></p>
+                                <p class="mb-0">AVG: <span class="color-or"><?=$thanhvien1['highrun']?></span></p>
+                            </div>
+                        </div>
+                        <?php include( PATH_APPLICATION . 'view/part/player_info_mobi.php'); ?>
+                    </div>
+                </div>
+                <div class="star-player-main t-line b-line">
+                    <div class="start_player_diem <?php if($thanhvien1['id'] == $trandau['khaicuoc_user']) echo 'start_player_diem_color-or'; else echo 'start_player_diem_color-bl';?>">
+                        <p>
+                        <span id="point<?=$thanhvien1['id']?>"><?=$currentPointUser1 < 10 ? '0' . $currentPointUser1: $currentPointUser1;?></span>
+                        <span class="start_player_diem_span1" id="timeCurrentUser<?=$thanhvien1['id']?>" style="display: none">00</span>
+                        </p>
+                    </div>
+                    <div class="start_player_button m-auto start_player_button_start_mobi">
+                        <button class="button_minus btn btn-primary btn-blue-n button2point<?=$thanhvien1['id']?>" data-id="<?=$thanhvien1['id']?>" >
+                            <i class="fa fa-minus" aria-hidden="true"></i>
+                        </button>
+                        <button class="button_plus button_plus_point btn btn-primary btn-blue-n button2point<?=$thanhvien1['id']?>" data-id="<?=$thanhvien1['id']?>" >
+                            <i class="fa fa-plus"aria-hidden="true"></i>
+                        </button>
+                        <button class="add_diemchodoithu button_plus_point btn btn-primary btn-blue-n" id="textPoint<?=$thanhvien1['id']?>" data-id="<?=$thanhvien2['id']?>" >
+                            +<span id="addPoint<?=$thanhvien2['id']?>">1</span> <?=$this->language("l_point_competitor")?>
+                        </button>
+                    </div>
+                </div>
+                <div class="start_player_thongke t-line">
+                    <div class="row row_thongke">
+                        <div class="col-2 r-line" style="padding-left: 20px">
+                            <p class="color-or s-15 mb-1" id="avg<?=$thanhvien1['id']?>"><?=$statisticalUser[1]['avg']?></p>
+                            <p>AVG</p>
+                        </div>
+                        <div class="col-3 r-line l-line">
+                            <p class="color-or s-15 mb-1" id="hight<?=$thanhvien1['id']?>"><?=$statisticalUser[1]['hight']?></p>
+                            <p><?=$this->language("l_high")?></p>
+                        </div>
+                        <div class="col-4 r-line l-line">
+                            <p class="color-or s-15 mb-1" id="sobicham<?=$thanhvien1['id']?>"><?=$statisticalUser[1]['number_balltouches']?></p>
+                            <p><?=$this->language("l_numbercham")?></p>
+                        </div>
+                        <div class="col-3 l-line">
+                            <p class="color-or s-15 mb-1"><span id="time<?=$thanhvien1['id']?>"><?=$statisticalUser[1]['total_time']?></span><span style="text-transform: none;">s</span></p>
+                            <p><?=$this->language("l_shot")?></p>
+                        </div>
+                    </div>
+                </div>  
+                <div class="start_player_history t-line">
+                    <?php include( PATH_APPLICATION . 'view/part/start_player_history1_mobi.php'); ?>                                          
+                </div>
+            </div>
+        </div>
+        <!---------------------------center--------------------------->
+        <div class="item_col_main">
+            <div class="main-bgt">
+                <div class="time_march">
+                    <p style="margin-bottom: 0px;" id="countTimeMarch">00:00</p>
+                </div>
+                <div class="start_luot_content">
+                    <p class="number_inning" id="number_inning"><?=$innering;?></p>
+                    <p class="cl_luot text_inning"><?=$this->language("l_inning")?></p>
+                </div>
+                <div class="start_luot_button">
+                    <div class="div_button_tranfer"><button type="button" class="button_tranfer btn btn-primary btn-blue-bn w-100 mb-1 ml-0"><?=$this->language("l_button_tranfer_model2")?></button></div>
+                    <div class="div_button_cancel"><button type="button" class="button_cancel btn btn-primary btn-blue-bn w-100 mb-1 ml-0"><?=$this->language("l_button_cancel_model2")?></button></div>
+                    <button type="button" class="cbutton btn btn-primary btn-blue-bn w-100 ml-0" style="margin-bottom: 4px;"><?=$this->language("l_button_cbutton_model2")?></button>
+                    <button type="button" class="button_pause btn btn-primary btn-blue-bn w-100 mb-1 ml-0"><?=$this->language("l_button_pause_model2")?></button>
+                    <button type="button" class="resettime btn btn-primary btn-orange w-100 mb-1 ml-0"><?=$this->language("l_button_resettime_model2")?></button>
+                    <button type="button" class="button_stop btn btn-primary btn-blue-bn w-100 mb-1 ml-0"  data-toggle="modal" data-target="#KetThucTranDauModal"><?=$this->language("l_button_stop_model2")?></button>                    
+                </div>
+            </div>
+        </div>
+        <!---------------------------end center--------------------------->
+        <div id="start_player2" class="item_col_player">
+            <div class="bgt-blue">
+                <div class="star-player-top b-line pt-4 pb-3 pl-4">
+                    <div class="row">
+                        <div class="w-55 pr-0 pl-3">
+                            <h3 class="name-item"><?=$thanhvien2['name']?></h3>
+                        </div>
+                        <div class="w-45" data-toggle="modal" data-target="#chitietthanhvien2">
+                            <div class="diem-chap-tv">
+                                <span style="float: right;"><?=$diem_ketthuc_player2?></span>
+                            </div>
+                            <div class="detail-tv">
+                                <p class="mb-0">High: <span class="color-or"><?=$thanhvien1['highrun']?></span></p>
+                                <p class="mb-0">AVG: <span class="color-or"><?=$thanhvien1['avg']?></span></p>
+                            </div>
+                        </div>
+                        <?php include( PATH_APPLICATION . 'view/part/player_info2_mobi.php'); ?>
+                    </div>
+                </div>
+                <div class="star-player-main t-line b-line-d">
+                    <div class="start_player_diem <?php if($thanhvien2['id'] == $trandau['khaicuoc_user']) echo 'start_player_diem_color-or'; else echo 'start_player_diem_color-bl';?>">
+                        <p>
+                        <span id="point<?=$thanhvien2['id']?>"><?=$currentPointUser2 < 10 ? '0' . $currentPointUser2: $currentPointUser2;?></span>
+                        <span class="start_player_diem_span2" id="timeCurrentUser<?=$thanhvien2['id']?>" style="display: none">00</span>                        
+                        </p>
+                    </div>
+                    <div class="start_player_button m-auto start_player_button_start_mobi">                        
+                        <button class="button_minus btn btn-primary btn-blue-n button2point<?=$thanhvien2['id']?>"data-id="<?=$thanhvien2['id']?>">
+                            <i class="fa fa-minus" aria-hidden="true"></i>
+                        </button>
+                        <button class="button_plus button_plus_point btn btn-primary btn-blue-n button2point<?=$thanhvien2['id']?>" data-id="<?=$thanhvien2['id']?>" >
+                            <i class="fa fa-plus"aria-hidden="true"></i>
+                        </button>
+                        <button class="add_diemchodoithu button_plus_point btn btn-primary btn-blue-n" id="textPoint<?=$thanhvien2['id']?>" data-id="<?=$thanhvien1['id']?>" >
+                            +<span id="addPoint<?=$thanhvien1['id']?>">1</span> <?=$this->language("l_point_competitor")?>
+                        </button>
+                    </div>
+                </div>
+                <div class="start_player_thongke t-line ">
+                    <div class="row row_thongke">
+                        <div class="col-2 r-line" style="padding-left: 20px">
+                            <p class="color-or s-15 mb-1" id="avg<?=$thanhvien2['id']?>"><?=$statisticalUser[2]['avg']?></p>
+                            <p>AVG</p>
+                        </div>
+                        <div class="col-3 r-line l-line">
+                            <p class="color-or s-15 mb-1" id="hight<?=$thanhvien2['id']?>"><?=$statisticalUser[2]['hight']?></p>
+                            <p><?=$this->language("l_high")?></p>
+                        </div>
+                        <div class="col-4 r-line l-line">
+                            <p class="color-or s-15 mb-1" id="sobicham<?=$thanhvien2['id']?>"><?=$statisticalUser[2]['number_balltouches']?></p>
+                            <p><?=$this->language("l_numbercham")?></p>
+                        </div>
+                        <div class="col-3 l-line">
+                            <p class="color-or s-15 mb-1"><span id="time<?=$thanhvien2['id']?>"><?=$statisticalUser[2]['total_time']?></span><span style="text-transform: none;">s</span></p>
+                            <p><?=$this->language("l_shot")?></p>
+                        </div>
+                    </div>
+                </div>  
+                <div class="start_player_history t-line">
+                    <?php include( PATH_APPLICATION . 'view/part/start_player_history2_mobi.php'); ?>                                        
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php include( PATH_APPLICATION . 'view/part/conform_stop_mobi.php'); ?>
+<script type="text/javascript">
+    var minutes = <?=$minutes?>;
+    var hour = <?=$hour?>;
+    var time;
+    var timerOn = 0;
+    var minutesPlay = <?=$trandau['thoigian']?>;  
+
+    function timedCount()
+    {
+        hour = parseInt(hour);
+        minutes = parseInt(minutes);        
+                
+        if(minutes < 10) {
+            txtMinutes = '0' + parseInt(minutes);
+        } else {
+            txtMinutes = parseInt(minutes);
+        }
+        if(hour < 10) {
+            txtHour = '0' + parseInt(hour);
+        } else {
+            txtHour = parseInt(hour);   
+        }
+
+        $('#countTimeMarch').html(txtHour + ':' + txtMinutes);
+
+        minutes = minutes+1;
+        if (minutes%60==0){
+            hour+=1;
+            minutes=0;
+        }
+        if (minutes%60==0){
+            hour+=1;
+            minutes=0;
+        }
+
+        minutesExpired = minutesPlay * 60;
+        minutesCurrent = hour * 3600 + minutes * 60;
+        if(minutesExpired > 0 &&  minutesExpired < minutesCurrent){
+            var dataId = $('#user_active').val();
+            disableButton(1);
+            var time = $('#timeUser').val();
+            var idTrandau = $('#trandau_id').val();
+            var nextPoint = $('#oneAddPoint').val();
+            $('.div_load_alert').css("display","block");
+            var url = $baseUrl + '/martchend_pointtime.html';
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    trandau_id:idTrandau,
+                    thanhvien_id:dataId,
+                    diem:nextPoint,
+                    time:time,
+                    status: 1
+                },
+                dataType:'text',                
+                success:function(data){             
+                    jsonData =  $.parseJSON(data);
+                    if(jsonData.status == true){
+                        //update history                        
+                        $('.div_load_alert').css("display","none");                        
+                        $('#avg' + dataId).html(jsonData.avg);
+                        $('#hight' + dataId).html(jsonData.hight);
+                        $('#sobicham' + dataId).html(jsonData.number_balltouches);
+                        $('#time' + dataId).html(jsonData.total_time + 's'); 
+
+                        $('#timeCurrentUser' + dataId).hide();
+                        hiddenButton(1);                                                                                                                                                           
+                        calculateTheEndMarch();                                        
+                        $('#conformStop').modal();
+                        return false;
+                                            
+                    } else {                    
+                        return false;
+                    }
+                }
+            });            
+        };
+
+        time = setTimeout("timedCount()",60000);
+    }
+
+    function start()
+    {
+        if (!timerOn)
+        {
+            timerOn =1;
+            timedCount();
+        }
+    }
+
+    function stop() {
+        if (time) {
+            timerOn=0;
+            clearTimeout(time);
+        }
+    }
+
+    // Caculater time User 
+    var secondUseCurrent = 0;
+    var timeUse;
+    var timerOnUser = 0;
+    var user1 = <?=$thanhvien1['id']?>;
+    var user2 = <?=$thanhvien2['id']?>;
+    var khaicuocId = $('#khaicuoc_user').val();
+    currentUser =0;
+    <?php if($currentUser){?>
+        var currentUser = khaicuocId;
+    <?php } else { ?>
+        if(khaicuocId == user1) currentUser = user2; 
+        if(khaicuocId == user2) currentUser = user1;
+    <?php } ?>     
+
+    if (localStorage.hasOwnProperty("secondUseCurrent")) {    
+    	secondUseCurrent=parseInt(localStorage.getItem("secondUseCurrent"));
+    }
+    function timedCountCurrentUser()
+    {
+        if(secondUseCurrent < 10) {
+            txtSecond = '0' + parseInt(secondUseCurrent);
+        } else {
+            txtSecond = parseInt(secondUseCurrent);   
+        }
+        localStorage.setItem("secondUseCurrent",secondUseCurrent); 
+        secondUseCurrent = secondUseCurrent + 1;
+        $('#timeCurrentUser' + currentUser).html(txtSecond);
+        $('#timeCurrentUser' + currentUser).show(); 
+        $('#timeUser').val(secondUseCurrent);        
+        timeUse = setTimeout("timedCountCurrentUser()",1000);
+    }
+    function startCountTimeUser()
+    {
+        if (!timerOnUser)
+        {
+            timerOnUser =1;
+            timedCountCurrentUser();
+        }
+    }
+
+    function stopCountTimeUser() {        
+       
+        if (timeUse) {
+            timerOnUser=0;
+            clearTimeout(timeUse);
+        }
+    }
+
+    function calculateTheEndMarch(){
+        var userId1 = $('#user1').val();
+        var userId2 = $('#user2').val();
+        var pointEndUser1 = parseInt($('#pointEndUser' + userId1).val());
+        var pointEndUser2 = parseInt($('#pointEndUser' + userId2).val());
+
+        var currentPointUser1 = parseInt($('#point' + userId1).html());
+        var currentPointUser2 = parseInt($('#point' + userId2).html());
+        var luotcodangdanh = $('#number_inning').html();
+        
+        if(currentPointUser1 < pointEndUser1 && currentPointUser2 < pointEndUser2){
+            if(currentPointUser1 > currentPointUser2){
+                $('.user_win' + userId1).addClass('start_player_diem_color-or');
+                $('.user_win' + userId1).removeClass('start_player_diem_color-bl');
+                $('.user_win' + userId2).removeClass('start_player_diem_color-or');
+                $('.user_win' + userId2).addClass('start_player_diem_color-bl');    
+            } else if(pointEndUser1 < pointEndUser2){
+                $('.user_win' + userId2).addClass('start_player_diem_color-or');
+                $('.user_win' + userId2).removeClass('start_player_diem_color-bl');
+                $('.user_win' + userId1).removeClass('start_player_diem_color-or');
+                $('.user_win' + userId1).addClass('start_player_diem_color-bl');
+            }    
+        } else {
+            if(currentPointUser1 == pointEndUser1){
+                $('.user_win' + userId1).addClass('start_player_diem_color-or');
+                $('.user_win' + userId1).removeClass('start_player_diem_color-bl');
+                $('.user_win' + userId2).removeClass('start_player_diem_color-or');
+                $('.user_win' + userId2).addClass('start_player_diem_color-bl');
+            }
+
+            if(currentPointUser2 == pointEndUser2){
+                $('.user_win' + userId2).addClass('start_player_diem_color-or');
+                $('.user_win' + userId2).removeClass('start_player_diem_color-bl');
+                $('.user_win' + userId1).removeClass('start_player_diem_color-or');
+                $('.user_win' + userId1).addClass('start_player_diem_color-bl');
+            }
+        }
+        
+
+        if(currentPointUser1 == currentPointUser2 && currentPointUser1 < pointEndUser1 & currentPointUser2 < pointEndUser2){
+            var userkhaicuoc = $('#khaicuoc_user').val();            
+            if(userkhaicuoc == userId1){
+                $('.user_win' + userId1).removeClass('start_player_diem_color-bl');
+                $('.user_win' + userId1).addClass('start_player_diem_color-or');
+                $('.user_win' + userId2).removeClass('start_player_diem_color-or');
+                $('.user_win' + userId2).addClass('start_player_diem_color-bl');
+            } else {
+                $('.user_win' + userId2).removeClass('start_player_diem_color-bl');
+                $('.user_win' + userId2).addClass('start_player_diem_color-or');
+                $('.user_win' + userId1).removeClass('start_player_diem_color-or');
+                $('.user_win' + userId1).addClass('start_player_diem_color-bl');
+            }
+        }
+
+        if(currentPointUser1 < 10) currentPointUser1 = '0' + currentPointUser1;
+        if(currentPointUser2 < 10) currentPointUser2 = '0' + currentPointUser2;
+        
+        $('.pointend' + userId1).html(currentPointUser1);
+        $('.diemend' + userId1).html(pointEndUser1);
+        $('.hightend' + userId1).html($('#hight' + userId1).html());
+        $('.luotcoend' + userId1).html(luotcodangdanh);
+        $('.avgend' + userId1).html($('#avg' + userId1).html());
+        
+
+        $('.pointend' + userId2).html(currentPointUser2);
+        $('.diemend' + userId2).html(pointEndUser2);
+        $('.hightend' + userId2).html($('#hight' + userId2).html());
+        $('.luotcoend' + userId2).html(luotcodangdanh);
+        $('.avgend' + userId2).html($('#avg' + userId2).html());
+        $('.luotcodangdanh').html(luotcodangdanh);
+        stop();
+        stopCountTimeUser();
+    }
+
+    function disableButton(option){
+        //the end martch
+        if(option == 1){
+            $('.button_plus_point').attr('disabled', true);
+            $('.button_minus').attr('disabled', true); 
+            $('.button_tranfer').attr('disabled', true);
+            $('.button_cancel').attr('disabled', true);
+            $('.button_pause').attr('disabled', true);
+            $('.cbutton').attr('disabled', true);
+            $('.button_stop').attr('disabled', false);
+        } else {
+            $('.button_plus_point').attr('disabled', false);
+            $('.button_minus').attr('disabled', false); 
+            $('.button_tranfer').attr('disabled', false);
+            $('.button_cancel').attr('disabled', false);
+            $('.button_pause').attr('disabled', false);
+            $('.button_stop').attr('disabled', false);
+        }
+    }
+
+    function hiddenButton(option){
+        //the end martch
+        if(option == 1){
+            $('#btnExit').show();
+            $('#btnChonlaicothu').show();
+            $('#btnResetGame').show();
+            $('#btnStop').hide();
+            $('#btnCancel').show();
+        }
+        //stop game
+        if(option == 2){
+            $('#btnStop').show();            
+            $('#btnResetGame').show();
+            $('#btnChonlaicothu').show();
+            $('#btnCancel').show();
+            $('#btnExit').hide();
+        }
+    }
+
+    $('body').on('click', '.button_tranfer', function(){        
+        var time = $('#timeUser').val();
+        secondUseCurrent = 0;
+        hidden = currentUser;
+        if(currentUser == user1) {
+            currentUser = user2;
+        } else {
+            currentUser = user1;
+        }      
+
+        //luot show
+        var currentluotco = parseInt($("#number_inning").html());
+        var user_khaicuoc = $('#khaicuoc_user').val();
+        if(user_khaicuoc == currentUser){
+            $("#number_inning").html(currentluotco + 1);
+        }
+
+        $('#timeCurrentUser' + hidden).hide();
+        $('#timeCurrentUser' + currentUser).show();
+        stopCountTimeUser();
+        startCountTimeUser();
+
+        var idTrandau = $('#trandau_id').val();
+        var idUser = hidden;
+        var point = $('#oneAddPoint').val();
+        $('#oneAddPoint').val(0);        
+        $('.button2point' + currentUser).show();
+        $('#textPoint' + currentUser).hide();
+        $('.button2point' + hidden).hide();
+        $('#textPoint' + hidden).show();   
+        
+        var strload='<img class="imagesload_wait_button_change_turn" src="'+$baseUrl+'/public/img/load.gif" />';
+        var url = $baseUrl + '/changeturns.html';
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                trandau_id:idTrandau,
+                thanhvien_id:idUser,
+                diem:point,
+                time:time,
+                status: 1
+            },
+            dataType:'text',
+            beforeSend: function() {
+                $('.button_tranfer').after(strload);
+                $('.button_tranfer').attr('disabled', true);
+                $('.button_cancel').attr('disabled', true);
+            },
+            success:function(data){             
+                jsonData =  $.parseJSON(data);
+
+                if(jsonData.status == true){
+                    //update history
+                    $('.imagesload_wait_button_change_turn').remove();
+                    $('.button_tranfer').attr('disabled', false);
+                    $('.button_cancel').attr('disabled', false);
+
+                    $('.rowUser' + hidden).removeClass('rowUser' + hidden);
+                    str = '<div class="row b-line-d t-line-d m-0 pb-14 rows_history rowUser' + hidden +'">';                       
+                       str += '<div class="col-4 pt-2"><p class="mb-1">' + jsonData.inning + '</p></div>';
+                       str += '<div class="col-4 pt-2"><p class="mb-1">' + jsonData.score + '</p></div>';
+                       str += '<div class="col-4 pt-2"><p class="mb-1">' + jsonData.shot + '</p></div>';                       
+                    str +='</div>';
+                    $(str).insertBefore('.rowshow' + hidden);
+                    $('.rowshow' + hidden).remove();  
+
+                    $('#user_active').val(currentUser);                                        
+                                                                                                
+                    $("#pointCurrentUser" + hidden).val(jsonData.diem);                    
+                    if(currentluotco < parseInt(jsonData.luotco)){
+                        $("#number_inning").html(jsonData.luotco);
+                        strshowuser1 = '<div class="row b-line-d t-line-d m-0 pb-14 rows_history rowshow' + hidden +'">';                           
+                           strshowuser1 += '<div class="col-4 pt-2"><p>' + jsonData.luotco + '</p></div>';
+                           strshowuser1 += '<div class="col-4 pt-2"><p class="mb-1 rowshowPoint' + hidden + '">0</p></div>';
+                           strshowuser1 += '<div class="col-4 pt-2"><p class="mb-1 rowshowTime' + hidden + '">0</p></div>';                           
+                        strshowuser1 +='</div>';
+                        $(strshowuser1).insertBefore('.rowUser' + hidden);                                                                 
+
+                        strshowuser2 = '<div class="row b-line-d t-line-d m-0 pb-14 rows_history rowshow' + currentUser +'">';                           
+                           strshowuser2 += '<div class="col-4 pt-2"><p>' + jsonData.luotco + '</p></div>';
+                           strshowuser2 += '<div class="col-4 pt-2"><p class="mb-1 rowshowPoint' + currentUser + '">0</p></div>';
+                           strshowuser2 += '<div class="col-4 pt-2"><p class="mb-1 rowshowTime' + currentUser + '">0</p></div>';                           
+                        strshowuser2 +='</div>';
+                        $(strshowuser2).insertBefore('.rowUser' + currentUser); 
+                    }     
+                                        
+                    $('#avg' + hidden).html(jsonData.avg);
+                    $('#hight' + hidden).html(jsonData.hight);
+                    $('#sobicham' + hidden).html(jsonData.number_balltouches);
+                    $('#time' + hidden).html(jsonData.total_time);  
+                    
+                    if(parseInt(jsonData.the_end)==1){
+                        $("#number_inning").html(jsonData.luotco);                        
+                        $('#timeCurrentUser' + currentUser).hide();
+                        $('#btnExit').show();
+                        $('#btnStop').hide();
+                        $('#btnCancel').hide();
+                        $('.div_button_tranfer').hide();
+                        $('.div_button_cancel').hide();
+                        $('.div_button_pause').hide();
+                        $('.div_button_stop').hide();
+                        $('.button_plus').attr('disabled', true);
+                        $('.button_minus').attr('disabled', true);
+                        $('.add_diemchodoithu').attr('disabled', true);
+                        $('.div_button_reset').attr('disabled', true); 
+                        $('.div_button_reset').show();                         
+                        calculateTheEndMarch();
+                                               
+                        $('#conformStop').modal();
+                        return false;
+                    }                    
+                } else {                    
+                    return false;
+                }
+
+            }
+        });               
+    });
+
+    $('body').on('click', '.button_cancel', function(){
+        var time = $('#timeUser').val();
+        secondUseCurrent = 0;
+        hidden = currentUser;
+        if(currentUser == user1) {
+            currentUser = user2;
+        } else {
+            currentUser = user1;
+        }  
+
+        //luot show
+        var currentluotco = parseInt($("#number_inning").html());
+        var user_khaicuoc = $('#khaicuoc_user').val();
+        if(user_khaicuoc == currentUser){
+            $("#number_inning").html(currentluotco + 1);
+        }
+
+        $('#timeCurrentUser' + hidden).hide();
+        $('#timeCurrentUser' + currentUser).show();
+        stopCountTimeUser();
+        startCountTimeUser();
+            
+        var idTrandau = $('#trandau_id').val();
+        var idUser = hidden;
+        var point = $('#oneAddPoint').val();        
+        $('.button2point' + currentUser).show();
+        $('#textPoint' + currentUser).hide();
+        $('.button2point' + hidden).hide();
+        $('#textPoint' + hidden).show();
+
+        var strload='<img class="imagesload_wait_button_cancel" src="'+$baseUrl+'/public/img/load.gif" />';
+        var url = $baseUrl + '/changeturns.html';
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                trandau_id:idTrandau,
+                thanhvien_id:idUser,
+                diem:point,
+                time:time,
+                status: 0
+            },
+            dataType:'text',
+            beforeSend: function() {
+                $('.button_cancel').after(strload);
+                $('.button_tranfer').attr('disabled', true);
+                $('.button_cancel').attr('disabled', true);
+            },
+            success:function(data){             
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == true){
+                    $('.imagesload_wait_button_cancel').remove();
+                    $('.button_tranfer').attr('disabled', false);
+                    $('.button_cancel').attr('disabled', false);
+
+                    if(parseInt(jsonData.diem) < 10){
+                        jsonData.diem = '0' + jsonData.diem; 
+                    }
+                    $('.rowUser' + hidden).removeClass('rowUser' + hidden);
+                    str = '<div class="row b-line-d t-line-d m-0 pb-14 rows_history rows_history_cancel rowUser' + hidden +'">';                
+                       str += '<div class="col-4 pt-2"><p>' + jsonData.inning + '</p></div>';
+                       str += '<div class="col-4 pt-2"><p>' + jsonData.score + '</p></div>';
+                       str += '<div class="col-4 pt-2"><p>' + jsonData.shot + '</p></div>';                       
+                    str +='</div>';
+                    $(str).insertBefore('.rowshow' + hidden);
+                    $('.rowshow' + hidden).remove();
+
+                    $('#user_active').val(currentUser);
+                    $('#oneAddPoint').val(0);                                            
+                    $('#point' + hidden).html(jsonData.diem)                                                                              
+                    $("#pointCurrentUser" + hidden).val(jsonData.diem);     
+                                        
+                    if(currentluotco < parseInt(jsonData.luotco)){
+                        $("#number_inning").html(jsonData.luotco);
+                        strshowuser1 = '<div class="row b-line-d t-line-d m-0 pb-14 rows_history rowshow' + hidden +'">';                           
+                           strshowuser1 += '<div class="col-4 pt-2"><p>' + jsonData.luotco + '</p></div>';
+                           strshowuser1 += '<div class="col-4 pt-2"><p class="rowshowPoint' + hidden + '">0</p></div>';
+                           strshowuser1 += '<div class="col-4 pt-2"><p class="rowshowTime' + hidden + '">0</p></div>';                           
+                        strshowuser1 +='</div>';
+                        $(strshowuser1).insertBefore('.rowUser' + hidden);                                                                 
+
+                        strshowuser2 = '<div class="row b-line-d t-line-d m-0 pb-14 rows_history rowshow' + currentUser +'">';                           
+                           strshowuser2 += '<div class="col-4 pt-2"><p>' + jsonData.luotco + '</p></div>';
+                           strshowuser2 += '<div class="col-4 pt-2"><p class="rowshowPoint' + currentUser + '">0</p></div>';
+                           strshowuser2 += '<div class="col-4 pt-2"><p class="rowshowTime' + currentUser + '">0</p></div>';                           
+                        strshowuser2 +='</div>';
+                        $(strshowuser2).insertBefore('.rowUser' + currentUser); 
+                    } 
+                    if(parseInt(jsonData.the_end)==1){
+                        $("#number_inning").html(jsonData.luotco);                        
+                        $('#timeCurrentUser' + currentUser).hide();
+                        $('#btnExit').show();
+                        $('#btnStop').hide();
+                        $('#btnCancel').hide();
+                        $('.div_button_tranfer').hide();
+                        $('.div_button_cancel').hide();
+                        $('.div_button_pause').hide();
+                        $('.div_button_stop').hide();
+                        $('.button_plus').attr('disabled', true);
+                        $('.button_minus').attr('disabled', true);
+                        $('.add_diemchodoithu').attr('disabled', true);
+                        $('.div_button_reset').attr('disabled', true); 
+                        $('.div_button_reset').show();                         
+                        calculateTheEndMarch();
+                                               
+                        $('#conformStop').modal();
+                        return false;
+                    }                                                                                                 
+                } else {                                        
+                    return false;     
+                }
+            }
+        });
+    })
+
+    $('.button_stop').on('click', function(){        
+        calculateTheEndMarch();
+        $('#btnStop').show();
+        $('#btnExit').hide();
+        $("#conformStop").modal();
+    })
+
+    $('.button_pause').on('click', function(){          
+        $('.button_tranfer').attr('disabled', true);
+        $('.button_cancel').attr('disabled', true);
+        $('.button_stop').attr('disabled', false);
+        $('.cbutton').attr('disabled', true);
+        $('.button_plus').attr('disabled', true);
+        $('.button_minus').attr('disabled', true);
+        $('.add_diemchodoithu').attr('disabled', true);
+        $('.resettime').show();
+        $('.button_pause').hide();
+        $('.div_full').css("display","block");
+        stopCountTimeUser();
+    })
+    
+    $('.resettime').on('click', function(){  
+        $('.div_full').css("display","none");     
+        $('.button_tranfer').attr('disabled', false);
+        $('.button_cancel').attr('disabled', false);
+        $('.button_stop').attr('disabled', false);
+        $('.resettime').hide();
+        $('.button_pause').show();
+
+        $('.cbutton').attr('disabled', false);
+        $('.button_plus').attr('disabled', false);
+        $('.button_minus').attr('disabled', false);
+        $('.add_diemchodoithu').attr('disabled', false);        
+        secondUseCurrent =0;
+        startCountTimeUser();
+    })
+
+    $('#btnResetGame').on('click', function(){     
+        $('.div_load_alert').css("display","block");
+        $.fn_ajax('reset', {'trandau_id': <?=$trandau_id?>}, function (result) {
+            if (result.flag == true) {
+                window.location = "<?= $this->route('start.html/') ?>" + result.trandau_id;
+            }
+        }, true);        
+    })
+
+    $('body').on('click', '.button_plus_point', function(){
+        
+        var dataId =$(this).attr('data-id');
+        var user1 = document.getElementById("user1").value;
+        var user2 = document.getElementById("user2").value;
+        if(dataId == user1){
+            var otherUser = user2;
+        } else {
+            var otherUser = user1;
+        }
+        var endPointUser = $("#pointEndUser" + dataId).val();
+        var currentPointUser = $("#pointCurrentUser" + dataId).val();
+        var currentAddPoint = $('#oneAddPoint').val();
+        var nextPoint = parseInt(currentAddPoint) + 1;
+        var TotalPoint = nextPoint + parseInt(currentPointUser);
+        var timeUser = $('#timeUser').val();            
+        $('.rowshowPoint' + dataId).html(nextPoint);
+        $('.rowshowTime' + dataId).html(timeUser); 
+
+        if(parseInt(endPointUser) > parseInt(TotalPoint)){                       
+            if(TotalPoint < 10) TotalPoint = '0' + parseInt(TotalPoint);
+            $('#point' + dataId).html(TotalPoint); 
+            $('#oneAddPoint').val(nextPoint);
+        }
+
+        if(endPointUser == TotalPoint){            
+            if(TotalPoint < 10) TotalPoint = '0' + parseInt(TotalPoint);
+            $('#point' + dataId).html(TotalPoint); 
+            $('#oneAddPoint').val(nextPoint);                        
+            disableButton(1);
+            var time = $('#timeUser').val();
+            var idTrandau = $('#trandau_id').val();
+
+            $('.div_load_alert').css("display","block");
+            var url = $baseUrl + '/martchend_pointtime.html';
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    trandau_id:idTrandau,
+                    thanhvien_id:dataId,
+                    diem:nextPoint,
+                    time:time,
+                    status: 1
+                },
+                dataType:'text',                
+                success:function(data){             
+                    jsonData =  $.parseJSON(data);
+                    if(jsonData.status == true){
+                        //update history                        
+                        $('.div_load_alert').css("display","none");                        
+                        $('#avg' + dataId).html(jsonData.avg);
+                        $('#hight' + dataId).html(jsonData.hight);
+                        $('#sobicham' + dataId).html(jsonData.number_balltouches);
+                        $('#time' + dataId).html(jsonData.total_time); 
+
+                        $('#timeCurrentUser' + dataId).hide();
+                        hiddenButton(1);                                                                                                                                                           
+                        calculateTheEndMarch();                                        
+                        $('#conformStop').modal();
+                        return false;
+                                            
+                    } else {                    
+                        return false;
+                    }
+                }
+            });                                  
+        }                                
+    })
+
+    $('body').on('click', '.button_minus', function(){
+        
+        var dataId =$(this).attr('data-id');
+        var user1 = document.getElementById("user1").value;
+        var user2 = document.getElementById("user2").value;
+        if(dataId == user1){
+            var otherUser = user2;
+        } else {
+            var otherUser = user1;
+        }
+        var currentPoint = parseInt($('#oneAddPoint').val());
+        if(currentPoint){
+            var nextPoint = currentPoint - 1;
+            var timeUser = $('#timeUser').val();
+            $('.rowshowPoint' + dataId).html(nextPoint);    
+            $('.rowshowTime' + dataId).html(timeUser);                  
+            $('#oneAddPoint').val(nextPoint);           
+            var TotalPoint = parseInt($('#point' + dataId).html());
+            var TotalPointNext = TotalPoint -1; 
+            if(TotalPoint < 10) TotalPointNext = '0' + TotalPointNext;
+            $('#point' + dataId).html(TotalPointNext);  
+        }
+        
+    })
+</script>
+<div class="div_load_alert">
+    <div class="main_mess">
+        <p><?= $this->language("l_main_mess") ?></p>
+        <img style="width: 200px;" src="<?=URL_PUBLIC?>img/load.gif" />
+    </div>
+</div>

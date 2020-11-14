@@ -1,0 +1,717 @@
+<?php
+
+class UserController extends Controller {
+
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+
+    // Phương thức test
+    public function testAction() {
+        //$this->isLogin(true);
+        $date = date('Y-m-d h:i:s', time());
+        $data = ['time' => $date];
+        $this->_model->insertRecord('test', $data);
+    }
+
+    // Phương thức mã hóa password
+    public function md5Password($password) {
+        return md5($password);
+        // return md5(md5('*)2^).-+(479&##' . $password . '#8$#@%^457'));
+    }
+
+    public function loginAction() {
+        $this->isLogin(true);
+        $this->_view->setFileTemplate('login');
+
+        if (isset($this->_params['aid'])) {
+            $inputs = $this->setInputs([
+                'aid',
+                'apw',
+                'acheck'
+            ]);
+            if ($inputs['aid'] && $inputs['apw']) {
+                $login = $this->_model->loadRecord('user', [
+                    'ID' => $inputs['aid'],
+                    'password' => $this->md5Password($inputs['apw'])
+                ]);
+                if ($login) {
+                    if ($login['status'] == 0) {
+                        $this->setError($this->_view->getItem('language', 'l_accountunactive'));
+                    } else {
+                        Session::set('lang', $login['lang']);
+                        Session::set('accountshopping', [
+                            'ID' => $login['ID'],
+                            'area' => $login['area'],
+                            'filetmp' => Func::strRandom()
+                        ]);
+                        if (isset($this->_params['achecked']) && $this->_params['achecked'] == 'on') {
+                            $timeout = strtotime("+30 days");
+                            setcookie("accountshopping[ID]", $login['ID'], $timeout);
+                            setcookie("accountshopping[area]", $login['area'], $timeout);
+                            setcookie("accountshopping[filetmp]", Session::get('accountshopping')['filetmp'], $timeout);
+                        } else {
+                            $timeout = time() - 3600;
+                            setcookie("accountshopping[ID]", "", $timeout);
+                        }
+                        $this->isLogin(true);
+                    }
+                } else {
+                    $this->setError($this->_view->getItem('language', 'l_notidpw'));
+                }
+            }
+        }
+        $this->_view->setData('error', $this->getError());
+        $this->_view->render('login');
+    }
+    public function loginkeyboardAction() {
+        $result = [
+            'status' => false,
+            'msg' => $this->_view->getItem('language', 'l_inputempty')
+        ];
+        if (isset($this->_params['aid'])&&isset($this->_params['apw'])) {
+            $aid = $this->_params['aid'];
+            $apw = $this->_params['apw'];            
+            $login = $this->_model->loadRecord('user', [
+                    'ID' => $aid,
+                    'password' => $this->md5Password($apw)
+            ]);
+            if ($login) {
+                if ($login['status'] == 0) {                    
+                    $result['msg'] = $this->_view->getItem('language', 'l_accountunactive');
+                } else {
+                    Session::set('lang', $login['lang']);
+                    Session::set('accountshopping', [
+                        'ID' => $login['ID'],
+                        'area' => $login['area'],
+                        'filetmp' => Func::strRandom()
+                    ]);
+                    if (isset($this->_params['achecked']) && $this->_params['achecked'] == 'on') {
+                        $timeout = strtotime("+30 days");
+                        setcookie("accountshopping[ID]", $login['ID'], $timeout);
+                        setcookie("accountshopping[area]", $login['area'], $timeout);
+                        setcookie("accountshopping[filetmp]", Session::get('accountshopping')['filetmp'], $timeout);
+                    } else {
+                        $timeout = time() - 3600;
+                        setcookie("accountshopping[ID]", "", $timeout);
+                    }
+                    //$this->isLogin(true);
+                    $result['status'] = true;
+                    $result['msg'] = "Login successfull";
+                }
+            } else {
+                $result['msg'] = $this->_view->getItem('language', 'l_notidpw');                
+            }            
+            
+        }
+        echo json_encode($result);
+    }
+
+    // Phương thức đăng xuất
+    public function logoutAction() {
+        if (Session::get('accountshopping')) {
+            $timeout = time() - 3600;
+            Session::delete('accountshopping');
+            setcookie("accountshopping[area]", "", $timeout);
+            setcookie("accountshopping[filetmp]", "", $timeout);
+            Url::header($this->route('login'));
+        }
+        $this->isLogin();
+    }
+
+    public function registerUserAction() {
+        $result = [
+            'status' => false,
+            'msg' => 'Insert user failt'
+        ];
+        
+        if (isset($this->_params['name']) && isset($this->_params['phone']) && isset($this->_params['point'])) {
+            $name = str_replace(' ', '', $this->_params['name']);
+            $phone = str_replace(' ', '', $this->_params['phone']);
+            $point = str_replace(' ', '', $this->_params['point']);
+            $point=(int)($point);
+            if($point>0){
+                if($name!=""){
+                    if (Func::isName($name) == false) {
+                        if (!$this->_model->checkNameExist($this->_params['name'])) {
+                            if($phone!=""){
+                                if(Func::isPhoneNumric($phone) != false ){
+                                    $data = [
+                                        'name' => $this->_params['name'],
+                                        'phone' => $this->_params['phone'],
+                                        'diem' => $this->_params['point'],
+                                    ];
+                                    if (!$this->_model->checkUserExist($this->_params['phone'])) {
+                                        $query = $this->_model->insertRecord('thanhvien', $data);
+                                        if ($query) {
+                                            $id = $this->_model->getLastId();
+                                            $infouser = $this->_model->loadRecord('thanhvien', ['id' => $id]);
+                                            $result['status'] = true;
+                                            $result['adduser'] = '<div class="col-xs-4 tv_rows">
+                                                                    <p class="tv_icon"><i class="fa fa-user" aria-hidden="true"></i></p>
+                                                                    <div class="tv_content">
+                                                                        <p class="tv_name">' . $infouser["name"] . '</p>
+                                                                        <p>
+                                                                            <span>AVG :</span> <span class="tv_avg">' . $infouser["avg"] . '</span> &nbsp;&nbsp;
+                                                                            <span>High :</span>  <span class="tv_highrun">' . $infouser["highrun"] . '</span>
+                                                                        </p>
+                                                                    </div>
+                                                                    <p class="tv_diemchap">' . $infouser["diem"] . '</p>
+                                                                    <div class="cl"></div>
+                                                                </div>';
+                                            $result['msg'] = $this->_view->getItem('language', 'l_sigup_user_success'); 
+                                        }
+                                    } else {
+                                        $result['msg'] = $this->_view->getItem('language', 'l_error_unique_phone'); 
+                                    }
+                                }else{
+                                    $result['msg'] = $this->_view->getItem('language', 'l_error_type_phone'); 
+                                }
+                                
+                            }else{
+                                $result['msg'] = $this->_view->getItem('language', 'l_error_required_phone'); 
+                            }
+                        }else{
+                            $result['msg'] = $this->_view->getItem('language', 'l_error_unique_name'); 
+                        }
+                    }else{
+                        $result['msg'] = $this->_view->getItem('language', 'l_error_special_name');
+                    }               
+                }else{
+                    $result['msg'] = $this->_view->getItem('language', 'l_error_required_username'); 
+                }
+            } else {
+                $result['msg'] = $this->_view->getItem('language', 'l_error_numberic'); 
+            }
+        }
+        $result['total'] = isset($this->_model->countRowTabel('thanhvien')['record']) ? $this->_model->countRowTabel('thanhvien')['record'] : 0;
+        echo json_encode($result);
+    }
+
+    public function registersettingUserAction() {
+        $result = [
+            'status' => false,
+            'msg' => 'Insert user failt'
+        ];
+
+        if (isset($this->_params['name']) && isset($this->_params['email']) && isset($this->_params['point'])) {
+            $name = str_replace(' ', '', $this->_params['name']);
+            $email = str_replace(' ', '', $this->_params['email']);
+            $point = str_replace(' ', '', $this->_params['point']);
+            $data = [
+                'name' => $this->_params['name'],
+                'email' => $this->_params['email'],
+                'diem' => $this->_params['point'],
+            ];
+            if($name!=""){
+                if($email!=""){
+                    $point=(int)($point);
+                    if($point>0){
+                        if (!$this->_model->checkUserExist($this->_params['email'])) {
+                            $query = $this->_model->insertRecord('thanhvien', $data);
+                            if ($query) {
+                                $id = $this->_model->getLastId();
+
+                                $infouser = $this->_model->loadRecord('thanhvien', ['id' => $id]);
+                                $result['status'] = true;
+                                $result['adduser'] = '<div class="col-xs-4 tv_rows" onclick="getPlayer(' . "'" . $infouser["id"] . "'" . ',' . "'" . $infouser["name"] . "'" . ',' . "'" . $infouser["diem"] . "'" . ')">
+                                                        <p class="tv_icon"><i class="fa fa-user" aria-hidden="true"></i></p>
+                                                        <div class="tv_content">
+                                                            <p class="tv_name">' . $infouser["name"] . '</p>
+                                                            <p>
+                                                                <span>AVG :</span> <span class="tv_avg">' . $infouser["avg"] . '</span> &nbsp;&nbsp;
+                                                                <span>High :</span>  <span class="tv_highrun">' . $infouser["highrun"] . '</span>
+                                                            </p>
+                                                        </div>
+                                                        <p class="tv_diemchap">' . $infouser["diem"] . '</p>
+                                                        <div class="cl"></div>
+                                                    </div>';
+                                $result['msg'] = $this->_view->getItem('language', 'l_sigup_user_success'); 
+                            }
+                        } else {
+                            $result['msg'] = $this->_view->getItem('language', 'l_error_unique_phone'); 
+                        }
+                    }else{
+                        $result['msg'] = $this->_view->getItem('language', 'l_error_numberic'); 
+                    }
+                }else{
+                    $result['msg'] = $this->_view->getItem('language', 'l_error_required_phone');
+                }
+            }else{
+                $result['msg'] = $this->_view->getItem('language', 'l_error_required_username');
+            }
+            
+        }
+        $result['total'] = isset($this->_model->countRowTabel('thanhvien')['record']) ? $this->_model->countRowTabel('thanhvien')['record'] : 0;
+        echo json_encode($result);
+    }
+    public function registerlistmemberUserAction() {
+        $result = [
+            'status' => false,
+            'msg' => 'Insert user failt'
+        ];
+        
+        if (isset($this->_params['name']) && isset($this->_params['phone']) && isset($this->_params['point'])) {
+            $name = str_replace(' ', '', $this->_params['name']);
+            $phone = str_replace(' ', '', $this->_params['phone']);
+            $point = str_replace(' ', '', $this->_params['point']);
+            $point=(int)($point);
+            if($point>0){
+                if($name!=""){
+                    if (Func::isName($name) == false) {
+                        if (!$this->_model->checkNameExist($this->_params['name'])) {
+                            if($phone!=""){
+                                if(Func::isPhoneNumric($phone) != false ){
+                                    $data = [
+                                        'name' => $this->_params['name'],
+                                        'phone' => $this->_params['phone'],
+                                        'diem' => $this->_params['point'],
+                                    ];
+                                    if (!$this->_model->checkUserExist($this->_params['phone'])) {
+                                        $query = $this->_model->insertRecord('thanhvien', $data);
+                                        if ($query) {
+                                            $id = $this->_model->getLastId();
+                                            $infouser = $this->_model->loadRecord('thanhvien', ['id' => $id]);
+                                            $result['status'] = true;
+                                            $result['adduser'] = '<div class="col-md-3">
+                                                                    <a href="">
+                                                                        <div class="thanh-vien-item">
+                                                                            <div class="circle"><img src="'.URL_PUBLIC.'images/thanh-vien-1.png"></div>
+                                                                            <div class="thanh-vien-ct">
+                                                                                <div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">' . $infouser["name"] . '</div>
+                                                                                <div class="w-50 float-left text-center">
+                                                                                    AVG: <span class="color-or">' . $infouser["avg"] . '</span>
+                                                                                </div>
+                                                                                <div class="w-50 float-left text-center">
+                                                                                    High: <span class="color-or">' . $infouser["highrun"] . '</span>
+                                                                                </div>
+                                                                            </div>	
+                                                                            <div class="circle-sm">' . $infouser["diem"] . '</div>
+                                                                        </div>
+                                                                    </a>
+                                                                </div>';
+                                            $result['msg'] = $this->_view->getItem('language', 'l_sigup_user_success'); 
+                                        }
+                                    } else {
+                                        $result['msg'] = $this->_view->getItem('language', 'l_error_unique_phone'); 
+                                    }
+                                }else{
+                                    $result['msg'] = $this->_view->getItem('language', 'l_error_type_phone'); 
+                                }
+                                
+                            }else{
+                                $result['msg'] = $this->_view->getItem('language', 'l_error_required_phone'); 
+                            }
+                        }else{
+                            $result['msg'] = $this->_view->getItem('language', 'l_error_unique_name'); 
+                        }
+                    }else{
+                        $result['msg'] = $this->_view->getItem('language', 'l_error_special_name');
+                    }               
+                }else{
+                    $result['msg'] = $this->_view->getItem('language', 'l_error_required_username'); 
+                }
+            } else {
+                $result['msg'] = $this->_view->getItem('language', 'l_error_numberic'); 
+            }
+        }
+        $result['total'] = isset($this->_model->countRowTabel('thanhvien')['record']) ? $this->_model->countRowTabel('thanhvien')['record'] : 0;
+        echo json_encode($result);
+    }
+
+    public function listMemberAction() {
+        $totalMember = $this->_model->countRowTabel('thanhvien');
+        $this->_view->setData('totalMember', isset($totalMember['record']) ? $totalMember['record'] : 0);
+        $option = [
+            'sort' => [
+                'column' => "id",
+                'order' => "DESC"
+            ]
+        ];
+
+        $listUser = $this->_model->loadRecords('thanhvien', [], true, $option);
+        $this->_view->setData('listUser', $listUser);
+        $this->_view->render('danhsachtv');
+    }
+
+    public function searchMemberAction() {
+        $result = [
+            'status' => false,
+            'msg' => 'not find member'
+        ];
+
+        if (isset($this->_params['keyword'])) {
+            $keyword = $this->_params['keyword'];
+            $sql = "SELECT user.* FROM thanhvien AS user 
+                    WHERE user.name LIKE '%" . $keyword . "%' OR  user.phone LIKE '%" . $keyword . "%' ORDER BY user.id DESC";
+
+            $query = $this->_model->setQuery($sql);
+            $result['user'] = $this->_model->readAll(true);
+            $result['total'] = count($result['user']);
+            $result['status'] = true;
+        }
+        echo json_encode($result);
+    }
+    public function registerlistmemberkeyboardAction() {
+        $result = [
+            'status' => false,
+            'msg' => 'Please input all'
+        ];
+
+        if (isset($this->_params['userName'])&&isset($this->_params['phone'])&&isset($this->_params['point'])) {
+            $userName = $this->_params['userName'];
+            $phone = $this->_params['phone'];
+            $point = $this->_params['point'];            
+            $data = [
+                'name' => $userName,
+                'phone' => $phone,
+                'diem' => $point,
+            ];
+            $userName = str_replace(' ', '', $userName);
+            $phone = str_replace(' ', '', $phone);
+            $point=(int)($point);
+            if($point>0){
+                if($userName!=""){
+                    if($phone!=""){
+                        if (!$this->_model->checkUserExist($phone)) {
+                            $query = $this->_model->insertRecord('thanhvien', $data);
+                            if ($query) {
+                                $id = $this->_model->getLastId();
+                                $infouser = $this->_model->loadRecord('thanhvien', ['id' => $id]);
+                                $result['status'] = true;
+                                $result['adduser'] = '<div class="col-md-3 tv_rows" onclick="getPlayer(' . "'" . $infouser["id"] . "'" . ',' . "'" . $infouser["name"] . "'" . ',' . "'" . $infouser["diem"] . "'" . ')">
+                                                        <div class="thanh-vien-item">
+                                                            <div class="circle"><img src="'.URL_PUBLIC.'images/thanh-vien-1.png"></div>
+                                                            <div class="thanh-vien-ct">
+                                                                <div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">' . $infouser["name"] . '</div>
+                                                                <div class="w-50 float-left text-center">
+                                                                    AVG: <span class="color-or">' . $infouser["avg"] . '</span>
+                                                                </div>
+                                                                <div class="w-50 float-left text-center">
+                                                                    High: <span class="color-or">' . $infouser["highrun"] . '</span>
+                                                                </div>
+                                                            </div>	
+                                                            <div class="circle-sm">' . $infouser["diem"] . '</div>
+                                                        </div>
+                                                    </div>';
+                                $result['status'] = true;                    
+                                $result['msg'] = $this->_view->getItem('language', 'l_sigup_user_success'); 
+                            }
+                        } else {
+                            $result['msg'] = $this->_view->getItem('language', 'l_error_unique_phone'); 
+                        }
+                    }else{
+                        $result['msg'] = $this->_view->getItem('language', 'l_error_required_phone'); 
+                    }
+                }else{
+                    $result['msg'] = $this->_view->getItem('language', 'l_error_required_username'); 
+                }
+            } else {
+                $result['msg'] = $this->_view->getItem('language', 'l_error_numberic'); 
+            }
+        }
+        echo json_encode($result);
+    }
+    public function registerkeyboardAction() {
+        $result = [
+            'status' => false,
+            'msg' => 'Please input all'
+        ];
+
+        if (isset($this->_params['userName'])&&isset($this->_params['phone'])&&isset($this->_params['point'])) {
+            $userName = $this->_params['userName'];
+            $phone = $this->_params['phone'];
+            $point = $this->_params['point'];
+            $data = [
+                'name' => $userName,
+                'phone' => $phone,
+                'diem' => $point,
+            ];
+            $userName = str_replace(' ', '', $userName);
+            $phone = str_replace(' ', '', $phone);
+            $point=(int)($point);
+            if($point>0){
+                if($userName!=""){
+                    if($phone!=""){
+                        if (!$this->_model->checkUserExist($phone)) {
+                            $query = $this->_model->insertRecord('thanhvien', $data);
+                            if ($query) {
+                                $result['status'] = true;                    
+                                $result['msg'] = $this->_view->getItem('language', 'l_sigup_user_success'); 
+                            }
+                        } else {
+                            $result['msg'] = $this->_view->getItem('language', 'l_error_unique_phone'); 
+                        }
+                    }else{
+                        $result['msg'] = $this->_view->getItem('language', 'l_error_required_phone'); 
+                    }
+                }else{
+                    $result['msg'] = $this->_view->getItem('language', 'l_error_required_username'); 
+                }
+            } else {
+                $result['msg'] = $this->_view->getItem('language', 'l_error_numberic'); 
+            }
+        }
+        echo json_encode($result);
+    }
+    
+    public function changeTurnsAction() {
+        $result = [
+            'status' => false,
+            'the_end' => 0,
+            'msg' => 'Error change turns'
+        ];
+
+        if (isset($this->_params['trandau_id']) && isset($this->_params['thanhvien_id'])) {
+
+            $data = [
+                'trandau_id' => $this->_params['trandau_id'],
+                'thanhvien_id' => $this->_params['thanhvien_id'],
+                'diem' => $this->_params['diem'],
+                'time' => $this->_params['time'],
+                'status' => $this->_params['status']
+            ];
+
+            $infotrandau = $this->_model->loadRecord('trandau', ['id' => $data['trandau_id']]);
+            $data['luot'] = (int)$this->_model->getNextLuotCoUser($data['trandau_id'],$data['thanhvien_id']); 
+
+            if((int)$infotrandau['khaicuoc_user'] != (int)$data['thanhvien_id'])
+            {
+                $result['luotco'] = (int)$this->_model->getNextLuotCoUser($data['trandau_id'],$infotrandau['khaicuoc_user']);                
+                if($infotrandau['luot'] > 0 && (int)$data['luot'] == $infotrandau['luot']){
+                    $result['the_end'] = 1;
+                    $this->_model->updateInfoUserAfterWin($data['trandau_id']);
+                    $this->_model->changeStatusTrandau($data['status'], $data['trandau_id']);
+                }
+            }
+                    
+            $query = $this->_model->insertRecord('trandau_chitiet', $data);
+
+            if ($query) {
+                $result['status'] = true;
+                $result['msg'] = 'Change Turns successfully';  
+                $result['inning'] = $data['luot'];
+                $result['score'] = $data['diem'];
+                $result['shot'] = $data['time'];
+
+                $historyPointUser = $this->_model->getHistoryPointUser($data['trandau_id'], $data['thanhvien_id']);                                 
+                $hight = 0;
+                $totalTime = 0;
+                $totalPoint = 0;
+                $inning = 1;
+                $curentPoint = 0;
+                if($historyPointUser){
+                    foreach ($historyPointUser as $key=>$val){                        
+                        if($hight<$val['diem'] && $val['status'] ==1) $hight=$val['diem'];
+                        if($inning<$val['luot']) $inning=$val['luot'];
+                        if($val['status'] ==1) $curentPoint +=$val['diem'];
+                        $totalTime +=$val['time'];
+                        $totalPoint +=$val['diem'];
+                    }
+                }                    
+                $result['diem'] = (int)$curentPoint;                                
+                $result['avg'] = round(($totalPoint/$inning),2);
+                $result['hight'] = (int)$hight;
+                $result['total_time'] = (int)$totalTime;                
+                $result['number_balltouches'] = 0;
+                // $pointendUser = (int)$this->_model->getPointEndUser($data['trandau_id'],$data['thanhvien_id']);                  
+                // if($result['diem'] == $pointendUser){
+                //     $result['the_end'] = 1;
+                //     $this->_model->updateInfoUserAfterWin($data['trandau_id']);
+                //     $this->_model->changeStatusTrandau(2, $data['trandau_id']);
+                // }                
+            } else {
+                $result['status'] = false;
+            }
+        }        
+        echo json_encode($result);
+    }
+
+    public function martchend_pointtimeAction(){
+        $result = [
+            'status' => false,
+            'the_end' => 0,
+            'msg' => 'action fail'
+        ];
+
+        if (isset($this->_params['status']) && isset($this->_params['trandau_id']) && isset($this->_params['thanhvien_id'])) {
+
+            $data = [
+                'trandau_id' => $this->_params['trandau_id'],
+                'thanhvien_id' => $this->_params['thanhvien_id'],
+                'diem' => $this->_params['diem'],
+                'time' => $this->_params['time'],
+                'status' => $this->_params['status']
+            ];
+
+            $data['luot'] = (int)$this->_model->getNextLuotCoUser($data['trandau_id'],$data['thanhvien_id']); 
+            $query = $this->_model->insertRecord('trandau_chitiet', $data);
+            if ($query) {
+                $result['status'] = true;
+                $result['msg'] = 'action successfully';  
+                $result['inning'] = $data['luot'];
+                $result['score'] = $data['diem'];
+                $result['shot'] = $data['time'];                
+
+                $historyPointUser = $this->_model->getHistoryPointUser($data['trandau_id'], $data['thanhvien_id']);  
+                                           
+                $hight = 0;
+                $totalTime = 0;
+                $totalPoint = 0;
+                $inning = 1;
+                $curentPoint = 0;
+                if($historyPointUser){
+                    foreach ($historyPointUser as $key=>$val){                        
+                        if($hight<$val['diem'] && $val['status'] ==1) $hight=$val['diem'];
+                        if($inning<$val['luot']) $inning=$val['luot'];
+                        if($val['status'] ==1) $curentPoint +=$val['diem'];
+                        $totalTime +=$val['time'];
+                        $totalPoint +=$val['diem'];
+                    }
+                }                    
+                $result['diem'] = (int)$curentPoint;                                
+                $result['avg'] = round(($totalPoint/$inning),2);
+                $result['hight'] = (int)$hight;
+                $result['total_time'] = (int)$totalTime;                
+                $result['number_balltouches'] = 0;
+                
+                $this->_model->updateInfoUserAfterWin($data['trandau_id']);
+                $this->_model->changeStatusTrandau($data['status'], $data['trandau_id']);                
+            } else {
+                $result['status'] = false;
+            }
+        }        
+        echo json_encode($result);
+         
+    }
+    public function gethistoryUserAction(){
+        $result = [
+            'status' => false,
+            'msg' => 'No find history of user'
+        ];
+
+        if (isset($this->_params['trandau']) && isset($this->_params['user'])) {
+            $trandau_id = $this->_params['trandau'];
+            $user = $this->_params['user'];
+
+            $sql = "SELECT chitiet.* FROM trandau_chitiet AS chitiet 
+                    WHERE chitiet.trandau_id = $trandau_id AND   chitiet.thanhvien_id = $user ORDER BY chitiet.id DESC";
+            $query = $this->_model->setQuery($sql);            
+            $result['chitiet'] = $this->_model->readAll(true);           
+            $result['status'] = true;
+        }
+        echo json_encode($result);
+    }
+
+    public function stoptrandau2userAction(){
+        $result = [
+            'status' => false,
+            'msg' => 'stop match fail'
+        ];
+
+        if (isset($this->_params['trandau']) && isset($this->_params['status'])) {
+            $trandau_id = $this->_params['trandau'];
+            $status = $this->_params['status'];
+
+            if($this->_model->changeStatusTrandau($status, $trandau_id)){
+                $result = [
+                    'status' => true,
+                    'msg' => 'stop match successfully'
+                ];                
+            }
+        }
+        echo json_encode($result);
+    }
+
+    public function addPointPlay2UserNormalAction(){
+        $result = [
+            'status' => false,
+            'msg' => 'add point fail'
+        ];
+
+        if (isset($this->_params['trandau']) && isset($this->_params['diem']) && isset($this->_params['thanhvien_id'])) {
+            $trandau_id = $this->_params['trandau'];
+            $thanhvien_trandau_id = $this->_params['thanhvien_id'];
+            $point = $this->_params['diem'];
+            $str = $this->_params['str'];
+            $time = $this->_params['time'];
+
+            $data = [
+                'trandau_id' => $trandau_id,
+                'thanhvien_trandau_id' => $thanhvien_trandau_id,                
+                'diem' => $point,
+                'content' => $str,
+                'time' => $time
+            ];
+
+            $query = $this->_model->insertRecord('trandau_chitiet', $data);            
+            
+            if($query){
+                $result = [
+                    'status' => true,
+                    'msg' => 'add point successfully'
+                ];                
+            }
+        }
+        echo json_encode($result);
+    }
+    
+    public function listmemberregisterAjax() {
+        $result = ['flag' => false];        
+        if (isset($this->_params['name']) && isset($this->_params['email']) && isset($this->_params['point'])) {            
+            $userName = $this->_params['name'];
+            $email = $this->_params['email'];
+            $point = $this->_params['point'];            
+            $data = [
+                'name' => $userName,
+                'email' => $email,
+                'diem' => $point,
+            ];
+            $userName = str_replace(' ', '', $userName);
+            $email = str_replace(' ', '', $email);
+            $point=(int)($point);
+            if($point>0){
+                if($userName!=""){
+                    if($email!=""){
+                        if (!$this->_model->checkUserExist($email)) {
+                            $query = $this->_model->insertRecord('thanhvien', $data);
+                            if ($query) {
+                                $id = $this->_model->getLastId();
+                                $infouser = $this->_model->loadRecord('thanhvien', ['id' => $id]);
+                                $result['status'] = true;
+                                $result['adduser'] = '<div class="col-xs-4 tv_rows" onclick="getPlayer(' . "'" . $infouser["id"] . "'" . ',' . "'" . $infouser["name"] . "'" . ',' . "'" . $infouser["diem"] . "'" . ')">
+                                                        <p class="tv_icon"><i class="fa fa-user" aria-hidden="true"></i></p>
+                                                        <div class="tv_content">
+                                                            <p class="tv_name">' . $infouser["name"] . '</p>
+                                                            <p>
+                                                                <span>AVG :</span> <span class="tv_avg">' . $infouser["avg"] . '</span> &nbsp;&nbsp;
+                                                                <span>High :</span>  <span class="tv_highrun">' . $infouser["highrun"] . '</span>
+                                                            </p>
+                                                        </div>
+                                                        <p class="tv_diemchap">' . $infouser["diem"] . '</p>
+                                                        <div class="cl"></div>
+                                                    </div>';
+                                $result['status'] = true;                    
+                                $result['msg'] = $this->_view->getItem('language', 'l_sigup_user_success'); 
+                            }
+                        } else {
+                            $result['msg'] = $this->_view->getItem('language', 'l_error_unique_phone'); 
+                        }
+                    }else{
+                        $result['msg'] = $this->_view->getItem('language', 'l_error_required_phone'); 
+                    }
+                }else{
+                    $result['msg'] = $this->_view->getItem('language', 'l_error_required_username'); 
+                }
+            } else {
+                $result['msg'] = $this->_view->getItem('language', 'l_error_numberic'); 
+            }
+        }
+        echo json_encode($result);
+        
+    }
+    
+}
+
+?>

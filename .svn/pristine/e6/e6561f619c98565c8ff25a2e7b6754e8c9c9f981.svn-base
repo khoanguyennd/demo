@@ -1,0 +1,408 @@
+<style>
+    .from-c {
+        font-size: 12px;
+    }
+    input{
+        padding: 15px 5px 15px 10px !important;
+    }
+    .error_insert{
+        color: red;
+        margin-top: 10px;
+    }
+    .logo {
+        width: 140px;
+        margin: auto;
+        }
+    .title_header{
+        font-size: 14px;    
+        float: right;
+    }
+    .input-group {
+        margin-left: 2%;
+        margin-right: 2%;
+        width: 94%;
+    }
+    a.btn-orange-sm {
+        padding: 0px 5px;
+        font-size: 12px;
+        margin-right: 0px;
+        line-height: 30px;
+    }
+    .circle{
+        padding-top: 4px;
+        width: 30px;
+        height: 30px;
+    }
+    .circle>img{
+        width: 45%;
+    }
+    .msg_head {  
+        width: 77%; 
+    }
+    .msg_head>h2{
+        margin-top: 35px;
+        float:right;
+    }  
+    .circle-sm{
+        margin-top: 0px;
+        margin-left: -20px;
+    }
+    .font-10{
+        font-size: 13px;
+    }
+    .tv_rows{
+        padding-left: 2px;
+        padding-right: 2px;
+        margin-bottom: -5px;
+    }
+    .rows_list{
+        margin: auto;
+        width: 100%;
+    }
+    a.btn-blue {
+        padding: 0px 5px;
+        margin-right: auto;
+    }
+    .margin-t-2{
+        margin-top: 2px;
+        margin-bottom: 5%;
+    }
+    .total_memb {
+        text-align: left !important;
+        margin-top: 10px;
+        margin-left: 5px;
+    }
+    .head-h3{
+        text-align: left !important;
+        margin-left: 5px;
+    }
+    .name-thanh-vien{
+       text-align: center;
+    }
+    .text-cus{min-width: 90px;}
+    .text-cus-hg{min-width: 90px;}
+    .head{ margin-left: 1%;margin-right: 1%;}  
+    .viewport{height: 250px !important; margin-top: 5px!important;}
+     .viewport {overflow: auto;margin-top: 20px;}
+    .hide-scroll {overflow: hidden;position: relative;}
+    .hide-scroll:after {content: '';height: 2em;position: absolute;bottom: 0;left: 0;right: 0;}
+    @media (min-width: 665px) and (max-width: 820px){
+        .head{ margin-left: 1%;margin-right: 1%;padding-bottom: 7px}   
+        .viewport{height: 230px !important;}
+        .error{
+            font-size: 12px !important;
+        }
+    }
+    @media (min-width: 570px) and (max-width: 665px){
+        .head{ margin-left: 1%;margin-right: 1%;padding-bottom: 5px}   
+        .viewport{height: 210px !important;}
+        .from-c {
+            font-size: 12px !important;
+        }
+        .error{
+            font-size: 10px !important;
+        }
+
+    }
+    @media (min-width: 520px) and (max-width: 570px){
+        .head{ margin-left: 1%;margin-right: 1%;padding-bottom: 2px}   
+        .viewport{height: 170px !important;}
+        .from-c {
+            font-size: 12px!important;
+        }
+    }
+
+</style>
+<?php include_once(PATH_APPLICATION . 'view/popup/register_member_mobile.php') ?>
+<input type="hidden" id="language" name="language" value="<?= Session::get('accountshopping')['area'] ?>">
+<div class="head">
+    <div class="row">
+    	<div style="width: 20%;padding: 10px 0px 0px 15px;"> 
+        <img class="logo" src="<?= URL_PUBLIC ?>images/logo-1.png" alt="Billiard">
+        </div>
+        <div style="width: 36%;padding-top: 20px;">       
+         	<h2 class="title_header"><?=$this->language("l_listmember")?></h2>
+        </div>
+
+        <div class="float-right text-right mg-b-10" style="width: 40%;padding-top: 10px;">
+            <a type="button" class="btn btn-warning btn-orange-sm" onclick="registerlistmember()"><?=$this->language("l_registermember")?></a>
+            <a type="button" class="btn btn-primary btn-blue shadow_button" onclick="closeWin()"><?=$this->language("m_back")?></a>
+        </div>
+        
+    </div>
+</div>
+<div class="container" style="min-height: auto;max-width: 98%;">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row main-bgt" style="padding: 10px;">
+                <div class="col-12 bgt-blue p-0">
+                    <div class="title" style="padding-top: 5px; padding-bottom: 5px;">
+                        <div class="row">
+                            <div class="col-6">
+                                <h3 class="head-h3"><?=$this->language("m_total_member")?>: <span id="totalUser"><?= $this->getData('totalMember'); ?></span></h3>
+                            </div>
+                                        							
+                            <div class="col-6 p-1">       
+                                <div class="input-group">
+                                    <input type="text" class="form-control ds-input use-keyboard-input-search-user-listmember" style="height: 33px;" id="search-input" placeholder="<?=$this->language("l_search_text_placeholder")?>">
+                                    <div class="input-group-append">                                        
+                                        <button class="btn btn-primary" id="seachMember" type="button" style="height: 33px;"><i class="fa fa-search" style="font-size: 20px;"></i></button>
+                                    </div>
+                                </div>                                                                                            
+                            </div>
+                      </div>
+                        <div class="hide-scroll t-line-d">
+                        <div class="t-line"></div>
+                                <div class="viewport" style="margin-top: 0px;height: 630px">
+                                    <div class="row rows_list" >                            
+                                    <?php
+                                    $listUser = $this->getData('listUser');
+                                    foreach ($listUser as $key => $val) {
+                                    ?>
+                                    <div class="col-3 tv_rows">
+                                        <div class="thanh-vien-item">
+                                            <div class="thanh-vien-ct">
+                                                <div  class="name-thanh-vien color-w text-center w-100 p-0 mg-b-10 lh-40"><?= $val['name']; ?></div>
+                                                <div class="row mg-b-10">
+                                                    <div class="col-3">
+                                                        <div class="circle"><img src="<?= URL_PUBLIC ?>images/thanh-vien-1.png"></div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="text-cus font-10">
+                                                            <?=$this->language("l_avg")?>: <span class="color-or"><?= $val['avg']; ?></span>
+                                                        </div>
+                                                        <div class="text-cus-hg font-10">
+                                                            <?=$this->language("l_detail_high")?>: <span class="color-or"><?= $val['highrun']; ?></span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <div class="circle-sm"><?= $val['diem']; ?></div>
+                                                    </div>
+                                                </div>                                             
+                                            </div>	                                   
+                                        </div>
+                                    </div>
+                                    <?php }?>
+                                </div>
+                            </div>                            
+                        </div>
+                    </div>									
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    $(document).ready(function() {        
+        $(".btnInfomember_close").click(function () {
+            $('#tttvModal_ds').modal('hide');
+        });
+        $(".btnUpdatemember").click(function () {
+            $('#suatvModal_ds').modal('show');
+        });
+    });
+    $('#seachMember').on('click', function(){
+        var keyword = $('#search-input').val();
+        var url = $baseUrl + '/searchmember.html';
+        $('.div_load_alert').css("display", "block");
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                keyword:keyword                                
+            },
+            dataType:'text',
+            success:function(data){             
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == true){                                    
+                    $('.rows_list').html('');
+                    var listUser = jsonData.user;
+                    $.each(listUser,function(i,item){                                        
+
+                        itemUser = '<div class="col-3 tv_rows">';
+                                itemUser += '<div class="thanh-vien-item">';
+                                    itemUser += '<div class="thanh-vien-ct">';        
+                                    itemUser += '<div class="name-thanh-vien color-w text-center w-100 p-0 mg-b-10 lh-40">' + item.name +'</div>';
+                             
+                                    itemUser += '<div class="row mg-b-10">';
+                                        itemUser += '<div class="col-3">';
+                                            itemUser += '<div class="circle"><img src="'+$baseUrl+'/public/images/thanh-vien-1.png"></div>';
+                                        itemUser += '</div>';
+                                        itemUser += '<div class="col-6">';
+                                            itemUser += '<div class="text-cus font-10">';
+                                                itemUser += '<?=$this->language("l_avg")?>: <span class="color-or">' + item.avg +'</span>';
+                                            itemUser += '</div>';
+                                            itemUser += '<div class="text-cus-hg font-10">';
+                                                itemUser += '<?=$this->language("l_detail_high")?>: <span class="color-or">' + item.highrun + '</span>';
+                                            itemUser += '</div>';
+                                        itemUser += '</div>';
+                                        itemUser += '<div class="col-3">';
+                                              itemUser += '<div class="circle-sm">' + item.diem + '</div>';
+                                        itemUser += '</div>';                             
+                                    itemUser += '</div>';              
+                                itemUser += '</div>';
+                        itemUser += '</div>';
+                        
+                        $('.rows_list').append(itemUser);                        
+                    })
+                    $('#totalUser').html(jsonData.total); 
+                    $('.div_load_alert').css("display", "none");
+                    $(".thanh-vien-item").click(function () {
+                        var name = $(this).find(".name-thanh-vien").text();
+                        $('#msg_err_edit_member').text("");
+                        $(".error").html("");
+                        $('.div_load_alert').css("display", "block");
+                        $.fn_ajax("getInfoUser",{ "name": name }, function(result){
+                            if (result.flag == true) {
+                                $('.div_load_alert').css("display", "none");
+                                $("#memberId").val(result.id);
+                                var ph=hiddenphone(result.phone);
+                                $("#infoUserNamelistmember").val(name);                
+                                $("#infoPhonelistmember").val(ph);//
+                                $("#infoPointlistmember").val(result.diem);
+                                $("#editUserNamelistmember").val(name);
+                                $("#editPhonelistmember").val("");
+                                $("#editPointlistmember").val(result.diem);    
+                                $('#tttvModal_ds').modal('show');
+                            } else {
+                                alert(result.error);   
+                            }
+                        });
+                    });
+                }                                            
+            }
+        });
+    })
+    $(".thanh-vien-item").click(function () {
+        var name = $(this).find(".name-thanh-vien").text();
+        $('#msg_err_edit_member').text("");
+        $(".error").html("");
+        $('.div_load_alert').css("display", "block");
+        $.fn_ajax("getInfoUser",{ "name": name }, function(result){
+            if (result.flag == true) {
+                $('.div_load_alert').css("display", "none");
+                $("#memberId").val(result.id);
+                var ph=hiddenphone(result.phone);
+                $("#infoUserNamelistmember").val(name);                
+                $("#infoPhonelistmember").val(ph);//
+                $("#infoPointlistmember").val(result.diem);
+                $("#editUserNamelistmember").val(name);
+                $("#editPhonelistmember").val("");
+                $("#editPointlistmember").val(result.diem);
+                $('#tttvModal_ds').modal('show');
+            } else {
+                alert(result.error);   
+            }
+        });
+    });
+    function hiddenphone(strphone){        
+        var strphoneshow="";
+        if(strphone.length>0){
+            for (var i = 0; i < strphone.length; i++) {                
+                if(i>(strphone.length-4)){
+                    strphoneshow=strphoneshow+""+strphone.charAt(i);
+                }else{
+                    strphoneshow=strphoneshow+"*";
+                }
+            }
+        }
+        return strphoneshow;
+    }
+</script>
+
+
+<div class="div_load_alert">
+    <div class="main_mess">
+        <p><?= $this->language("l_main_mess") ?></p>
+        <img style="width: 200px;" src="<?= URL_PUBLIC ?>img/load.gif" />
+    </div>
+</div>
+<!-- -----------------------------thong tin thanh vien----------------------------------------------------->
+<div class="modal fade" id="tttvModal_ds" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="margin-top: 10%">
+        <div class="modal-content bgt-blue">
+            <div class="modal-body p-0 b-line">
+                <div class="title text-center  b-line"><h3><?= $this->language("l_info_member") ?></h3></div>
+                <form class="cmxform" id="editFormlistmember" method="get" action="">
+                    <div class="list-luot-co t-line">
+                        <div class="row">
+                            <div class="w-85 m-auto m-0 pl-5 pr-5">
+                                <div class="form-row">
+                                    <input type="hidden" id="memberId" name="memberId">                            
+                                    <div class="form-group col-md-12">
+                                        <label for="recipient-name" class="col-form-label"><?= $this->language("l_hoten") ?> <span class="required"></span></label>
+                                        <input style="margin-bottom: 10px" type="text" disabled="disabled" class="form-control from-c" autocomplete="off" id="infoUserNamelistmember" name="name" placeholder="<?= $this->language("l_hoten_placeholder") ?>">
+                                    </div>
+                                    <div class="row wid-104">
+                                         <div class="form-group col-6">
+                                            <label class="col-form-label" for="#"><?= $this->language("l_phone") ?> <span class="required"></span></label>
+                                            <input type="text" disabled="disabled" class="form-control from-c" autocomplete="off" id="infoPhonelistmember" name="phone" placeholder="<?= $this->language("l_phone_placeholder") ?>">
+                                        </div>
+                                        <div class="form-group col-6">
+                                            <label for="recipient-name" class="col-form-label"><?= $this->language("l_point") ?><span class="required"></span></label>
+                                            <input type="text" disabled="disabled" class="form-control from-c" maxlength="3" autocomplete="off" id="infoPointlistmember" name="point" placeholder="<?= $this->language("l_point_placeholder")?>">
+                                        </div>
+                                    </div>
+          
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>                	
+            </div>
+            <div class="modal-footer t-line">
+                <div class="m-0 m-auto">
+                    <button type="button" class="btn btn-primary btn-blue btnInfomember_close"><?= $this->language("l_close")?></button>
+                    <button type="button" class="btn btn-primary btn-blue btnUpdatemember"><?= $this->language("l_chinhsua") ?></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------------------------thong tin thanh vien-------------------------------------->
+<!-- -----------------------------sua thanh vien----------------------------------------------------->
+<div class="modal fade" id="suatvModal_ds" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="margin-top: 10%">
+        <div class="modal-content bgt-blue">
+            <div class="modal-body p-0 b-line">
+                <div class="title text-center  b-line"><h3><?= $this->language("l_edit_member") ?></h3></div>
+                <form class="cmxform" id="editFormlistmember" method="get" action="">
+                    <div class="list-luot-co t-line">
+                        <div class="row">
+                            <div class="w-85 m-auto m-0 pl-5 pr-5">
+                                <div class="form-row">
+                                    <input type="hidden" id="memberId" name="memberId">
+                                    <div id="msg_err_edit_member" class="error_insert"></div>
+                                    <div class="form-group col-md-12">
+                                        <label for="recipient-name" class="col-form-label"><?= $this->language("l_hoten") ?> <span class="required"></span></label>
+                                        <input style="margin-bottom: 10px" type="text" class="form-control from-c" autocomplete="off" id="editUserNamelistmember" name="name" placeholder="<?= $this->language("l_hoten_placeholder") ?>">
+                                    </div>
+                                    <div class="row wid-104">
+                                        <div class="form-group col-6">
+                                            <label class="col-form-label" for="#"><?= $this->language("l_phone_c") ?> <span class="required"></span></label>
+                                            <input type="text" class="form-control from-c" autocomplete="off" id="editPhonelistmember" name="phone" onkeyup="this.value=this.value.replace(/[^\d]/,'')" placeholder="<?= $this->language("l_phone_placeholder") ?>">
+                                        </div>    
+                                        <div class="form-group col-6">
+                                            <label for="recipient-name" class="col-form-label"><?= $this->language("l_point") ?><span class="required"></span></label>
+                                            <input type="text" class="form-control from-c" maxlength="3" autocomplete="off" id="editPointlistmember" name="point" onkeyup="this.value=this.value.replace(/[^\d]/,'')" placeholder="<?= $this->language("l_point_placeholder")?>">
+                                        </div>                                    
+                                    </div>
+          
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>                	
+            </div>
+            <div class="modal-footer t-line">
+                <div class="m-0 m-auto">
+                    <button type="button" class="btn btn-primary btn-blue"  id="btnEditlistmember_close"><?= $this->language("l_close")?></button>
+                    <button type="button" class="btn btn-primary btn-blue" id="btnEditlistmember"><?= $this->language("l_update") ?></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------------------------sua thanh vien-------------------------------------->

@@ -1,0 +1,167 @@
+<div class="modal fade" id="conformStop" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width: 70%">
+        <div class="modal-content bgt-blue">
+          <div class="modal-body p-0 b-line">
+            <div class="title text-center pb-3 b-line"><h3><?=$this->language("l_conformstop")?></h3></div>
+            <div class="list-luot-co t-line pt-5 pb-3 pr-5 pl-5">
+                <div class="row">
+                    <div class="w-20 float-left">
+                        <div class="list-diem-a">
+                            <div class="row b-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_conforms_point")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="pointuser diemend<?=$thanhvien1['id']?>">0</p>
+                                </div>
+                            </div>
+                            <div class="row b-line-d t-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_high")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="pointuser hightend<?=$thanhvien1['id']?>">0</p>
+                                </div>
+                            </div>
+                            <div class="row b-line-d t-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_conforms_luotco")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="luotcotuser luotcoend<?=$thanhvien1['id']?>">0</p>
+                                </div>
+                            </div>
+                            <div class="row b-line-d t-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_conforms_avg")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="avguser avgend<?=$thanhvien1['id']?>">0</p>
+                                </div>
+                            </div>
+                            <div class="row t-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_conforms_sobicham")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="sobichamuser sobichamend<?=$thanhvien1['id']?>">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-60 float-left pl-1 pr-1">
+                        <div class="w-40 float-left">
+                            <div class="name-thanh-vien text-center p-0 w-100 s-20"><?=$thanhvien1['name']?></div>
+                            <div class="start_player_diem_sm user_win<?=$thanhvien1['id']?> start_player_diem_color-or box-shadow">
+                                <p class="lh-210">
+                                <span id="point" class="point_end_play pointend<?=$thanhvien1['id']?>">0</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="w-20 float-left">
+                            <div class="text-center mt-lg-5 pt-lg-4">
+                                <p class="w-100"><h3><span class="luotcodangdanh">0</span> <?=$this->language("l_luotco")?></h3></p>
+                                <img src="<?= URL_PUBLIC ?>images/vs.png" width="50px">
+                            </div>
+                        </div>
+                        <div class="w-40 float-left">
+                            <div class="name-thanh-vien text-center p-0 w-100 s-20"><?=$thanhvien2['name']?></div>
+                            <div class="start_player_diem_sm user_win<?=$thanhvien2['id']?> box-shadow">
+                                <p class="lh-210">
+                                <span id="point" class="point_end_play pointend<?=$thanhvien2['id']?>">0</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-20 float-left">
+                        <div class="list-diem-a">
+                            <div class="row b-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_conforms_point")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="diemend<?=$thanhvien2['id']?>">0</p>
+                                </div>
+                            </div>
+                            <div class="row b-line-d t-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_high")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="hightend<?=$thanhvien2['id']?>">0</p>
+                                </div>
+                            </div>
+                            <div class="row b-line-d t-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_conforms_luotco")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="luotcoend<?=$thanhvien2['id']?>">0</p>
+                                </div>
+                            </div>
+                            <div class="row b-line-d t-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_conforms_avg")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="avgend<?=$thanhvien2['id']?>">0</p>
+                                </div>
+                            </div>
+                            <div class="row t-line-d pt-2">
+                                <div class="col-md-8 text-right">
+                                    <p><?=$this->language("l_conforms_sobicham")?></p>
+                                </div>
+                                <div class="col-md-4 text-left">
+                                    <p class="sobichamend<?=$thanhvien2['id']?>">0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>  
+          </div>
+          <div class="modal-footer t-line pb-4 pt-4">
+            <div class="m-0 m-auto">
+                <a type="button" id="btnCancel" class="btn btn-primary btn-blue" data-dismiss="modal"><?=$this->language("l_cancel")?></a>
+                <a type="button" id="btnChonlaicothu" class="btn btn-primary btn-blue"><?=$this->language("l_conform_button_cothu")?></a>
+                <a type="button" id="btnResetGame" class="btn btn-primary btn-blue"><?=$this->language("l_conform_reset")?></a>
+                <a type="button" id="btnStop" class="btn btn-primary btn-blue"><?=$this->language("l_conforms_end")?></a>
+                <a type="button" id="btnExit" class="btn btn-primary btn-blue"><?=$this->language("l_conform_button_exitgame")?></a>
+            </div>
+          </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $('#btnStop').on('click', function(){
+        var idTrandau = $('#trandau_id').val();
+        var status = 3;
+        var url = $baseUrl + '/stoptrandau.html';
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                trandau:idTrandau,                
+                status:status
+            },
+            dataType:'text',
+            success:function(data){             
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == true){                                                                            
+                    window.location = $baseUrl;
+                } else {                    
+                    return false;            
+                }
+            }
+        });
+    })
+
+    $('#btnExit').on('click', function(){
+        window.location = $baseUrl;
+    })
+
+    $('#btnChonlaicothu').on('click', function(){
+        window.location = $baseUrl + '/setting.html';
+    })    
+
+</script>

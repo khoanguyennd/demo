@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title><?= $this->language('l_tbbida') ?></title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://kit.fontawesome.com/8aee9abc8a.js" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="<?= URL_PUBLIC ?>temple_mobile/css/customer.css" />
+        <link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>temple_mobile/bootstrap/css/bootstrap.min.css"> 
+        <link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>temple_mobile/style.css">
+        <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">   
+		 
+        <script type="text/javascript" src="<?= URL_PUBLIC ?>temple_mobile/js/jquery-3.5.1.min.js"></script> 
+        <script type="text/javascript" src="<?= URL_PUBLIC ?>temple_mobile/bootstrap/js/bootstrap.js"></script>   
+        <script type="text/javascript" src="<?= URL_PUBLIC ?>temple_mobile/js/jquery.main.min.js"></script>
+        <script type="text/javascript" src="<?= URL_PUBLIC ?>temple_mobile/js/jquery.validate.js"></script>
+        <script type="text/javascript" src="<?= URL_PUBLIC ?>temple_mobile/js/jquery.blockUI.min.js"></script>
+        <script type="text/javascript" src="<?= URL_PUBLIC ?>temple_mobile/js/jquery.countdown.min.js"></script>
+        <script type="text/javascript" src="<?= URL_PUBLIC ?>temple_mobile/js/customer.js"></script>
+        
+        <script type="text/javascript">
+            <?php 
+            if (isset($_SESSION['lang'])){ 
+                if($_SESSION['lang']=="VN"){
+                    $lang="vn";
+                }
+                if($_SESSION['lang']=="EN"){
+                    $lang="en";
+                }
+                if($_SESSION['lang']=="KR"){
+                    $lang="kr";
+                }
+            }else{
+                $lang="en";
+            }?>
+            var lang="<?=$lang?>";
+        </script>        
+        <script type="text/javascript">
+            <?php echo 'jsData=' . json_encode($this->getData('jsData')); ?>            
+            var $baseUrl = "<?= URL_BASE; ?>";
+        </script>
+        <?php if (isset($_SESSION['lang']) && $_SESSION['lang'] == 'KR') { ?>
+            <!-- load font KR -->
+            <style>
+                body {font-family: 'Nanum Gothic', 'Roboto', sans-serif;}
+                @font-face { 
+                        font-family: 'NanumGothic';
+                        src: url('<?= URL_BASE ?>/public/font/NanumGothic.eot');
+                        src: url('<?= URL_BASE ?>/public/font/NanumGothic.eot') format('embedded-opentype'),
+                        url('<?= URL_BASE ?>/public/font/NanumGothic.woff') format('woff');
+                }
+                .divlangkr{font-family: 'NanumGothic';}
+            </style>
+        <?php }?>  
+    </head>
+    <body style="position: relative;background: #010952;">        
+        <?php
+        $action = isset($this->_params['action']) ? $this->_params['action'] : 'index';
+        $controller = isset($this->_params['controller']) ? $this->_params['controller'] : 'site';
+        if($controller=="dashboard"&&$action=="start3"){}elseif($controller=="dashboard"&&$action=="setting3"){?>
+        <img style="position: absolute; top: 0px; left: 0px; width: 100%; height: 796px;" src="<?= URL_PUBLIC ?>temple_mobile/images/bg_body.jpg" />
+        <?php }else{?>
+        <img style="position: absolute; top: 0px; left: 0px; width: 100%;" src="<?= URL_PUBLIC ?>temple_mobile/images/bg_body.jpg" />
+        <?php }?>
+        <input type="hidden" id="pos_number" value=""/>
+        <input type="hidden" id="pos_char" value=""/>
+        <?php include_once(PATH_APPLICATION . 'view/popup/home_mobile.php') ?>
+        <?php require  $this->_fileView; ?>                
+    </body>
+</html>

@@ -1,0 +1,113 @@
+<?php
+    $kiemtrangay = date("l");
+    if ($kiemtrangay == "Sunday") {
+        $ngay = $this->language('h_cn');
+    }
+    if ($kiemtrangay == "Monday") {
+        $ngay = $this->language('h_t2');
+    }
+    if ($kiemtrangay == "Tuesday") {
+        $ngay = $this->language('h_t3');
+    }
+    if ($kiemtrangay == "Wednesday") {
+        $ngay = $this->language('h_t4');
+    }
+    if ($kiemtrangay == "Thursday") {
+        $ngay = $this->language('h_t5');
+    }
+    if ($kiemtrangay == "Friday") {
+        $ngay = $this->language('h_t6');
+    }
+    if ($kiemtrangay == "Saturday") {
+        $ngay = $this->language('h_t7');
+    }
+    $language=Session::get('lang');
+?>
+<script>
+    function registerhome() {
+        $("#msg_err_home").html('');
+        $("#userName-error").html('');
+        $("#email-error").html('');
+        $("#point-error").html('');
+        $('#dangkytvModal').modal('show');
+    }
+</script>
+<div class="container-fluid bgt-home">
+<input type="hidden" id="language" name="language" value="<?= Session::get('accountshopping')['area'] ?>">
+    <div class="row">
+        <div class="col-md-6 logo">
+            <img src="<?= URL_PUBLIC ?>images/logo-1.png" alt="Billiard">
+        </div>
+        <div class="col-md-6">            
+            <div class="w-auto pt-4">
+                <div class="float-right pr-2">
+                    <span class="date"><?= date('d') ?>.<?= date('m') ?> (<?= $ngay ?>) </span>
+                    <span class="date"><?= date('H') ?>.<?= date('i') ?></span>						
+                </div>
+            </div>
+            <div class="pt-5 w-auto">
+                <div class="float-right">
+                    <a type="button" href="<?=$this->route('danhsachtv')?>" class="btn btn-primary btn-blue"><?=$this->language('l_tbnumbertvclb')?> (<?=$this->getData('totalMember')?>)</a>
+                    <a class="btn btn-warning btn-orange-sm" onclick="registerhome();"><?= $this->language("l_registermember") ?></a>
+                    <nav class="navbar navbar-expand-lg navbar-inverse btn btn-primary btn-lag">
+                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                            <ul class="navbar-nav mr-auto">
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <?php if($language=="KR"){?>
+                                            <img class="img-flag" src="<?= URL_PUBLIC ?>images/kr.png">
+                                        <?php }elseif($language=="EN"){?>
+                                            <img class="img-flag" src="<?= URL_PUBLIC ?>images/en.jpg">
+                                        <?php }else{?>
+                                            <img class="img-flag" src="<?= URL_PUBLIC ?>images/vn.png">
+                                        <?php }?>
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                        <a class="dropdown-item" onclick="changeLangue('KR')"><img class="img-flag" src="<?= URL_PUBLIC ?>images/kr.png"> <?=$this->language('l_language_KR')?></a>
+                                        <a class="dropdown-item" onclick="changeLangue('VN')"><img class="img-flag" src="<?= URL_PUBLIC ?>images/vn.png"> <?=$this->language('l_language_VN')?></a>
+                                        <a class="dropdown-item" onclick="changeLangue('EN')"><img class="img-flag" src="<?= URL_PUBLIC ?>images/en.jpg"> <?=$this->language('l_language_EN')?></a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </nav>
+                </div>	
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="container-th pt-200">
+            <div class="row">
+                <div class="col-md-4">
+                    <a class="table-bd" href="<?= $this->route('setting') ?>">
+                        <div class="bida_table">
+                            <h2><?= $this->language("l_mode2") ?></h2>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a class="table-bd" href="<?= $this->route('setting2') ?>">
+                        <div class="bida_table">
+                            <h2><?= $this->language("l_mode2_dg") ?></h2>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a class="table-bd" href="<?= $this->route('setting3') ?>">
+                        <div class="bida_table">
+                            <h2><?= $this->language("l_mode3") ?></h2>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 margin0 ">
+            <div class="margin0 d-table w-auto pt-140 pb-100">
+                <a type="button" class="btn btn-primary btn-blue shadow_button" data-toggle="modal" data-target="#trogiupModal"><?= $this->language("l_help") ?></a>
+                <a type="button" class="btn btn-primary btn-blue shadow_button" href="<?= $this->route('logout') ?>"><?= $this->language("l_logout") ?></a>
+            </div>
+        </div>
+    </div>
+</div>

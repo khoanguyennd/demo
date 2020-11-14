@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title><?= $this->language('l_tbbida') ?></title>
+	<meta charset="utf-8">
+	<!-- <link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>bootstrap/css/bootstrap.css">-->
+	<link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>style.css">
+    <link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>css/customer.css" />
+	<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+        <script src="<?= URL_PUBLIC ?>js/jquery-3.5.1.min.js"></script> 
+        <script src="<?= URL_PUBLIC ?>js/jquery.main.min.js"></script>
+        <script src="<?= URL_PUBLIC ?>js/jquery.validate.js"></script>
+        <script src="<?= URL_PUBLIC ?>js/jquery.blockUI.min.js"></script>
+        <script src="<?= URL_PUBLIC ?>js/jquery.countdown.min.js"></script>
+        <script src="<?= URL_PUBLIC ?>js/customer.js"></script>
+        
+        <script>
+            <?php echo 'jsData=' . json_encode($this->getData('jsData')); ?>
+        </script>
+        <script type="text/javascript">
+            var $baseUrl = "<?= URL_BASE; ?>";
+        </script>
+</head>
+<body>
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12" style="margin: 50px 0 250px 0; text-align: center;">
+				<img src="<?= URL_PUBLIC ?>images/logo.png" alt="Billiard">
+			</div>
+		</div>
+                <?php require  $this->_fileView; ?>		
+	</div>
+
+<script type="text/javascript" src="<?= URL_PUBLIC ?>bootstrap/js/bootstrap.js"></script>
+</body>
+</html>

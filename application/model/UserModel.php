@@ -1,0 +1,324 @@
+<?php
+
+class UserModel extends Model{
+    
+    // Phương thức khới tạo
+    public function __construct(){
+        parent::__construct();
+    }
+    
+    // Phương thức lấy ra tổng số thành viên
+    public function countNotification(){
+        $sql = 'SELECT COUNT(idx) as record FROM ' . $this->setTable('user');
+        $this->setQuery($sql);
+        return $this->read();
+    }
+    
+    // Phương thức lấy ra danh sách member
+    public function loadMember($sql, $length = 0, $position = 0, $fetch = true){
+        //if( $length != 0 && $position != 0)
+        if( $length != 0)
+            $sql .= $this->createOptions([
+                'limit'=>[
+                    'position'=>$position,
+                    'length'=>$length
+                ]
+            ]);
+            $this->setQuery($sql);
+            return $this->readAll($fetch);
+    }
+    
+    // Phương thức thay đổi trạng thái account
+    public function changeStatus($status, $arrid){
+        if(is_array($arrid)){
+            $sql = 'UPDATE `' . $this->setTable('user') . '` SET `status`=? WHERE `idx` IN (' . $this->convertId($arrid) .')';
+            $this->setQuery($sql);
+            $this->execute();
+            return $this->getRowCount();
+        }
+    }
+    
+    // Phương thức tìm kiếm member account
+    public function searchMemberAcount($params){
+        //accid 'keyword' 'col'], 'status''role']
+        $sql1 = 'SELECT COUNT(u1.`idx`) as record ';
+        $sql2 = 'SELECT u1.*,u2.ID as ID_parent ';
+        $sql = 'FROM `'.$this->setTable('user').'` u1 LEFT JOIN `'.$this->setTable('user').'` u2 ON u1.idx_parent=u2.idx  WHERE u1.idx!='.$params['accid'];
+        $where = [];
+        if($params['status']!= 'all'){
+            $item = 0;
+            if($params['status']== 'active'){
+                $item = 1;
+            }
+            $sql .= ' AND u1.`status`='.$item;
+        }
+        if($params['role']!= 'all'){
+            $item= 0;
+            if($params['role']== 'seller'){
+                $item= 1;
+            }
+            if($params['role']== 'supplier'){
+                $item= 2;
+            }
+            $sql .= ' AND u1.`role`='.$item;
+        }
+        if($params['keyword']){
+            $sql .= ' AND u1.`' .addslashes($params['col']).'` LIKE "%'.$params['keyword'].'%"';
+        }
+        $sql1 = $sql1.$sql;
+        $sql = $sql2.$sql;
+        // Options
+        if(isset($params['length']) && isset($params['page'])){
+            $length = ($params['length']?$params['length']:DEFAULT_LENGTH);
+            $pageCurrent = ($params['page']?$params['page']:1);
+            $begin = ($pageCurrent - 1) * $length;
+            $sql .= $this->createOptions([
+                'sort'=>[
+                    'column'=>'idx',
+                    'order'=>'DESC'
+                ],
+                'limit'=>[
+                    'position'=>$begin,
+                    'length'=>$length
+                ]]);
+        }
+        // count
+        $this->setQuery($sql1);
+        $count = $this->read();
+        $data = [];
+        if($count){
+            // data
+            $this->setQuery($sql);
+            $data= $this->readAll();
+        }
+        return [
+            'count'=>($count['record'])?$count['record']:0,
+            'data'=>$data
+        ];
+    }
+    
+    public function checkUserExist($phone){
+        if(isset($phone)){
+            return $this->loadRecords('thanhvien', ['phone'=>$phone]);
+        }
+        return false;
+    }
+
+    public function checkNameExist($name){
+        if(isset($name)){
+            return $this->loadRecords('thanhvien', ['name'=>$name]);
+        }
+        return false;
+    }
+    
+    public function getHistoryPointUser($idTrandau, $idUser){
+        $pointHistory = array();
+        $sql = "SELECT * FROM trandau_chitiet WHERE trandau_id=" . $idTrandau . " AND thanhvien_id = $idUser ORDER BY id DESC";
+        $this->setQuery($sql);
+        $pointHistory = $this->readAll();
+        return $pointHistory;
+    }
+    
+    public function getNextLuotCoUser($idTrandau, $idUser){
+        $sql = "SELECT COUNT(*) as total FROM trandau_chitiet
+                WHERE trandau_id = $idTrandau AND thanhvien_id = $idUser";
+        $this->setQuery($sql);
+        $count = $this->read();
+        return $count['total'] + 1;
+    }
+    
+    public function getCurrentPointUser($idTrandau, $idUser){
+        $sql = "SELECT SUM(diem) as diem FROM trandau_chitiet
+                WHERE trandau_id = $idTrandau AND thanhvien_id = $idUser AND status =1";
+        $this->setQuery($sql);
+        $diem = $this->read();
+        return $diem['diem'];
+    }
+    
+    public function getPointEndUser($idTrandau, $idUser){
+        $sql = "SELECT SUM(diem) as diem FROM trandau_thanhvien
+                WHERE trandau_id = $idTrandau AND thanhvien_id = $idUser";
+        $this->setQuery($sql);
+        $diem = $this->read();
+        return $diem['diem'];
+    }
+    
+    public function getHightPoint($idTrandau, $idUser){
+        $sql = "SELECT MAX(diem) as diem FROM trandau_chitiet
+                WHERE trandau_id = $idTrandau AND thanhvien_id = $idUser AND status =1";
+        $this->setQuery($sql);
+
+        $diem = $this->read();        
+        return isset($diem['diem']) ? $diem['diem'] : 0;    
+    }
+    
+    public function getTotalTime($idTrandau, $idUser){
+        $sql = "SELECT SUM(time) as timedau FROM trandau_chitiet
+                WHERE trandau_id = $idTrandau AND thanhvien_id = $idUser";
+        
+        $this->setQuery($sql);
+        $time = $this->read();
+        
+        $sql = "SELECT MAX(luot) as luotco FROM trandau_chitiet
+                WHERE trandau_id = $idTrandau AND thanhvien_id = $idUser";
+        $this->setQuery($sql);
+        $luotco = $this->read()['luotco'];
+
+        if(!$luotco) return 0;
+        
+        return round($time['timedau']/$luotco, 2);    
+    }   
+
+    public function getAvgPoint($idTrandau, $idUser){
+        $sql = "SELECT MAX(luot) as luotco FROM trandau_chitiet
+                WHERE trandau_id = $idTrandau AND thanhvien_id = $idUser";
+        $this->setQuery($sql);
+        $luotco = $this->read()['luotco'];
+
+        if(!$luotco) return 0;
+        
+        $point = $this->getCurrentPointUser($idTrandau, $idUser);
+        $avg = round(($point/$luotco),2);
+        return $avg;
+    }
+    
+    
+    public function changeStatusTrandau($status, $trandau){
+        if(isset($trandau) && isset($status)){
+            $sql = 'UPDATE ' . $this->setTable('trandau') . " SET status= $status WHERE id = $trandau";
+            $this->setQuery($sql);
+            $this->execute();
+            return $this->getRowCount();
+        }
+        return false;
+    }
+    
+    public function updateInfoUserAfterWin($idTrandau=0){
+        
+        if(isset($idTrandau)){
+            $sql = 'SELECT id, trandau_id, thanhvien_id, SUM(diem) as diem , MAX(diem) AS hightPoint FROM ' . $this->setTable('trandau_chitiet') .
+            " WHERE trandau_id = $idTrandau AND status =1 GROUP BY(thanhvien_id) ORDER BY diem DESC";
+            
+            $this->setQuery($sql);
+            $fetch = true;
+            $sumTrandau = $this->readAll($fetch);
+            $infoTrandau = $this->loadRecord('trandau', ['id' => $idTrandau]);
+            if(is_array($sumTrandau) && $infoTrandau['statistical']){
+                $stt = 1;
+                foreach ($sumTrandau as $key => $val) {
+                    $dataInsert['trandau_id'] = $val['trandau_id'];
+                    $dataInsert['thanhvien_id'] = $val['thanhvien_id'];
+                    $dataInsert['thutu'] = $stt;
+                    $this->insertRecord('trandau_userwin', $dataInsert);
+                    
+                    $sql = 'UPDATE ' . $this->setTable('thanhvien') . ' SET';
+                    if($stt == 1){
+                        if($infoTrandau['khaicuoc_user'] == $val['thanhvien_id']){
+                            $sql .= ' total_thang = total_thang + 1, win_start = win_start + 1';
+                        } else {
+                            $sql .= ' total_thang = total_thang + 1';
+                        }
+                    } else {
+                        $sql .= ' total_thua= total_thua + 1';
+                    }                    
+                    
+                    $userInfo = $this->loadRecord('thanhvien', ['id' => $val['thanhvien_id']]);
+                    if($userInfo['highrun'] <  $val['hightPoint']){
+                        $sql .= ', highrun =' . $val['hightPoint'];
+                    }
+                    $sql .= ', avg =' . $this->avgMenber($val['thanhvien_id'])['avg'];
+                    $sql .= ', avg_time =' . $this->avgMenber($val['thanhvien_id'])['avg_time'];
+                    
+                    $sql .= ' WHERE id = ' . $val['thanhvien_id'];
+                    
+                    $this->setQuery($sql);
+                    $this->execute();
+                    ++$stt;
+                }
+            }
+        }
+    }
+    
+    public function avgMenber($id_thanhvien){
+        $sql = 'SELECT count(*) as totalLuotCo, SUM(detail.diem) AS points, SUM(detail.time) AS timess
+                FROM trandau_chitiet as detail
+                INNER JOIN trandau as td ON detail.trandau_id = td.id
+                WHERE detail.thanhvien_id =' . $id_thanhvien . " AND detail.status=1";
+        
+        $this->setQuery($sql);
+        $result = $this->read();
+        $totalLuot=$result['totalLuotCo'];
+        $totalPoint=$result['points'];
+        $totalTime=$result['timess'];
+
+        $arrayTtatistic = [];
+        if(!$totalLuot){
+            $arrayTtatistic['avg'] = 0;
+            $arrayTtatistic['avg_time'] = 0;
+        } else {
+            $arrayTtatistic['avg'] = round($totalPoint/$totalLuot, 2);
+            $arrayTtatistic['avg_time'] = round($totalTime/$totalLuot, 2);
+        }
+        return  $arrayTtatistic;
+    }
+    
+    public function avgThanhvien($thanhvien_id){
+        $sql  = 'SELECT COUNT(thanhvien_id) as total,SUM(diem) as total_diem,SUM(time) as total_thoigian FROM trandau_chitiet WHERE thanhvien_id='.$thanhvien_id;
+        $this->setQuery($sql);
+        $result = $this->read();
+        $tong_luot=$result['total'];
+        $tong_diem=$result['total_diem'];
+        $tong_thoigian=$result['total_thoigian'];
+        if($tong_luot==0){
+            $trungbinh_tichluy=0;
+            //$trungbinh_thoigian_player1=0;
+        }else{
+            $trungbinh_tichluy=$tong_diem/$tong_luot;
+            //$trungbinh_thoigian_player1=$tong_thoigian/$tong_luot;
+        }
+        return $trungbinh_tichluy;
+    }
+
+    public function checkNameExistForEdit($name, $id){
+        if(isset($name) && isset($id)){
+            $user = $this->loadRecord('thanhvien', ['name'=>$name]);
+            if ($user) {
+                if($user['id'] == $id){
+                    return false;
+                }
+                return true;// neu la true thi name da duoc user khac dung
+            }
+            return false;// khong co user voi ten can tim
+        }
+        return false;
+    }
+    public function accuracyPhone($phone, $id){
+        if(isset($phone) && isset($id)){
+            $user = $this->loadRecord('thanhvien', ['id'=>$id]);
+            if ($user) {
+                if($user['phone'] == $phone){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+            return false;// khong co user voi ten can tim
+        }
+        return false;
+    }
+    public function checkPhoneExistForEdit($phone, $id){
+        if(isset($phone) && isset($id)){
+            $user = $this->loadRecord('thanhvien', ['phone'=>$phone]);
+            if ($user) {
+                if($user['id'] == $id){
+                    return false;
+                }
+                return true;// neu la true thi phone da duoc user khac dung
+            }
+            return false;// khong co user voi ten can tim
+        }
+        return false;
+    }
+}
+
+?>

@@ -1,0 +1,80 @@
+<style type="text/css">
+#chitietthanhvien{text-align: left;}
+#chitietthanhvien2{text-align: left;}
+.chitietthanhvien_icon i {background: #9599b8;padding: 12px 12px;border-radius: 50%;font-size: 20px; border: 1px solid #fff;float: left;margin-right: 10px;}
+.chitietthanhvien p{margin-bottom: 0px;}
+.chitietthanhvien span{font-size: 15px;}
+.rows_tk{background: #011b43;width: 31.33%;margin-right: 0%;margin-left: 1px;margin-bottom: 1px;text-align: center; padding: 5px 5px; color: #fff;}
+.rows_tk p{font-size: 14px}
+.rows_tk_title{font-weight: bold; padding-bottom: 2px;height: 20px;overflow: hidden;}
+.rows_tk_content{color: #f7941d; font-weight:bold;}
+
+</style>
+<?php
+    $totalTrandau1 = ($thanhvien1['total_thang'] + $thanhvien1['total_thua']) > 0 ? ($thanhvien1['total_thang'] + $thanhvien1['total_thua']) : 1;
+?>
+<div class="modal fade" id="chitietthanhvien" tabindex="-1" role="dialog" aria-labelledby="chitietthanhvien" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width: 80%; margin-top: 5%">
+        <div class="modal-content bgt-blue" style="padding: 20px">
+            <h3 style="font-size: 20px; padding-bottom: 5px;border-bottom: 1px solid #ebebeb;">
+                <?=$this->language("l_detail_member")?>                 
+            </h3>
+            <div class="chitietthanhvien"> 
+                <div class="row paddingleftright">
+                    <div class="col">
+                        <div class="chitietthanhvien_icon">
+                            <i class="fa fa-user" aria-hidden="true"></i>                            
+                            <p><?=$thanhvien1['name']?></p>
+                        </div>                    
+                    </div>
+                    <div class="col" style="text-align: right;">
+                        <p><span><?=$this->language("l_point")?>: </span><span class="colordefault"><?=$thanhvien1['diem']?></span></p>
+                        <p><span><?=$this->language("l_detail_highrun")?>: </span><span class="colordefault"><?=$thanhvien1['highrun']?></span></p>
+                    </div>    
+                </div>               
+                
+                <div class="row paddingleftright" style="padding-bottom: 15px; padding-top: 15px;">
+                    <div class="col-xs-4 paddingleftright rows_tk">
+                        <p class="rows_tk_title"><?=$this->language("l_detail_trungbinh")?></p>
+                        <p class="rows_tk_content"><?=$thanhvien1['avg']?></p>
+                    </div>
+                    <div class="col-xs-4 paddingleftright rows_tk">
+                        <p class="rows_tk_title"><?=$this->language("l_detail_high")?></p>
+                        <p class="rows_tk_content"><?=$thanhvien1['highrun']?></p>
+                    </div>
+                    <div class="col-xs-4 paddingleftright rows_tk">
+                        <p class="rows_tk_title"><?=$this->language('l_detail_all')?></p>
+                        <p class="rows_tk_content"><?=$thanhvien1['total_thang']?> <?=$this->language('l_detail_win')?> <?=$thanhvien1['total_thua']?> <?=$this->language('l_detail_faile')?></p>
+                    </div>                
+                    <div class="col-xs-4 paddingleftright rows_tk">
+                        <p class="rows_tk_title"><?=$this->language("l_detail_doidau")?></p>
+                        <p class="rows_tk_content"><?=$this->getData('total_doidau');?></p>
+                    </div>
+                    <div class="col-xs-4 paddingleftright rows_tk">
+                        <p class="rows_tk_title"><?=$this->language("l_tylethang")?></p>
+                        <p class="rows_tk_content">
+                            <?=round($thanhvien1['total_thang']/$totalTrandau1,2)?>%
+                        </p>
+                    </div>
+                    <div class="col-xs-4 paddingleftright rows_tk">
+                        <p class="rows_tk_title"><?=$this->language("l_tylecham")?></p>
+                        <p class="rows_tk_content"><?=$this->getData('tylechambi_thanhvien1')?>%</p>
+                    </div>
+                    <div class="col-xs-4 paddingleftright rows_tk">
+                        <p class="rows_tk_title"><?=$this->language("l_trungbinhmot")?></p>
+                        <p class="rows_tk_content"><?=$thanhvien1['avg_time']?>s</p>
+                    </div>
+                    <div class="col-xs-4 paddingleftright rows_tk">
+                        <p class="rows_tk_title"><?=$this->language("l_tylethangdepa")?></p>
+                        <p class="rows_tk_content">50%</p>
+                    </div>
+                    <div class="col-xs-4 paddingleftright rows_tk">
+                        <p class="rows_tk_title"><?=$this->language("l_tylethangkhaicuoc")?></p>
+                        <p class="rows_tk_content"><?=round($thanhvien1['win_start']/$totalTrandau1,2)?>%</p>
+                    </div><div class="cl"></div>
+                </div>
+                <div class="cl"></div>
+            </div>            
+        </div>
+    </div>
+</div>

@@ -1,0 +1,596 @@
+<?php
+
+require_once PATH_APPLICATION . DS . 'model' . DS . 'UserModel.php';
+
+class DashboardController extends Controller {
+
+    public $_userModel;
+
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+        $this->isLogin();
+        $this->_userModel = new UserModel();
+    }
+
+    // Phương thức index
+    public function indexAction() {
+        unset($_SESSION['trandau_id']);
+        $this->_view->render('index');
+    }
+    // Phương thức index
+    public function tesstAction() {        
+        $this->_view->render('tesst');
+    }
+
+    // Trang chủ
+    public function homeAction() {
+        $totalMember = $this->_model->countRowTabel('thanhvien');
+        unset($_SESSION['trandau_id']);
+        $this->_view->setData('totalMember', isset($totalMember['record']) ? $totalMember['record'] : 0);
+        $this->_view->render('home');
+    }
+
+    public function settingAction() {
+        $totalMember = $this->_model->countRowTabel('thanhvien');
+        $this->_view->setData('totalMember', isset($totalMember['record']) ? $totalMember['record'] : 0);
+        $option = [
+            'sort' => [
+                'column' => "id",
+                'order' => "DESC"
+            ]
+        ];
+        $listUser = $this->_model->loadRecords('thanhvien', [], true, $option);
+        $this->_view->setData('listUser', $listUser);
+        if (isset($_SESSION['trandau_id'])) {
+            $trandau_id = $_SESSION['trandau_id'];
+            $trandau = $this->_model->loadRecord("trandau", ['id' => $trandau_id]);
+            $userTrandau = $this->_model->loadRecords("trandau_thanhvien", ['trandau_id' => $trandau_id]);
+            $infoUser1 = array();
+            if (isset($userTrandau[0]['thanhvien_id'])) {
+                $user1 = $this->_model->loadRecord("thanhvien", ['id' => $userTrandau[0]['thanhvien_id']]);
+                $infoUser1['id_thanhvien'] = $userTrandau[0]['thanhvien_id'];
+                $infoUser1['name'] = $user1['name'];
+                $infoUser1['diem'] = $userTrandau[0]['diem'];
+            }
+            $infoUser2 = array();
+            if (isset($userTrandau[1]['thanhvien_id'])) {
+                $user2 = $this->_model->loadRecord("thanhvien", ['id' => $userTrandau[1]['thanhvien_id']]);
+                $infoUser2['id_thanhvien'] = $userTrandau[1]['thanhvien_id'];
+                $infoUser2['name'] = $user2['name'];
+                $infoUser2['diem'] = $userTrandau[1]['diem'];
+            }
+        }
+        $this->_view->setData('userinfo1', isset($infoUser1) ? $infoUser1 : 0);
+        $this->_view->setData('userinfo2', isset($infoUser2) ? $infoUser2 : 0);
+        $this->_view->setData('trandau', isset($trandau) ? $trandau : 0);
+        $this->_view->render('setting');
+    }
+
+    public function setting2Action() {
+        $this->_view->render('setting2');
+    }
+
+    public function setting3Action() {
+        $this->_view->render('setting3');
+    }
+    
+    public function startAction() {
+        $s01 = microtime(true) * 10000;
+        $trandau_id = $_SESSION["trandau_id"];
+        $trandau = $this->_model->loadRecord("trandau", ['id' => $trandau_id]);
+        $this->_view->setData('trandau', $trandau);
+        $trandau_thanhvien = $this->_model->loadRecords("trandau_thanhvien", ['trandau_id' => $trandau_id]);
+
+        $innering = $this->_model->getInnering($trandau_id);
+        //$totalTime = $this->_model->getTotalTime($trandau_id);
+        
+        $this->_view->setData('innering', $innering);
+        $this->_view->setData('totalTime', $innering['timess']);
+        $this->_view->setData('trandau', $trandau);
+        $this->_view->setData('trandau_thanhvien', $trandau_thanhvien);
+        
+        $thanhviens = $this->_model->loadthanhvien($trandau_thanhvien[0]['thanhvien_id'],$trandau_thanhvien[1]['thanhvien_id']);
+        $this->_view->setData('thanhvien1', $thanhviens[0]);
+        $this->_view->setData('thanhvien2', $thanhviens[1]);
+               
+        
+        if($trandau['soluong_user']==2){
+            $thanhvien1=$this->_view->getData('thanhvien1');
+            $thanhvien2=$this->_view->getData('thanhvien2');
+            
+            $thanhvien_id_1=$thanhvien1['id'];
+            $thanhvien_id_2=$thanhvien2['id'];
+            
+            $total_doidau=$this->_model->load_doidau($thanhvien_id_1,$thanhvien_id_2);           
+            $this->_view->setData('total_doidau', $total_doidau);
+            
+            //trung bình tích lũy , trung bình thời gian đánh
+            $result = $this->_model->load_thanh_tich($thanhvien_id_1,$thanhvien_id_2);
+            $tylechambi_thanhvien1 =0;
+            $tylechambi_thanhvien2 =0;
+            foreach ($result as $value=>$giatri){
+                $tong_luot =  $tong_diem =  $tong_thoigian = 0;
+                if($giatri['id']==$thanhvien_id_1){
+                    $tong_luot = $giatri['total'];
+                    $tong_diem = $giatri['total_diem'];
+                    $tong_thoigian = $giatri['total_thoigian'];
+                    $tylechambi_thanhvien1 = round($tong_thoigian/$tong_diem, 2);
+                }              
+                
+                if($giatri['id']==$thanhvien_id_2){
+                    $tong_luot = $giatri['total'];
+                    $tong_diem = $giatri['total_diem'];
+                    $tong_thoigian = $giatri['total_thoigian'];
+                    $tylechambi_thanhvien2 = round($tong_thoigian/$tong_diem, 2);                    
+                }
+            }
+
+            $this->_view->setData('tylechambi_thanhvien1', $tylechambi_thanhvien1);
+            $this->_view->setData('tylechambi_thanhvien2', $tylechambi_thanhvien2);
+            
+            $historyPointUser1 = $this->_model->getHistoryPointUser($trandau_id, $thanhvien_id_1);
+            $historyPointUser2 = $this->_model->getHistoryPointUser($trandau_id, $thanhvien_id_2);
+            $currentPointUser1=$currentPointUser2=0;
+            $statisticalUser = array();
+            $hight=$total_time=0;
+            $totalPoint =0;
+            $inning = 1;
+            if($historyPointUser1)
+            foreach ($historyPointUser1 as $value=>$giatri){
+                if($giatri['status'] ==1) $currentPointUser1 +=$giatri['diem'];
+                if($inning<$giatri['luot']) $inning=$giatri['luot'];
+                if($hight<$giatri['diem']) $hight=$giatri['diem'];
+                $total_time+=$giatri['time'];
+                $totalPoint +=$giatri['diem'];
+            }
+            $statisticalUser[1]['avg'] = round(($totalPoint/$inning),2);
+            $statisticalUser[1]['hight'] = $hight;
+            $statisticalUser[1]['total_time'] = $total_time;
+            $statisticalUser[1]['number_balltouches'] = 0;
+            
+            $hight=$total_time=0;
+            $totalPoint =0;
+            $inning = 1;
+            if($historyPointUser2)
+            foreach ($historyPointUser2 as $value=>$giatri){
+                
+                if($giatri['status'] ==1) $currentPointUser2 +=$giatri['diem'];
+                if($inning<$giatri['luot']) $inning=$giatri['luot'];
+                if($hight<$giatri['diem'] && $giatri['status'] ==1) $hight=$giatri['diem'];
+                $total_time+=$giatri['time'];
+                $totalPoint +=$giatri['diem'];
+            }
+            $statisticalUser[2]['avg'] = round(($totalPoint/$inning),2);
+            $statisticalUser[2]['hight'] = $hight;
+            $statisticalUser[2]['total_time'] = $total_time;
+            $statisticalUser[2]['number_balltouches'] = 0;
+            
+            $this->_view->setData('historyPointUser1', $historyPointUser1);
+            $this->_view->setData('historyPointUser2', $historyPointUser2);
+            $this->_view->setData('currentPointUser1', $currentPointUser1);
+            $this->_view->setData('currentPointUser2', $currentPointUser2);
+            $this->_view->setData('statisticalUser', $statisticalUser);   
+        }
+        
+        $this->_view->render('start');
+    }
+
+    public function start2Action() {
+        $trandau_id = $_SESSION["trandau_id"];
+        $trandau = $this->_model->loadRecord("trandau", ['id' => $trandau_id]);
+        $totalTime = $this->_model->getTotalTime($trandau_id);
+
+        $sql = "SELECT * FROM `trandau_thanhvien` WHERE trandau_id=" . $trandau_id . " order by id DESC";
+        $this->_model->setQuery($sql);
+        $trandau_thanhvien = $this->_model->readAll();        
+        foreach ($trandau_thanhvien as $key => $value) {
+            $key++;
+            $this->_view->setData('thanhvien' . $key, $value);
+            $this->_view->setData('diem' . $key, $this->_model->getTotalPoint2User($trandau_id, $value['id']));    
+        }        
+
+        $sql = "SELECT * FROM `trandau_chitiet` WHERE trandau_id=" . $trandau_id . " order by id DESC";
+        $this->_model->setQuery($sql);
+        $trandau_chitiet = $this->_model->readAll(); 
+
+        $this->_view->setData('totalTime', $totalTime);
+        $this->_view->setData('trandau_chitiet', $trandau_chitiet);
+        $this->_view->setData('trandau', $trandau);
+        $this->_view->setData('trandau_thanhvien', $trandau_thanhvien);
+        $this->_view->render('start2');
+    }
+
+    public function changeUser2khaicuocAjax() {
+        $result = ['flag' => false];        
+        if (isset($this->_params['trandau']) && isset($this->_params['userKhaiCuoc'])) {
+            $trandau_id = $this->_params['trandau'];
+            $khaicuoc_user = $this->_params['userKhaiCuoc'];
+            $rounCount = $this->_model->checkTranDauBegin($trandau_id);
+            if(!$rounCount){
+                $data = ['khaicuoc_user' => $khaicuoc_user];
+                $this->_model->updateRecord('trandau', $data, ['id' => $trandau_id]);
+                $result['flag'] = true;                                                
+            }                            
+        }
+        echo json_encode($result);
+        
+    }
+    public function start3Action() {        
+        $trandau_id = $_SESSION["trandau_id"];
+        $trandau = $this->_model->loadRecord("trandau", ['id' => $trandau_id]);
+        $trandau_chitiet = $this->_model->trandauchitiet_start3($trandau_id);
+        $tongwin=0;$seconds=0;$timesave="00:00:00";$timemarch="00:00";$auto=0;
+        if($trandau_chitiet){
+            $td_chitiet = $trandau_chitiet[0];
+            $seconds=$td_chitiet['time'];
+            $timesave=$td_chitiet['timesave'];            
+            $a = (int)((int)($seconds / 60) / 60);
+            $b = (int)($seconds / 60);
+            if($a<10){$a="0".$a;}
+            if($b<10){$b="0".$b;}
+            $timemarch=$a.":".$b;  
+            $auto=1;
+        }
+        $trandau_thanhvien = $this->_model->trandauthanhvien_start3($trandau_id);
+        $key=0; $tongwin=0;
+        foreach ($trandau_thanhvien as $key => $value) {
+            $point=0; $win=0;
+            $key++;       
+            $this->_view->setData('thanhvien_name' . $key, $value['thanhvien_name']);
+            $this->_view->setData('thanhvien_diemketthuc' . $key, $value['diemketthuc']);             
+            if($value['thutu']!=""){
+                $win=$value['thutu'];
+                $tongwin++;
+            }
+            if($value['diem']!="") $point=$value['diem'];
+            $this->_view->setData('thanhvien_point'. $key, $point);
+            $this->_view->setData('thanhvien_win' . $key, $win);
+            
+        }
+        $this->_view->setData('seconds', $seconds);
+        $this->_view->setData('timesave', $timesave);
+        $this->_view->setData('timemarch', $timemarch);
+        $this->_view->setData('auto', $auto);
+        $this->_view->setData('tongwin', $tongwin);
+        $this->_view->setData('trandau', $trandau);
+        $this->_view->setData('trandau_chitiet', $trandau_chitiet);
+        $this->_view->setData('trandau_thanhvien', $trandau_thanhvien);
+        
+        $this->_view->render('start3');
+    }
+
+    //Phương thức reset
+    public function resetAjax() {
+        $result = ['flag' => false];
+        if (isset($this->_params['trandau_id'])) {
+            $oldtrandau_id = $this->_params['trandau_id'];
+            $oldtrandau = $this->_model->loadRecord("trandau", ['id' => $oldtrandau_id]);
+            $newdata_Trandau = array();
+            if (isset($oldtrandau) && is_array($oldtrandau)) {
+                $newdata_Trandau['loaithidau'] = $oldtrandau['loaithidau'];
+                $newdata_Trandau['luot'] = $oldtrandau['luot'];
+                $newdata_Trandau['thoigian'] = $oldtrandau['thoigian'];
+                $newdata_Trandau['status'] = $oldtrandau['status'];
+                $newdata_Trandau['soluong_user'] = $oldtrandau['soluong_user'];
+                $newdata_Trandau['khaicuoc_user'] = $oldtrandau['khaicuoc_user'];
+                $newdata_Trandau['statistical'] = $oldtrandau['statistical'];
+                $newdata_Trandau['created'] = time();
+            }
+            $idnewTrandau = $this->_model->insertRecord('trandau', $newdata_Trandau);
+            $trandau = $this->_model->loadRecord("trandau", ['id' => $idnewTrandau]);
+            $trandau_thanhvien = $this->_model->loadRecords("trandau_thanhvien", ['trandau_id' => $oldtrandau_id]);
+            $newTrandau_thanhvien = array();
+            foreach ($trandau_thanhvien as $key => $value) {
+                $key++;
+                $newTrandau_thanhvien['trandau_id'] = $idnewTrandau;
+                $newTrandau_thanhvien['thanhvien_id'] = $value['thanhvien_id'];
+                $newTrandau_thanhvien['diem'] = $value['diem'];
+                $newTrandau_thanhvien['status'] = $value['status'];
+                $idnewTrandau_thanhvien = $this->_model->insertRecord('trandau_thanhvien', $newTrandau_thanhvien);
+                $thanhvien = $this->_model->loadRecord("thanhvien", ['id' => $value['thanhvien_id']]);
+            }
+            Session::set('trandau_id', $idnewTrandau);
+            Session::set('popup_khaicuoc_user', 0);
+            $result['flag'] = true;
+        }
+        echo json_encode($result);
+    }
+
+    // Phương thức setting
+    public function settingAjax() {
+        $result = ['flag' => false];
+        if (isset($this->_params['player1']) && isset($this->_params['player2']) && isset($this->_params['settingdiem1']) && isset($this->_params['settingdiem2']) && isset($this->_params['settingluotco']) && isset($this->_params['statistical']) && isset($this->_params['settingthoigian'])) {
+            $player1 = $this->_params['player1'];
+            $player2 = $this->_params['player2'];
+            $settingdiem1 = $this->_params['settingdiem1'];
+            $settingdiem2 = $this->_params['settingdiem2'];
+            $settingluotco = $this->_params['settingluotco'];
+            $statistical = $this->_params['statistical'];
+            $settingthoigian = $this->_params['settingthoigian'];
+            $khaicuoc_user = $this->_params['khaicuoc_user'];
+            $trandau = [
+                'loaithidau' => 1, // mode 2
+                'status' => 1,
+                'luot' => $settingluotco,
+                'soluong_user' => 2,
+                'khaicuoc_user' => $khaicuoc_user,
+                'playing_user' => $player1, 
+                'statistical' => $statistical,
+                'thoigian' => $settingthoigian,
+                'created' => time()
+            ];
+            $this->_model->insertRecord('trandau', $trandau);
+            $trandau_id = $this->_model->getLastId();
+
+            $trandau_thanhvien1 = [
+                'trandau_id' => $trandau_id,
+                'thanhvien_id' => $player1,
+                'diem' => $settingdiem1,
+                'status' => 1
+            ];
+            $this->_model->insertRecord('trandau_thanhvien', $trandau_thanhvien1);
+
+            $trandau_thanhvien2 = [
+                'trandau_id' => $trandau_id,
+                'thanhvien_id' => $player2,
+                'diem' => $settingdiem2,
+                'status' => 1
+            ];
+            $this->_model->insertRecord('trandau_thanhvien', $trandau_thanhvien2);
+
+            Session::set('trandau_id', $trandau_id);
+            Session::set('popup_khaicuoc_user', 0);  // chưa chọn người khai cuộc
+            $result['flag'] = true;
+        }
+        echo json_encode($result);
+    }
+    // Phương thức setting 3
+    public function setting2Ajax() {              
+        $str_name = $this->_params['strname'];
+        $str_point = $this->_params['strpoint'];
+        $number_player = $this->_params['number_player'];        
+        $array_name = explode(",", $str_name);
+        $array_point = explode(",", $str_point);
+        $trandau = [
+            'loaithidau' => 2,
+            'status' => 1,
+            'luot' => 0,
+            'soluong_user' => $number_player,
+            'khaicuoc_user' => 0,
+            'statistical' => 0,
+            'thoigian' => 0,
+            'created' => time()
+        ];
+        $this->_model->insertRecord('trandau', $trandau);
+        $trandau_id = $this->_model->getLastId();
+        for ($i = 0; $i < $number_player; $i++) {
+            $trandau_thanhvien = [
+                'trandau_id' => $trandau_id,
+                'thanhvien_id' => 0,
+                'thanhvien_name' => $array_name[$i],
+                'diem' => $array_point[$i],
+                'status' => 1
+            ];
+            $this->_model->insertRecord('trandau_thanhvien', $trandau_thanhvien);
+        }
+        Session::set('trandau_id', $trandau_id);
+        Session::set('auto5s', 0);
+        $result['flag'] = true;
+        echo json_encode($result);
+    }
+    // Phương thức setting 3
+    public function setting3Ajax() {              
+        $str_name = $this->_params['strname'];
+        $str_point = $this->_params['strpoint'];
+        $number_player = $this->_params['number_player'];        
+        $array_name = explode(",", $str_name);
+        $array_point = explode(",", $str_point);
+        $trandau = [
+            'loaithidau' => 3,
+            'status' => 1,
+            'luot' => 0,
+            'soluong_user' => $number_player,
+            'khaicuoc_user' => 0,
+            'statistical' => 0,
+            'thoigian' => 0,
+            'created' => time()
+        ];
+        $this->_model->insertRecord('trandau', $trandau);
+        $trandau_id = $this->_model->getLastId();
+        for ($i = 0; $i < $number_player; $i++) {
+            $trandau_thanhvien = [
+                'trandau_id' => $trandau_id,
+                'thanhvien_id' => 0,
+                'thanhvien_name' => $array_name[$i],
+                'diem' => $array_point[$i],
+                'status' => 1
+            ];
+            $this->_model->insertRecord('trandau_thanhvien', $trandau_thanhvien);
+        } // nếu chậm thì viết hàm insert nhiều value cùng lúc
+        
+        Session::set('trandau_id', $trandau_id);
+        Session::set('auto5s', 0);
+        $result['flag'] = true;
+        echo json_encode($result);
+    }
+
+    //Phương thức inningsavemode35
+    public function inningsavemode35Ajax() {
+        //$result = ['flag' => false];
+        //if (isset($this->_params['trandau_id']) && isset($this->_params['name']) && isset($this->_params['str']) && isset($this->_params['pointnow']) && isset($this->_params['timesave']) && isset($this->_params['hidden_timesave'])) {
+            $trandau_id = $this->_params['trandau_id'];
+            $name = $this->_params['name'];
+            $content = $this->_params['str'];
+            $pointnow = $this->_params['pointnow'];
+            $timesave = $this->_params['timesave'];
+            $hidden_timesave = $this->_params['hidden_timesave'];
+            $thanhvien_trandau_id= $this->_params['thanhvien_trandau_id'];
+            $trandau_chitiet = [
+                'trandau_id' => $trandau_id,
+                'thanhvien_id' => 0,
+                'diem' => $pointnow,
+                'luot' => 0,
+                'time' => $hidden_timesave,
+                'status' => 1,
+                'thanhvien_name' => $name,
+                'timesave' => $timesave,
+                'content' => $content,
+                'thanhvien_trandau_id' => $thanhvien_trandau_id
+            ];
+            $this->_model->insertRecord('trandau_chitiet', $trandau_chitiet);
+            $result['flag'] = true;
+        //}
+        echo json_encode($result);
+    }
+
+    //Phương thức savewinmode35
+    public function savewinmode35Ajax() {
+        $result = ['flag' => false];
+        if (isset($this->_params['trandau_id']) && isset($this->_params['name']) && isset($this->_params['numberplay'])) {
+            $trandau_id = $this->_params['trandau_id'];
+            $name = $this->_params['name'];
+            $numberplay = $this->_params['numberplay'];
+            $thanhvien_trandau_id = $this->_params['thanhvien_trandau_id'];
+
+            $sql = "SELECT trandau_id FROM `trandau_userwin` WHERE trandau_id=" . $trandau_id;
+            $this->_model->setQuery($sql);
+            $trandau_thanhvien = $this->_model->readAll();
+            if ($trandau_thanhvien) {
+                $thutu = count($trandau_thanhvien) + 1;
+            } else {
+                $thutu = 1;
+            }
+            $trandau_userwin = [
+                'trandau_id' => $trandau_id,
+                'thanhvien_id' => 0,
+                'thutu' => $thutu,
+                'thanhvien_name' => $name,
+                'thanhvien_trandau_id' => $thanhvien_trandau_id
+            ];
+            $this->_model->insertRecord('trandau_userwin', $trandau_userwin);
+            $check=$thutu+1;
+            if($check==$numberplay){
+                $result['showall'] = true;
+            }else{
+                $result['showall'] = false;
+            }
+            $result['flag'] = true;
+            $result['thutu'] = $thutu;
+        }
+        echo json_encode($result);
+    }
+
+    //Phương thức loadinfouser
+    public function loadinfouserAjax() {
+        $result = ['flag' => false];
+        if (isset($this->_params['thanhvien_id'])) {
+            $thanhvien_id = $this->_params['thanhvien_id'];
+            $result['flag'] = true;
+            $result['data'] = $thanhvien_id;
+        }
+        echo json_encode($result);
+    }
+
+    // Phương thức loaduser
+    public function loaduserAjax() {
+        $result = ['flag' => false];
+        if (isset($this->_params['settingplayer'])) {
+            $sub_thanhvien_id = $this->_params['settingplayer'];
+            $sql = "SELECT * FROM `thanhvien` WHERE id!=" . $sub_thanhvien_id . " order by id DESC";
+            $this->_model->setQuery($sql);
+            $result = $this->_model->readAll();
+            $countuser= count($result);
+            $stringdata = '';
+            foreach ($result as $key => $value) {
+                $stringdata .= '<div class="col-md-3 tv_rows" onclick="getPlayer(' . "'" . $value["id"] . "'" . ',' . "'" . $value["name"] . "'" . ',' . "'" . $value["diem"] . "'" . ',' . "'" . $value["avg"] . "'" . ',' . "'" . $value["highrun"] . "'" . ')">
+                                    <div class="thanh-vien-item">
+                                        <div class="circle"><img src="' . URL_PUBLIC .'images/thanh-vien-1.png"></div>
+                                        <div class="thanh-vien-ct">
+                                            <div class="name-thanh-vien color-w text-center w-100 p-0 lh-40">' . $value["name"] . '</div>
+                                            <div class="w-50 float-left text-center">AVG: <span class="color-or">' . $value["avg"] . '</span></div>
+                                            <div class="w-50 float-left text-center">High: <span class="color-or">' . $value["highrun"] . '</span></div>
+                                        </div>
+                                        <div class="circle-sm">' . $value["diem"] . '</div>                                    
+                                    </div>
+                                </div>';
+            }
+            $result['flag'] = true;
+            $result['data'] = $stringdata;
+            $result['countuser'] = $countuser;
+        }
+        echo json_encode($result);
+    }
+
+    // Phương thức loadusersub
+    public function loadusersubAjax() {
+        $result = ['flag' => false];
+        if (isset($this->_params['str_sub'])) {
+            $sub_thanhvien_id = $this->_params['str_sub'];
+            $sub_thanhvien_id = str_replace(',,', '', $sub_thanhvien_id);
+            $countstr = strlen($sub_thanhvien_id);
+            if ($countstr > 1) {
+                $sql = "SELECT * FROM thanhvien WHERE id NOT IN (" . $sub_thanhvien_id . ") order by id DESC";
+            } else {
+                $sql = "SELECT * FROM thanhvien order by id DESC";
+            }
+            $this->_model->setQuery($sql);
+            $result = $this->_model->readAll();
+            $stringdata = '';
+            foreach ($result as $key => $value) {
+                $stringdata .= '<div class="col-xs-4 tv_rows" onclick="getPlayer(' . "'" . $value["id"] . "'" . ',' . "'" . $value["name"] . "'" . ',' . "'" . $value["diem"] . "'" . ')">
+                                <p class="tv_icon">
+                                    <i class="fa fa-user" aria-hidden="true"></i>
+                                </p>
+                                <div class="tv_content">
+                                    <p class="tv_name">' . $value["name"] . '</p>
+                                    <p>
+                                        <span>AVG :</span> <span class="tv_avg">' . $value["avg"] . '</span> &nbsp;&nbsp;
+                                        <span>High :</span>  <span class="tv_highrun">' . $value["highrun"] . '</span>
+                                    </p>
+                                </div>
+                                <p class="tv_diemchap">' . $value["diem"] . '</p>
+                                <div class="cl"></div>
+                            </div>';
+            }
+            $result['flag'] = true;
+            $result['data'] = $stringdata;
+        }
+        echo json_encode($result);
+    }
+
+    // Phương thức cancelkhaicuoc
+    public function cancelkhaicuocAjax() {
+        Session::delete('trandau_id');
+        Session::delete('popup_khaicuoc_user');
+        $result['flag'] = true;
+        echo json_encode($result);
+    }
+
+    // Phương thức update người khai cuộc
+    public function updatekhaicuocAjax() {
+        $result = ['flag' => false];
+        if (isset($this->_params['trandau_id']) && isset($this->_params['khaicuoc_user'])) {
+            $trandau_id = $this->_params['trandau_id'];
+            $khaicuoc_user = $this->_params['khaicuoc_user'];
+            $autorepay = $this->_params['autorepay'];
+            //$trandau = $this->_model->loadRecord("trandau", ['id' => $trandau_id]);
+            //if ($trandau) {
+                $data = [
+                    'khaicuoc_user' => $khaicuoc_user,
+                    'playing_user' => $khaicuoc_user,
+                    'autorepay' => $autorepay
+                ];
+                $this->_model->updateRecord('trandau', $data, ['id' => $trandau_id]);
+                $result['flag'] = true;
+                
+                Session::set('popup_khaicuoc_user', 1); 
+                
+            //}
+        }
+        echo json_encode($result);
+    }
+
+}
+
+?>

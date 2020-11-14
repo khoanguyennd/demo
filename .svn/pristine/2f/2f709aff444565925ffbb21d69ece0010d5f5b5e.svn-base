@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Billiard Mode 3 người Star</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Place your kit's code here -->
+    <script src="https://kit.fontawesome.com/8aee9abc8a.js" crossorigin="anonymous"></script>
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+	<!-- -----------------------------tro giup----------------------------------------------------->
+	<div class="modal fade" id="trogiupModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document" style="margin-top: 10%">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+        	<div class="title text-center pb-3 b-line"><h3>Trợ giúp</h3></div>
+			<div class="list-luot-co t-line pt-4 pb-4">
+				<div class="row">
+					<div class="w-85 m-auto m-0 pl-5 pr-5">
+						<p>1. Xem / chỉnh sửa điểm chấp của người chơi: Chạm vào điểm chấp để chỉnh sửa.</p>
+						<p>2. Cài đặt quy tắc cạnh tranh: Đặt các quy tắc cạnh tranh như giới hạn xoay vòng, giới hạn thời gian, lưu trữ số liệu thống kê và lưu trữ hình ảnh.</p>
+						<p>3. Chỉ định màu của viên bi (trắng / vàng) và sửa nó bằng cách nhấn nút "Thay đổi Cược".</p>
+					</div>
+				</div>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <button type="button" class="btn btn-primary btn-blue" data-dismiss="modal">Đóng</button>
+	    	</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!----------------------------------end tro giup-------------------------------------->
+	<!-- -----------------------------thuc tran tran dau ----------------------------------------------------->
+	<div class="modal fade" id="KetThucTranDonGianDauModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document" style="max-width: 40%; top: 20%">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+        	<div class="title text-center pb-3 b-line"><h3>Bạn thật sự muốn kết thúc trận đấu ?</h3></div>
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <a type="button" class="btn btn-primary btn-blue" data-dismiss="modal">Đóng</a>
+		        <a type="button" class="btn btn-primary btn-blue" href="mode-3-5.html">Ok</a>
+	    	</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!-- -----------------------------end thuc tran tran dau ----------------------------------------------------->
+	<div class="container-fluid">
+		<div class="main-bgt mt-3">
+			<div class="row">
+				<div class="col-md-4 text-center">
+					<div class="w-25 float-left mt-5 pt-2">
+						<a type="button" href="" class="btn btn-primary btn-blue-bn-t mb-1 ml-0 w-100" data-toggle="modal" data-target="#trogiupModal">Trợ giúp</a>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="time_march">
+						<p>00:29</p>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="mt-4 float-right pt-1" style="width: 45%">
+						<a type="button" href="" class="btn btn-primary btn-blue-bn-t mb-1 ml-0 w-100 mb-2">Tạm dừng</a>
+						<a type="button" href="" class="btn btn-primary btn-blue-bn-t mb-1 ml-0 w-100" data-toggle="modal" data-target="#KetThucTranDonGianDauModal">Kết thúc trận đấu</a>
+					</div>
+				</div>
+			</div>			
+		</div>
+		<div class="row mt-3">
+			<div class="col-md-4 pr-10">
+				<div class="bgt-blue mb-3">
+					<div class="star-player-top b-line pt-2 pb-0 pl-4">
+						<div class="row">
+							<div class="w-85 pr-0 pl-3">
+								<h3 class="name-item s-24">Người chơi 1</h3>
+							</div>
+							<div class="w-15 pl-0 float-right">
+								<div class="diem-chap-tv text-center s-50">
+									<span>10</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="star-player-main t-line b-line pt-5">
+						<div class="start_player_diem start_player_diem_color-gr s-160 w-275 h-275">
+							<p>
+							<span id="point">03</span>
+							</p>
+						</div>
+						<div class="start_player_button m-auto m-0 pt-4">
+							<button class="button_minus btn btn-primary btn-blue-n" data-id="105" >
+			                    <i class="fa fa-minus" aria-hidden="true"></i>
+			                </button>
+			                <button class="button_minus btn btn-primary btn-blue-n" data-id="105" >
+			                    <i class="fa fa-plus"aria-hidden="true"></i>
+			                </button>
+						</div>
+					</div>
+					<div class="start_player_history t-line">
+						<div class="title_history">
+							<div class="row">
+								<div class="col-md-12 pt-2 text-left">
+									<p class="pl-4 pt-2">Lịch sử trận đấu</p>								
+								</div>
+							</div>
+						</div>
+						<div class="main_history">
+							<div class="row b-line-d m-0 text-capitalize">
+								<div class="col-md-8 pt-2 text-left pl-4">
+									<p class="mb-1"><strong>[Người chơi A]:</strong> -1 điểm</p>
+									<p>Thời gian: 00:00:03</p>
+								</div>
+								<div class="col-md-4 pt-2 text-right">
+									<p class="mb-1">8->7 điểm</p>
+								</div>
+							</div>
+							<div class="row b-line-d t-line-d m-0 text-capitalize">
+								<div class="col-md-8 pt-2 text-left pl-4">
+									<p class="mb-1"><strong>[Người chơi A]:</strong> -1 điểm</p>
+									<p>Thời gian: 00:00:03</p>
+								</div>
+								<div class="col-md-4 pt-2 text-right">
+									<p class="mb-1">8->7 điểm</p>
+								</div>
+							</div>
+							<div class="row t-line-d m-0 text-capitalize">
+								<div class="col-md-8 pt-2 text-left pl-4">
+									<p class="mb-1"><strong>[Người chơi A]:</strong> -1 điểm</p>
+									<p>Thời gian: 00:00:03</p>
+								</div>
+								<div class="col-md-4 pt-2 text-right">
+									<p class="mb-1">8->7 điểm</p>
+								</div>
+							</div>
+						</div>						
+					</div>
+				</div>
+			</div>
+			<!---------------------------center--------------------------->
+			<div class="col-md-4 pl-10 pr-10">
+				<div class="bgt-blue mb-3">
+					<div class="star-player-top b-line pt-2 pb-0 pl-4">
+						<div class="row">
+							<div class="w-85 pr-0 pl-3">
+								<h3 class="name-item s-24">Người chơi 2</h3>
+							</div>
+							<div class="w-15 pl-0 float-right">
+								<div class="diem-chap-tv text-center s-50">
+									<span>10</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="star-player-main t-line b-line pt-5">
+						<div class="start_player_diem start_player_diem_color-or s-160 w-275 h-275">
+							<p>
+							<span id="point">03</span>
+							</p>
+						</div>
+						<div class="start_player_button m-auto m-0 pt-4">
+							<button class="button_minus btn btn-primary btn-blue-n" data-id="105" >
+			                    <i class="fa fa-minus" aria-hidden="true"></i>
+			                </button>
+			                <button class="button_minus btn btn-primary btn-blue-n" data-id="105" >
+			                    <i class="fa fa-plus"aria-hidden="true"></i>
+			                </button>
+						</div>
+					</div>
+					<div class="start_player_history t-line">
+						<div class="title_history">
+							<div class="row">
+								<div class="col-md-12 pt-2 text-left">
+									<p class="pl-4 pt-2">Lịch sử trận đấu</p>								
+								</div>
+							</div>
+						</div>
+						<div class="main_history">
+							<div class="row b-line-d m-0 text-capitalize">
+								<div class="col-md-8 pt-2 text-left pl-4">
+									<p class="mb-1"><strong>[Người chơi A]:</strong> -1 điểm</p>
+									<p>Thời gian: 00:00:03</p>
+								</div>
+								<div class="col-md-4 pt-2 text-right">
+									<p class="mb-1">8->7 điểm</p>
+								</div>
+							</div>
+							<div class="row b-line-d t-line-d m-0 text-capitalize">
+								<div class="col-md-8 pt-2 text-left pl-4">
+									<p class="mb-1"><strong>[Người chơi A]:</strong> -1 điểm</p>
+									<p>Thời gian: 00:00:03</p>
+								</div>
+								<div class="col-md-4 pt-2 text-right">
+									<p class="mb-1">8->7 điểm</p>
+								</div>
+							</div>
+							<div class="row t-line-d m-0 text-capitalize">
+								<div class="col-md-8 pt-2 text-left pl-4">
+									<p class="mb-1"><strong>[Người chơi A]:</strong> -1 điểm</p>
+									<p>Thời gian: 00:00:03</p>
+								</div>
+								<div class="col-md-4 pt-2 text-right">
+									<p class="mb-1">8->7 điểm</p>
+								</div>
+							</div>
+						</div>						
+					</div>
+				</div>
+			</div>
+			<!---------------------------end center--------------------------->
+			<div class="col-md-4 pl-10">
+				<div class="bgt-blue mb-3">
+					<div class="star-player-top b-line pt-2 pb-0 pl-4">
+						<div class="row">
+							<div class="w-85 pr-0 pl-3">
+								<h3 class="name-item s-24">Người chơi 3</h3>
+							</div>
+							<div class="w-15 pl-0 float-right">
+								<div class="diem-chap-tv text-center s-50">
+									<span>10</span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="star-player-main t-line b-line pt-5">
+						<div class="start_player_diem start_player_diem_color-bl s-160 w-275 h-275">
+							<p>
+							<span id="point">08</span>
+							</p>
+						</div>
+						<div class="start_player_button m-auto m-0 pt-4">
+							<button class="button_minus btn btn-primary btn-blue-n" data-id="105" >
+			                    <i class="fa fa-minus" aria-hidden="true"></i>
+			                </button>
+			                <button class="button_minus btn btn-primary btn-blue-n" data-id="105" >
+			                    <i class="fa fa-plus"aria-hidden="true"></i>
+			                </button>
+						</div>
+					</div>
+					<div class="start_player_history t-line">
+						<div class="title_history">
+							<div class="row">
+								<div class="col-md-12 pt-2 text-left">
+									<p class="pl-4 pt-2">Lịch sử trận đấu</p>								
+								</div>
+							</div>
+						</div>
+						<div class="main_history">
+							<div class="row b-line-d m-0 text-capitalize">
+								<div class="col-md-8 pt-2 text-left pl-4">
+									<p class="mb-1"><strong>[Người chơi A]:</strong> -1 điểm</p>
+									<p>Thời gian: 00:00:03</p>
+								</div>
+								<div class="col-md-4 pt-2 text-right">
+									<p class="mb-1">8->7 điểm</p>
+								</div>
+							</div>
+							<div class="row b-line-d t-line-d m-0 text-capitalize">
+								<div class="col-md-8 pt-2 text-left pl-4">
+									<p class="mb-1"><strong>[Người chơi A]:</strong> -1 điểm</p>
+									<p>Thời gian: 00:00:03</p>
+								</div>
+								<div class="col-md-4 pt-2 text-right">
+									<p class="mb-1">8->7 điểm</p>
+								</div>
+							</div>
+							<div class="row t-line-d m-0 text-capitalize">
+								<div class="col-md-8 pt-2 text-left pl-4">
+									<p class="mb-1"><strong>[Người chơi A]:</strong> -1 điểm</p>
+									<p>Thời gian: 00:00:03</p>
+								</div>
+								<div class="col-md-4 pt-2 text-right">
+									<p class="mb-1">8->7 điểm</p>
+								</div>
+							</div>
+						</div>						
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+<script src="jquery-3.5.1.min.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Billiard Home</title>
+	<meta charset="utf-8">
+	<!-- Place your kit's code here -->
+    <script src="https://kit.fontawesome.com/8aee9abc8a.js" crossorigin="anonymous"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+	<!-- -----------------------------tro giup----------------------------------------------------->
+	<div class="modal fade" id="trogiupModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document" style="margin-top: 10%">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+        	<div class="title text-center pb-3 b-line"><h3>Trợ giúp</h3></div>
+			<div class="list-luot-co t-line pt-4 pb-4">
+				<div class="row">
+					<div class="w-85 m-auto m-0 pl-5 pr-5">
+						<p>1. Xem / chỉnh sửa điểm chấp của người chơi: Chạm vào điểm chấp để chỉnh sửa.</p>
+						<p>2. Cài đặt quy tắc cạnh tranh: Đặt các quy tắc cạnh tranh như giới hạn xoay vòng, giới hạn thời gian, lưu trữ số liệu thống kê và lưu trữ hình ảnh.</p>
+						<p>3. Chỉ định màu của viên bi (trắng / vàng) và sửa nó bằng cách nhấn nút "Thay đổi Cược".</p>
+					</div>
+				</div>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <button type="button" class="btn btn-primary btn-blue" data-dismiss="modal">Đóng</button>
+	    	</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!----------------------------------end tro giup-------------------------------------->
+	<!-- -----------------------------dang ky thanh vien----------------------------------------------------->
+	<div class="modal fade" id="dangkytvModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document" style="margin-top: 10%">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+        	<div class="title text-center pb-3 b-line"><h3>Đăng ký thành viên</h3></div>
+			<div class="list-luot-co t-line pt-4 pb-4">
+				<div class="row">
+					<div class="w-85 m-auto m-0 pl-5 pr-5">
+						<div class="form-row">
+						    <div class="form-group col-md-12">
+						      <label for="recipient-name" class="col-form-label">Họ & tên <span class="required">*</span></label>
+						      <input type="text" class="form-control from-c" id="validationCustom01" placeholder="Nhập họ tên của bạn ...">
+						    </div>
+						    <div class="form-group col-md-12">
+						      <label class="col-form-label" for="#">Số điện thoại <span class="required">*</span></label>
+						      <input type="@" class="form-control from-c" id="#" placeholder="Nhập số điện thoại của bạn ...">
+						    </div>
+						    <div class="form-group col-md-12">
+						      <label for="recipient-name" class="col-form-label">Điểm chấp</label>
+						      <input type="text" class="form-control from-c" id="validationCustom01" placeholder="Nhập họ điểm chấp">
+						    </div>
+						</div>
+					</div>
+				</div>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <button type="button" class="btn btn-primary btn-blue" data-dismiss="modal">Đóng</button>
+		        <button type="button" class="btn btn-primary btn-blue" data-dismiss="modal">Đăng ký</button>
+	    	</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!----------------------------------end dang ky thanh vien-------------------------------------->
+	<div class="container-fluid bgt-home">
+		<div class="row">
+			<div class="col-md-6 logo">
+				<img src="images/logo-1.png" alt="Billiard">
+			</div>
+			<div class="col-md-6">
+				<div class="w-auto pt-4">
+					<div class="float-right pr-2">
+						<span class="date">08.10 (Thứ 5) </span>
+						<span class="date">08:16</span>						
+					</div>
+				</div>
+				<div class="pt-5 w-auto">
+					<div class="float-right">
+						<a type="button" href="list-member.html" class="btn btn-primary btn-blue">Số thành viên (79)</a>
+						<a href="list-member.html" class="btn btn-warning btn-orange-sm" data-toggle="modal" data-target="#dangkytvModal">Đăng ký thành viên</a>
+						<nav class="navbar navbar-expand-lg navbar-inverse btn btn-primary btn-lag">
+						  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+						    <ul class="navbar-nav mr-auto">
+						      <li class="nav-item dropdown">
+						        <a class="nav-link" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						        	<img class="img-flag" src="images/kr.png">
+						        </a>
+						        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+						          <a class="dropdown-item" href="#"><img class="img-flag" src="images/kr.png"> 한국어</a>
+						          <a class="dropdown-item" href="#"><img class="img-flag" src="images/vn.png"> Tiếng Việt</a>
+						          <a class="dropdown-item" href="#"><img class="img-flag" src="images/en.jpg"> English</a>
+						        </div>
+						      </li>
+						    </ul>
+						  </div>
+						</nav>
+					</div>	
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="container-th pt-200">
+				<div class="row">
+					<div class="col-md-4">
+						<a class="table-bd" href="mode-2.html"><div class="bida_table"><h2>Mode record 2</h2></div></a>
+					</div>
+					<div class="col-md-4">
+						<a class="table-bd" href="mode-2-don-gian.html"><div class="bida_table"><h2>Mode record 2<br>đơn giản</h2></div></a>
+					</div>
+					<div class="col-md-4">
+						<a class="table-bd" href="mode-3-5.html"><div class="bida_table"><h2>Mode record 3-5</h2></div></a>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12 margin0 ">
+				<div class="margin0 d-table w-auto pt-140 pb-100">
+					<a type="button" class="btn btn-primary btn-blue shadow_button" data-toggle="modal" data-target="#trogiupModal">Trợ giúp</a>
+					<a type="button" class="btn btn-primary btn-blue shadow_button" href="login.html">Đăng xuất</a>
+				</div>
+			</div>
+		</div>
+	</div>
+<script src="jquery-3.5.1.min.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+</body>
+</html>

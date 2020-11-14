@@ -1,0 +1,804 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.0.0/animate.min.css"/>
+<style>
+.btn-orange:hover{
+    color: #fff;
+    background-color: #d39e00;
+    border-color: #c69500;
+}
+
+/* Khoa */
+
+@media screen and (min-device-width: 320px) and (max-device-width: 567px) {
+    .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl {
+        padding: 4px !important;
+    }
+
+    .row {
+        margin: 0px !important;
+    }
+    
+    #KetThucTranDonGianDauModal .modal-dialog {
+        max-width: 80% !important;
+    }
+
+    #trogiupModal {
+        width:80% !important;
+        margin-left: 9%;
+    }
+
+    .name-item, .diem-chap-tv {
+        font-size: 11px !important ;
+        line-height: 8px !important;
+        padding-top: 20px !important;
+    }
+
+    .w-85 {
+        width: 80% !important;
+    }
+    
+    .w-15 {
+        width: 20% !important;
+    }
+
+    .pl-10 {
+        padding: 0 1px !important;
+        /* padding-right: 1px !important; */
+    }
+
+    .pr-10 {
+        padding: 1px !important;
+    }
+
+    .pl-3, .px-3 {
+        padding-left: 0rem!important;
+    }
+
+    .main-bgt {
+        padding: 5px !important;
+    }
+
+    .img-responsive {
+        width: 90px !important;
+    }
+
+    .start_player_diem {
+        border-radius: 54px !important ;
+        font-size: 46px !important;
+        width: 78px !important;
+    }
+
+     .time_march {
+        font-size: 38px !important;
+        height: 60px;
+    }
+
+    .start_luot_content {
+        font-size: 64px;
+        margin-bottom: 10px !important;
+    }
+
+    .start_luot_button {
+        padding: 5px !important;
+    }
+
+    a.btn-blue-bn, a.btn-orange {
+        font-size: 11px !important;
+    }
+
+    .star-player-main {
+        padding: 5px !important;
+        height: 97px !important;
+    }
+
+    .mt-3, .my-3 {
+        margin-top: 0.3rem!important;
+    }
+
+    .s-20 {
+        font-size: 8px !important;
+    }
+
+    .s-55 {
+        font-size: 15px !important;
+    }
+
+    .minus_number {
+        bottom: 2px !important;
+    }
+
+    .pl-4, .px-4 {
+        padding-left: 0.5rem!important;
+    }
+
+    .start_player_history {
+        font-size: 12px !important;
+    }
+
+    .main_history {
+        font-size: 11px !important;
+    }
+
+    .fa, .fas {
+        font-weight: 600 !important;
+    }
+
+    button.btn-number {
+        margin: 0 2px !important;
+    }
+
+    .mt-5, .my-5 {
+        margin-top: 0px !important;
+    }
+
+    .pt-4, .py-4 {
+        padding-top: 0px !important;
+    }
+}
+
+@media screen and (min-device-width: 568px) and (max-device-width: 1024px) {
+    .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl {
+        padding: 4px !important;
+    }
+
+    .row {
+        margin: 0px !important;
+    }
+
+    #KetThucTranDonGianDauModal .modal-dialog {
+        max-width: 80% !important;
+    }
+
+    #trogiupModal {
+        width:80% !important;
+        margin-left: 9%;
+    }
+
+    .name-item, .diem-chap-tv {
+        font-size: 18px !important ;
+        line-height: 8px !important;
+        padding-top: 20px !important;
+    }
+
+    .w-85 {
+        width: 80% !important;
+    }
+    
+    .w-15 {
+        width: 20% !important;
+    }
+
+    .pl-10 {
+        padding: 0 1px !important;
+        /* padding-right: 1px !important; */
+    }
+
+    .pr-10 {
+        padding: 1px !important;
+    }
+
+    .main-bgt {
+        padding: 5px !important;
+    }
+
+    .img-responsive {
+        width: 160px !important;
+    }
+
+    .start_player_diem {
+        border-radius: 90px !important ;
+        font-size: 80px !important;
+        width: 130px !important;
+    }
+
+     .time_march {
+        font-size: 38px !important;
+        height: 60px;
+    }
+
+    .start_luot_content {
+        font-size: 64px;
+        margin-bottom: 10px !important;
+    }
+
+    .start_luot_button {
+        padding: 5px !important;
+    }
+
+    a.btn-blue-bn, a.btn-orange {
+        font-size: 16px !important;
+    }
+
+    .star-player-main {
+        padding: 5px !important;
+        height: 147px !important;
+    }
+
+    .mt-3, .my-3 {
+        margin-top: 0.3rem!important;
+    }
+
+    .s-20 {
+        font-size: 8px !important;
+    }
+
+    .s-55 {
+        font-size: 15px !important;
+    }
+
+    .minus_number {
+        bottom: 2px !important;
+    }
+
+    .pl-4, .px-4 {
+        padding-left: 0.5rem!important;
+    }
+
+    .pl-3, .px-3 {
+        padding-left: 0rem!important;
+    }
+
+    .start_player_history {
+        font-size: 12px !important;
+    }
+
+    .main_history {
+        font-size: 11px !important;
+    }
+
+    .fa, .fas {
+        font-weight: 600 !important;
+    }
+
+    button.btn-number {
+        margin: 0 2px !important;
+    }
+
+    .mt-5, .my-5 {
+        margin-top: 0px !important;
+    }
+
+    .pt-4, .py-4 {
+        padding-top: 0px !important;
+    }
+}
+
+/* end Khoa */
+
+</style>
+<?php
+$auto5s = $_SESSION["auto5s"];
+$trandau = $this->getData('trandau');
+$trandau_thanhvien = $this->getData('trandau_thanhvien');
+$trandau_chitiet = $this->getData('trandau_chitiet');
+$number_user = $trandau["soluong_user"];
+$totalTime = $this->getData('totalTime') > 0 ? $this->getData('totalTime') : 0;
+$hour = 0;
+if($totalTime >= 3600) $hour = round($totalTime/ (60*60));
+$secondRemain = $totalTime - $hour * (60*60);
+$minutes = round($secondRemain/60);
+
+if($number_user==2){
+    $thanhvien1 = $this->getData('thanhvien1');
+    $thanhvien2 = $this->getData('thanhvien2'); 
+
+    $diem1 = $this->getData('diem1');
+    $diem2 = $this->getData('diem2');
+?>
+<script>
+	var count = 5;
+    $(document).ready(function () {
+        <?php if ($auto5s == 0) { ?>
+            startAutoplay();
+        <?php } ?>
+        function startAutoplay() {
+            var r = setInterval(function () {
+                var timer = document.getElementById("timer");
+                if (count > 0) {
+                    count--;
+                    timer.innerHTML = "(" + count + ")";
+                }else if(count == -1){
+                	$("#timer").remove();
+                    clearInterval(r);
+                } else {
+                    $('.button_play_mode2').click();
+                    $("#timer").remove();
+                    clearInterval(r);
+                }
+            }, 1000);
+        }
+
+        $(".cbutton").click(function () {
+            var strDiv1Content = document.getElementById('start_player1').innerHTML;
+            var strDiv2Content = document.getElementById('start_player2').innerHTML;
+            //strDiv1Content.replace('start_player_diem_span1', 'start_player_diem_span2');
+            //strDiv2Content.replace('start_player_diem_span2', 'start_player_diem_span1');
+            document.getElementById('start_player1').innerHTML = strDiv2Content;
+            document.getElementById('start_player2').innerHTML = strDiv1Content;
+            const element = document.querySelector('#start_player1');
+            element.classList.add('animate__animated', 'animate__fadeInLeft');
+            element.addEventListener('animationend', () => {
+                element.classList.remove('animate__animated', 'animate__fadeInLeft');
+            });
+            const element2 = document.querySelector('#start_player2');
+            element2.classList.add('animate__animated', 'animate__fadeInRight');
+            element2.addEventListener('animationend', () => {
+                element2.classList.remove('animate__animated', 'animate__fadeInRight');
+            });
+        });
+
+        $('.button_addpoint').attr('disabled', true);
+    });
+</script>
+
+<!-- -----------------------------tro giup----------------------------------------------------->
+<input type="hidden" id="trandau_id" value="<?=$trandau['id']?>"/>
+<input type="hidden" id="khaicuoc_user" value="<?=$trandau['khaicuoc_user']?>"/>
+<input type="hidden" id="user1" value="<?=$thanhvien1['id']?>"/>
+<input type="hidden" id="user2" value="<?=$thanhvien2['id']?>"/>
+<input type="hidden" id="oneAddPoint" value="0"/>
+<input type="hidden" id="timeUser" value="0"/>
+<input type="hidden" id="pointEndUser<?=$thanhvien1['id']?>" value="<?=$thanhvien1['diem']?>"/>
+<input type="hidden" id="pointEndUser<?=$thanhvien2['id']?>" value="<?=$thanhvien2['diem']?>"/>
+<input type="hidden" id="pointCurrentUser<?=$thanhvien1['id']?>" value="<?=$diem1?>"/>
+<input type="hidden" id="pointCurrentUser<?=$thanhvien2['id']?>" value="<?=$diem2?>"/>
+
+<div class="modal fade" id="trogiupModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="margin-top: 10%">
+    <div class="modal-content bgt-blue">
+        <div class="modal-body p-0 b-line">
+        <div class="title text-center pb-3 b-line"><h3><?= $this->language("l_help") ?></h3></div>
+        <div class="list-luot-co t-line pt-4 pb-4">
+            <div class="row">
+                <div class="w-85 m-auto m-0 pl-5 pr-5">
+                    <p>1. <?= $this->language("l_modal_help_row1") ?></p>
+                    <p>2. <?= $this->language("l_modal_help_row2") ?></p>
+                    <p>3. <?= $this->language("l_modal_help_row3") ?></p>
+                </div>
+            </div>
+        </div>	
+        </div>
+        <div class="modal-footer t-line pb-4 pt-4">
+        <div class="m-0 m-auto">
+            <button type="button" class="btn btn-primary btn-blue" data-dismiss="modal"><?= $this->language("l_close") ?></button>
+        </div>
+        </div>
+    </div>
+    </div>
+</div>
+<!----------------------------------end tro giup-------------------------------------->
+<!-- -----------------------------thuc tran tran dau ----------------------------------------------------->
+<div class="modal fade" id="KetThucTranDonGianDauModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width: 40%; top: 20%">
+    <div class="modal-content bgt-blue">
+        <div class="modal-body p-0 b-line">
+        <div class="title text-center pb-3 b-line"><h3><?=$this->language("l_confirm_end")?></h3></div>
+        </div>
+        <div class="modal-footer t-line pb-4 pt-4">
+        <div class="m-0 m-auto">
+            <a type="button" class="button_closehelp btn btn-primary btn-blue" data-dismiss="modal"><?= $this->language("l_close"); ?></a>
+            <a type="button" class="button_ok_mode35_end button_ok_mode2_end btn btn-primary btn-blue"><?= $this->language("l_ok"); ?></a>
+        </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmmode2Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width: 40%; top: 20%">
+        <div class="modal-content bgt-blue">
+            <div class="modal-body p-0 b-line">
+                <div class="title text-center pb-3 b-line"><h3><?=$this->language("l_confirm_start") ?></h3></div>
+            </div>
+            <div class="modal-footer t-line pb-4 pt-4">
+                <div class="m-0 m-auto">
+                    <button type="button" class="btn btn-primary btn-blue button_ok_mode2_end" data-dismiss="modal"><?= $this->language("l_no") ?></button>
+                    <button type="button" class="btn btn-primary btn-blue button_yes_mode2_end"><?= $this->language("l_yes") ?></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="div_load_alert">
+    <div class="main_mess">
+        <p><?= $this->language("l_main_mess") ?></p>
+        <img style="width: 200px;" src="<?= URL_PUBLIC ?>img/load.gif" />
+    </div>
+</div>
+<!----------------------------------end thuc tran tran dau-------------------------------------->
+<div class="container-fluid">
+    <div class="row mt-3">
+        <div class="col-4 col-sm-4 col-md-4 pr-10">  
+            <div id="start_player1">
+                <div class="bgt-blue mb-3">             
+                    <div class="star-player-top b-line pt-4 pb-3 pl-4">
+                        <div class="row">
+                            <div class="w-85 pr-0 pl-3">
+                                <h3 class="name-item name_user<?=$thanhvien1['id']?>"><?=$thanhvien1['thanhvien_name']?></h3>
+                            </div>
+                            <div class="w-15 pl-0 float-right">
+                                <div class="diem-chap-tv text-center">
+                                    <span><?=$thanhvien1['diem']?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="star-player-main t-line b-line pt-5">
+                        <div class="start_player_diem start_player_diem_color-or">
+                            <p>
+                            <span id="point<?=$thanhvien1['id']?>"><?=$diem1 < 10 ? '0' . $diem1 : $diem1;?></span>
+                            <!-- span class="start_player_diem_span2">05</span>
+                            <<span class="start_player_diem_span1">05</span> -->
+                            </p>
+                        </div>
+                        <div class="start_player_button m-auto m-0 pt-4">
+                            <div class="rowsplay_button_mode2">
+                                
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="rowsplay_button_mode2 t-line pt-2 pb-2">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien1['id']?>" data-val = '-1'>
+                                    <i class="fa fa-minus s-20 minus_number " aria-hidden="true"></i><span class="s-55 font-weight-bold">1</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien1['id']?>" data-val = '1'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">1</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien1['id']?>" data-val = '2'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">2</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien1['id']?>" data-val = '3'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">3</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien1['id']?>" data-val = '4'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">4</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien1['id']?>" data-val = '5'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">5</span>
+                                    </button>
+                                </div>
+                                <div class="win container_item_button_mode2">
+                                    <button class="button_user_win win<?=$thanhvien1['id']?>" style="display: none"><strong><?= $this->language("l_detail_win") ?></strong></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>	
+                    <div class="start_player_history t-line">
+                        <div class="title_history">
+                            <div class="row">
+                                <div class="col-md-12 pt-2 text-left">
+                                    <p class="pl-4 pt-2"><?= $this->language("l_lichsutrandau") ?></p>								
+                                </div>
+                            </div>
+                        </div>
+                        <div class="main_history" style="min-height: 310px">
+                        <div class="rows_history_mode1"></div>  
+                            <?php            
+                                foreach ($trandau_chitiet as $td_ct){
+                                    if($thanhvien1['id']==$td_ct['thanhvien_trandau_id']){
+                                        echo $td_ct['content'];
+                                    }
+                                }
+                            ?>          
+                        </div>						
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!---------------------------center--------------------------->
+        <div class="col-4 col-sm-4 col-md-4 pr-10 pl-10">
+            <div class="main-bgt">
+                <div class="time_march">
+                    <p id="countTimeMarch">00:00</p>
+                </div>
+                <div class="start_luot_content mt-5 pb-lg-5" style="margin-bottom: 210px">
+                    <p class="text-center pt-4"><img src="<?= URL_PUBLIC ?>images/logo-2.png" class="img-responsive"></p>
+                </div>
+                <div class="start_luot_button mt-lg-5">
+                    <a type="button"  class="start_player_diem_color-bl btn btn-primary btn-blue-bn w-100 mb-1 ml-0" data-toggle="modal" data-target="#trogiupModal"><?= $this->language("l_help") ?></a>
+                    <a type="button"  class="start_player_diem_color-bl cbutton mode2_postion btn btn-primary btn-blue-bn w-100 mb-1 ml-0"><?= $this->language("l_vitri") ?></a>
+                    <a type="button"  class="start_player_diem_color-bl btn btn-primary btn-blue-bn w-100 mb-1 ml-0" data-toggle="modal" data-target="#KetThucTranDonGianDauModal"><?= $this->language("l_conforms_end") ?></a>
+                    <a type="button"  class="start_player_diem_color-bl button_play_mode2 btn btn-primary btn-orange w-100 ml-0 pt-3 pb-3 s-30 mt-3"><?=$this->language("l_play") ?>
+                        <?php if ($auto5s == 0) { ?>
+                            <span id="timer">(5)</span>
+                            <?php Session::set('auto5s', 1); ?>
+                        <?php } ?> 
+                    </a>
+                    <a type="button" style="display: none" class="start_player_diem_color-bl button_pause2_normal btn btn-primary btn-blue-bn  w-100 ml-0 pt-3 pb-3 s-30 mt-3"><?= $this->language("l_pause") ?></a>
+
+                </div>
+            </div>
+        </div>
+        <!---------------------------end center--------------------------->
+        <div class="col-4 col-sm-4 col-md-4 pl-10">
+            <div id="start_player2">
+            <div class="bgt-blue mb-3">        
+                    <div class="star-player-top b-line pt-4 pb-3 pl-4">
+                        <div class="row">
+                            <div class="w-85 pr-0 pl-3">
+                                <h3 class="name-item name_user<?=$thanhvien2['id']?>"><?=$thanhvien2['thanhvien_name']?></h3>
+                            </div>
+                            <div class="w-15 pl-0 float-right">
+                                <div class="diem-chap-tv text-center">
+                                    <span><?=$thanhvien2['diem']?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="star-player-main t-line b-line pt-5">
+                        <div class="start_player_diem start_player_diem_color-bl">
+                            <p>
+                            <span id="point<?=$thanhvien2['id']?>"><?=$diem2 < 10 ? '0' . $diem2 : $diem2;?></span>
+                            <!-- span class="start_player_diem_span2">05</span>
+                            <<span class="start_player_diem_span1">05</span> -->
+                            </p>
+                        </div>
+                        <div class="start_player_button m-auto m-0 pt-4">
+                            <div class="rowsplay_button_mode2">
+                                
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="rowsplay_button_mode2 t-line pt-2 pb-2">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien2['id']?>" data-val = '-1'>
+                                    <i class="fa fa-minus s-20 minus_number " aria-hidden="true"></i><span class="s-55 font-weight-bold">1</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien2['id']?>" data-val = '1'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">1</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien2['id']?>" data-val = '2'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">2</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien2['id']?>" data-val = '3'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">3</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien2['id']?>" data-val = '4'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">4</span>
+                                    </button>
+                                </div>
+                                <div class="container_item_button_mode2">
+                                    <button class="button_addpoint button_minus btn btn-primary btn-number" data-id="<?=$thanhvien2['id']?>" data-val = '5'>
+                                        <i class="fa fa-plus s-20 minus_number" aria-hidden="true"></i><span class="s-55 font-weight-bold">5</span>
+                                    </button>
+                                </div>
+                                <div class="win container_item_button_mode2">
+                                    <button class="button_user_win win<?=$thanhvien2['id']?>" style="display: none"><strong><?= $this->language("l_detail_win") ?></strong></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>	
+         
+                <div class="start_player_history t-line">
+                    <div class="title_history">
+                        <div class="row">
+                            <div class="col-md-12 pt-2 text-left">
+                                <p class="pl-4 pt-2"><?= $this->language("l_lichsutrandau") ?></p>								
+                            </div>
+                        </div>
+                    </div>
+                    <div class="main_history" style="min-height: 310px">
+                    <div class="rows_history_mode2"></div>  
+                        <?php            
+                              foreach ($trandau_chitiet as $td_ct){
+                                if($thanhvien2['id']==$td_ct['thanhvien_trandau_id']){
+                                    echo $td_ct['content'];
+                                }
+                            }
+                        ?>          
+                    </div>						
+                </div>         
+            </div>   
+        </div>          
+        </div>      
+    </div>
+</div>
+<?php }else{?>
+<p>Error input data</p>
+<?php } ?>
+
+<script type="text/javascript">
+    var minutes = <?=$minutes?>;
+    var hour = <?=$hour?>;
+    // Caculater time User 
+    var secondUseCurrent = 0;
+    var timeUse;
+    var timerOnUser = 0;
+    
+    if (localStorage.hasOwnProperty("secondUseCurrent")) {    
+    	secondUseCurrent=parseInt(localStorage.getItem("secondUseCurrent"));
+    }
+    function timedCountCurrentUser()
+    {
+        if(secondUseCurrent < 10) {
+            txtSecond = '0' + parseInt(secondUseCurrent);
+        } else {
+            txtSecond = parseInt(secondUseCurrent);   
+        }
+        secondUseCurrent = secondUseCurrent + 1;  
+        localStorage.setItem("secondUseCurrent",secondUseCurrent); 
+        
+        var h = Math.floor( txtSecond / 3600 );
+        var m = Math.floor( (txtSecond%3600) / 60 );
+        var s = txtSecond % 60;
+        if (s < 10) { s = "0" + s;}
+        if (m < 10) { m = "0" + m;}
+        if (h < 10) { h = "0" + h;}
+
+        
+        $("#countTimeMarch").html(h + ":" + m);      
+        $('#timeUser').val(secondUseCurrent);        
+        timeUse = setTimeout("timedCountCurrentUser()",1000);
+    }
+
+    function startCountTimeUser()
+    {
+        if (!timerOnUser)
+        {
+            timerOnUser =1;
+            timedCountCurrentUser();
+        }
+    }
+
+    function stopCountTimeUser() {        
+       
+        if (timeUse) {
+            timerOnUser=0;
+            clearTimeout(timeUse);
+        }
+    }
+    $('.button_play_mode2').on('click', function(){
+        count=-1;
+        $('.button_addpoint').attr('disabled', false);
+        $(".button_play_mode2").hide();
+        $(".button_pause2_normal").show();
+        startCountTimeUser();  
+        $("#timer").remove();              
+    })
+
+    $('.button_pause2_normal').on('click', function(){
+        $(".button_play_mode2").html("<?= $this->language("l_continue") ?>");
+        $('.button_addpoint').attr('disabled', true);
+        $(".button_pause2_normal").hide();
+        $(".button_play_mode2").show();
+        stopCountTimeUser();                
+    })
+
+    $(".button_ok_mode2_end").click(function () {
+        $('.div_load_alert').css("display","block");
+        window.location = "<?= $this->route('setting2') ?>";
+    });
+    $(".button_yes_mode2_end").click(function () {
+    	strname = "<?=$thanhvien2['thanhvien_name']?>"+","+"<?=$thanhvien1['thanhvien_name']?>";
+        strpoint = "<?=$thanhvien2['diem']?>"+","+"<?=$thanhvien1['diem']?>";
+        $('.div_load_alert').css("display", "block");
+        $.fn_ajax('setting2', { 'strname': strname, 'strpoint': strpoint, 'number_player': 2 }, function(result) {
+            console.log(result)
+            if (result.flag == true) {
+               window.location = "<?= $this->route('start2') ?>/"+result.trandau_id;
+            }
+        }, true);
+       
+    });
+    $('body').on('click', '.button_addpoint', function(){
+        $('.button_pause2_normal').show();
+        var dataId = parseInt($(this).attr('data-id'));
+        var point = parseInt($(this).attr('data-val'));
+        var trandau_id = parseInt($('#trandau_id').val());
+        var time = $('#timeUser').val();
+        var currentPoint = parseInt($('#pointCurrentUser' + dataId).val());
+        var endPoint = parseInt($('#pointEndUser' + dataId).val());
+        var nextPoint = currentPoint + point;
+        if(nextPoint < 0) return false;
+
+        $('#pointCurrentUser' + dataId).val(nextPoint);
+
+        if(nextPoint < 10) $('#point' + dataId).html( '0' + nextPoint);
+        else  $('#point' + dataId).html(nextPoint);
+
+        stopCountTimeUser();
+        startCountTimeUser();
+
+        if(point > 0 ) showPointHistory = '+' + point;
+        else showPointHistory = point;
+
+        var hour = Math.floor(time / 3600);
+        var remainSecond = time - hour * 3600;
+        var minutes = Math.floor(remainSecond / 60);
+        var second = remainSecond % 60;
+        if (second < 10) {
+            second = "0" + second;
+        }
+        if (minutes < 10) {
+            minutes = "0" + minutes;
+        }
+        if (hour < 10) {
+            hour = "0" + hour;
+        }
+        var timeShow = hour + ':' + minutes + ':' + second;
+        var nameUser = $('.name_user' + dataId).html();
+
+        str = '<div class="row b-line-d t-line-d m-0 text-capitalize">';
+            str += '<div class="col-md-6 pt-2 text-left pl-4">'
+                str += '<p class="mb-1"><strong>[' + nameUser +  '] :</strong> ' +  showPointHistory + ' <?=$this->language("l_pointtb")?></p>';
+                str += '<p><?=$this->language("l_thoigian")?>: ' + timeShow + '</p>';
+            str += '</div>';
+            str +='<div class="col-md-6 pt-2 text-right">'
+            str += '<p><?=$this->language("l_chitiet")?> : ' +  currentPoint + ' <?=$this->language("l_pointtb")?> ->' +  nextPoint +  ' <?=$this->language("l_pointtb")?>';
+            str += '</div>';
+        str += '</div>';
+
+        
+
+        if( dataId == <?= $thanhvien1['id'] ?> ){
+            $('.rows_history_mode1').after(str);
+        }else{
+            $('.rows_history_mode2').after(str);
+        }
+
+        if(nextPoint >= endPoint) {
+            $('.button_addpoint').hide();
+            $('.win' + dataId).show();
+            $('.button_pause2_normal').hide();
+            $('#confirmmode2Modal').modal('show');
+            stopCountTimeUser(); 
+        }
+        var url = $baseUrl + '/addPointPlay2UserNormal.html';
+        var strload='<img style="margin-top: 25%; margin-left: 13%;" class="imagesload_wait" src="'+$baseUrl+'/public/img/load.gif" />';                
+        var currentObject = $(this);      
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                trandau:trandau_id,
+                thanhvien_id:dataId,
+                diem:point,
+                time:time,
+                str:str,
+                status: 0
+            },
+            dataType:'text',
+            beforeSend: function() {
+//                 $(currentObject).css('color', '#24354c');
+//                 if(nextPoint < endPoint) $(currentObject).after(strload);
+//                 $(".container_item_button_mode2 :input").prop("disabled", true);
+            },
+            success:function(data){             
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == true){
+                    $('.imagesload_wait').remove();
+                    $(currentObject).css('color', '#ffffff');                                                                                               
+                    $(".container_item_button_mode2 :input").prop("disabled", false);                                                                  
+                } else {                                        
+                    return false;     
+                }
+            }
+        });
+         
+    })
+</script>

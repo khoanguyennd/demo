@@ -1,0 +1,115 @@
+<div class="modal fade" id="conformStop" data-backdrop="static" style="margin-top: 100px" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="max-width: 1100px; height: 200px; top: 0px" role="document">
+        <div class="modal-content bgt-blue">
+            <div class="modal-header">                                        
+                <h1 class="h1register"><?=$this->language("l_conformstop")?></h1>
+            </div>
+            <div class="modal-body" style="color:#ffffff; height: 300px">                
+                <div class="row">
+                    <div class="col-3">  
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_conforms_point")?></span>
+                            <span class="pointuser diemend<?=$thanhvien1['id']?>">0</span>                         
+                        </div>
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_high")?></span>
+                            <span class="pointuser hightend<?=$thanhvien1['id']?>">0</span>                         
+                        </div>
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_conforms_luotco")?></span>
+                            <span class="luotcotuser luotcoend<?=$thanhvien1['id']?>">0</span> 
+                        </div>
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_conforms_avg")?></span>
+                            <span class="avguser avgend<?=$thanhvien1['id']?>">0</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_conforms_sobicham")?></span>
+                            <span class="sobichamuser sobichamend<?=$thanhvien1['id']?>" style="margin-left: 15px">0</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="row">
+                            <div class="col-4"><p class="nameCothu"><?=$thanhvien1['name']?></p></div>
+                            <div class="col-4"></div>
+                            <div class="col-4"><p class="nameCothu"><?=$thanhvien2['name']?></p></div>                            
+                        </div>
+                        <div class="row">
+                            <div class="col-4"><span class="point_end_play pointend<?=$thanhvien1['id']?> <?php if($thanhvien1['id'] == $trandau['khaicuoc_user'] ) echo 'activeplay';?>">10</span></div>
+                            <div class="col-4 infoGenaral">
+                                <p><span class="luotcodangdanh">0</span> luot co</p>
+                                <?php if($trandau['luot']): ?>
+                                <p style="color: #ef7634"><?=$trandau['luot']?> Luot</p>
+                                <?php endif;?>
+                                <p style="font-size: 30px; font-weight: bold; margin-top: 20px">VS</p>
+                            </div>
+                            <div class="col-4"><span class="point_end_play pointend<?=$thanhvien2['id']?> <?php if($thanhvien2['id'] == $trandau['khaicuoc_user'] ) echo 'activeplay';?>">10</span></div>                            
+                        </div>
+                    </div>                    
+                    <div class="col-3">
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_conforms_point")?></span>
+                            <span class="pointuser diemend<?=$thanhvien2['id']?>">0</span>                         
+                        </div>
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_high")?></span>
+                            <span class="pointuser hightend<?=$thanhvien2['id']?>">0</span>                         
+                        </div>
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_conforms_luotco")?></span>
+                            <span class="luotcotuser luotcoend<?=$thanhvien2['id']?>">0</span> 
+                        </div>
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_conforms_avg")?></span>
+                            <span class="avguser avgend<?=$thanhvien2['id']?>">0</span>
+                        </div>
+                        <div class="item-info">
+                            <span class="title"><?=$this->language("l_conforms_sobicham")?></span>
+                            <span class="sobichamuser sobichamend<?=$thanhvien2['id']?>">0</span>
+                        </div>
+                    </div>                    
+                </div>    
+            </div>
+            <div class="modal-footer" style="text-align: center;">
+                <button type="button" id="btnCancel" class="btn btn-primary btn-blue-bn" data-dismiss="modal" style="font-size: 20px; line-height:30px"><?=$this->language("l_cancel")?></button>
+                <button type="button" id="btnChonlaicothu" class="btn btn-primary btn-blue-bn" data-dismiss="modal" style="font-size: 20px; line-height:30px"><?=$this->language("l_conform_button_cothu")?></button>
+                <button type="button" id="btnResetGame" class="btn btn-primary btn-blue-bn" data-dismiss="modal" style="font-size: 20px; line-height:30px"><?=$this->language("l_conform_reset")?></button>
+                <button type="button" id="btnStop" class="btn btn-primary btn-blue-bn" style="display: none; font-size: 20px; line-height:30px"><?=$this->language("l_conforms_end")?></button>
+                <button type="button" id="btnExit" class="btn btn-primary btn-blue-bn" style="display: none; font-size: 20px; line-height:30px"><?=$this->language("l_conform_button_exitgame")?></button>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $('#btnStop').on('click', function(){
+        var idTrandau = $('#trandau_id').val();
+        var status = 3;
+        var url = $baseUrl + '/stoptrandau.html';
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: {
+                trandau:idTrandau,                
+                status:status
+            },
+            dataType:'text',
+            success:function(data){             
+                jsonData =  $.parseJSON(data);
+                if(jsonData.status == true){                                                                            
+                    window.location = $baseUrl;
+                } else {                    
+                    return false;            
+                }
+            }
+        });
+    })
+
+    $('#btnExit').on('click', function(){
+        window.location = $baseUrl;
+    })
+
+    $('#btnChonlaicothu').on('click', function(){
+        window.location = $baseUrl + '/setting.html';
+    })    
+
+</script>

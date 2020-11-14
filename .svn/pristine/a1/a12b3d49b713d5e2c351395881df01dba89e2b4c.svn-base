@@ -1,0 +1,28 @@
+<!-- Modal help -->
+<div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="h1help">도움</h1>
+            </div>
+            <div class="modal-body">
+                <div class="help1">
+                    <p class="helpnumber">1</p>
+                    <p class="helptext">플레이어의 핸디캡보기 / 편집 : 핸디캡을 터치하여 수정하십시오.</p>
+                </div>
+                <div class="help2">
+                    <p class="helpnumber">2</p>
+                    <p class="helptext">경쟁 규칙 설정 : 회전 횟수 제한, 시간 제한, 통계 저장, 이미지 저장과 같은 경쟁 규칙을 설정합니다.</p>
+                </div>
+                <div class="help3">
+                    <p class="helpnumber">3</p>
+                    <p class="helptext">대리석의 색상 지정 (흰색 / 노란색) "베팅 변경"버튼을 눌러 수정하십시오.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="button_closehelp" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end modal help -->

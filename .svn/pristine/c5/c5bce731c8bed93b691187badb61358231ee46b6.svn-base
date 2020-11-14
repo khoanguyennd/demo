@@ -1,0 +1,47 @@
+<?php 
+
+$route = new Route();
+
+// Trang xử lý ajax ajax.html/{controller}/{action}
+$route->get('ajax', '/ajax.html', null);
+
+// trang chủ
+$route->get('home', '/', 'dashboard@home');
+$route->get('setting', '/setting.html', 'dashboard@setting');
+$route->get('start', '/start.html/{trandau_id?}', 'dashboard@start')->where(['trandau_id'=>'[0-9]+']);
+$route->get('restart', '/resetgame.html', 'dashboard@resetgame');
+$route->get('setting2', '/setting2.html', 'dashboard@setting2');
+$route->get('start2', '/start2.html/{trandau_id?}', 'dashboard@start2')->where(['trandau_id'=>'[0-9]+']);
+$route->get('setting3', '/setting3.html', 'dashboard@setting3');
+$route->get('start3', '/start3.html/{trandau_id?}', 'dashboard@start3')->where(['trandau_id'=>'[0-9]+']);
+
+// trang chủ
+$route->get('dashboard', '/dashboard.html', 'dashboard@index');
+
+// Trang đăng nhập
+$route->get('login', '/login.html', 'user@login');
+$route->get('loginkeyboard', '/loginkeyboard.html', 'user@loginkeyboard');
+$route->get('registerkeyboard', '/registerkeyboard.html', 'user@registerkeyboard');
+$route->get('registerlistmemberkeyboard', '/registerlistmemberkeyboard.html', 'user@registerlistmemberkeyboard');
+
+// Trang logout
+$route->get('logout', '/logout.html', 'user@logout');
+
+$route->get('registerUser', '/registerUser.html', 'user@registerUser');
+$route->get('registersettingUser', '/registersettingUser.html', 'user@registersettingUser');
+$route->get('registerlistmemberUser', '/registerlistmemberUser.html', 'user@registerlistmemberUser');
+$route->get('danhsachtv', '/listmember.html', 'user@listMember');
+$route->get('searchMember', '/searchmember.html', 'user@searchMember');
+$route->get('changeTurns', '/changeturns.html', 'user@changeTurns');
+$route->get('martchend_pointtime', '/martchend_pointtime.html', 'user@martchend_pointtime');
+$route->get('addPointPlay2UserNormal', '/addPointPlay2UserNormal.html', 'user@addPointPlay2UserNormal');
+$route->get('getlisthistory', '/gethistoryUser.html', 'user@gethistoryUser');
+$route->get('stoptrandau', '/stoptrandau.html', 'user@stoptrandau2user');
+
+$route->get('member', '/member.html/{page?}/{length?}', 'user@member')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+$route->get('edituser', '/edituser.html/{idx}', 'user@edituser');
+$route->get('adduser', '/adduser.html', 'user@adduser');
+// $route->get('my-name', '/duong-dan-url/{id1?}/{id2?}', 'controller@action')->where(['id1'=>'[0-9]+']);
+$route->get('editlistmemberUser', '/editlistmemberUser.html', 'user@editlistmemberUser');
+
+?>

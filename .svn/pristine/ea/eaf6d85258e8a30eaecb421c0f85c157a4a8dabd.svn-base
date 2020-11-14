@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Billiard Mode 2</title>
+	<meta charset="utf-8">
+	<!-- Place your kit's code here -->
+    <script src="https://kit.fontawesome.com/8aee9abc8a.js" crossorigin="anonymous"></script>
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="stylesheet" type="text/css" href="style-1.css">
+	<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+</head>
+<body>
+	<!------------------------ chon diem cho nguoi choi -------------------------------------------------->
+	<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+        	<div class="title text-center pb-3 b-line"><h3>Điểm kết thúc trận</h3></div>
+			<div class="main-ct list-luot-co t-line">
+				<div class="row">
+					<div class="w-75 m-auto m-0">
+						<div class="form-group">
+				            <label for="recipient-name" class="col-form-label">Nhập điểm kết thúc trận:</label>
+				            <input type="text" class="form-control from-c" id="recipient-name">
+			            </div>
+					</div>
+				</div>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <a type="button" class="btn btn-primary btn-blue-5" data-dismiss="modal">Cancel</a>
+		        <a type="button" class="btn btn-primary btn-blue-5">Ok</a>
+	    	</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!----------------------------------end chon diem cho nguoi choi-------------------------------------->
+
+	<!-- -----------------------------chon luot co ----------------------------------------------------->
+	<div class="modal fade" id="LuotCoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+        	<div class="title text-center pb-3 b-line"><h3>Số lượt cơ mục tiêu</h3></div>
+			<div class="list-luot-co t-line">
+				<ul style="list-style-type: none;" class="m-0">
+					<li onclick="settingluotco(0)" class="b-line lh-50 text-center">Không giới hạn</li>
+					<li onclick="settingluotco(30)" class="t-line b-line lh-50 text-center">30 lượt cơ</li>
+					<li onclick="settingluotco(35)" class="t-line b-line lh-50 text-center">35 lượt cơ</li>
+					<li onclick="settingluotco(40)" class="t-line b-line lh-50 text-center">40 lượt cơ</li>
+					<li onclick="settingluotco(45)" class="t-line b-line lh-50 text-center">45 lượt cơ</li>
+					<li onclick="settingluotco(50)" class="t-line lh-50 text-center">50 lượt cơ</li>
+				</ul>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <a type="button" class="btn btn-primary btn-blue-5" data-dismiss="modal">Cancel</a>
+	    	</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!----------------------------------end chon luot co-------------------------------------->
+	<!-- -----------------------------thoi gian ket thuc tran ----------------------------------------------------->
+	<div class="modal fade" id="ThoiGianModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+        	<div class="title text-center pb-3 b-line"><h3>Thời gian</h3></div>
+			<div class="list-luot-co t-line">
+				<ul style="list-style-type: none;" class="m-0">
+					<li onclick="settingthoigian(0)" class="b-line lh-50 text-center">Không giới hạn</li>
+					<li onclick="settingthoigian(20)" class="t-line b-line lh-50 text-center">20 phút</li>
+					<li onclick="settingthoigian(40)" class="t-line b-line lh-50 text-center">40 phút</li>
+					<li onclick="settingthoigian(60)" class="t-line b-line lh-50 text-center">60 phút</li>
+					<li onclick="settingthoigian(80)" class="t-line b-line lh-50 text-center">80 phút</li>
+					<li onclick="settingthoigian(100)" class="t-line b-line lh-50 text-center">100 phút</li>
+					<li onclick="settingthoigian(120)" class="t-line b-line lh-50 text-center">120 phút</li>
+					<li onclick="settingthoigian(140)" class="t-line b-line lh-50 text-center">140 phút</li>
+					<li onclick="settingthoigian(160)" class="t-line b-line lh-50 text-center">160 phút</li>
+					<li onclick="settingthoigian(180)" class="t-line lh-50 text-center">180 phút</li>
+				</ul>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <a type="button" class="btn btn-primary btn-blue-5" data-dismiss="modal">Cancel</a>
+	    	</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!----------------------------------end thoi gian ket thuc tran-------------------------------------->
+	<!-- -----------------------------chon nguoi khai cuoc ---------------------------------------------->
+	<div class="modal fade" id="ChonNguoiKCModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" role="document" style="max-width: 800px">
+	    <div class="modal-content bgt-blue">
+	      <div class="modal-body p-0 b-line">
+        	<div class="title text-center pb-3"><h3>Ai là người đánh khai cuộc ?</h3></div>
+			<div class="list-luot-co t-line">
+				<div class="row">
+					<div class="chon_nkc m-0 m-auto">
+						<div class="float-left w-40 mt-5 mb-5">
+							<div class="thanh-vien-item box-shadow">
+								<div class="w-100 text-center mt-3">
+									<div class="circle-big float-none m-0 m-auto"><img src="images/thanh-vien-2.png"></div>
+								</div>
+								<div class="thanh-vien-ct w-100">
+									<div class="name-thanh-vien text-center w-100 p-0 lh-40 pt-2 mt-2">Trần Quyết chiến</div>
+									<div class="detail_tv mt-2">
+										<div class="w-50 float-left text-right">
+											<p class="diem-chap-sm m-0">23</p>
+										</div>
+										<div class="w-50 float-left text-left">
+											<p class="m-0">AVG: <span class="color-or">2.32</span></p>
+											<p class="m-0">High: <span class="color-or">5</span></p>
+										</div>
+									</div>
+								</div>	
+							</div>
+						</div>
+						<div class="w-20 float-left text-center mt-5 mb-5">
+							<img src="images/vs.png">
+						</div>
+						<div  class="float-left w-40 mt-5 mb-5">
+							<div class="thanh-vien-item box-shadow">
+								<div class="w-100 text-center mt-3">
+									<div class="circle-big float-none m-0 m-auto"><img src="images/thanh-vien-2.png"></div>
+								</div>
+								<div class="thanh-vien-ct w-100">
+									<div class="name-thanh-vien text-center w-100 p-0 lh-40 pt-2 mt-2">Ngô Đình Lại</div>
+									<div class="detail_tv mt-2">
+										<div class="w-50 float-left text-right">
+											<p class="diem-chap-sm m-0">23</p>
+										</div>
+										<div class="w-50 float-left text-left">
+											<p class="m-0">AVG: <span class="color-or">2.32</span></p>
+											<p class="m-0">High: <span class="color-or">5</span></p>
+										</div>
+									</div>
+								</div>	
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>	
+	      </div>
+	      <div class="modal-footer t-line pb-4 pt-4">
+	      	<div class="m-0 m-auto">
+		        <a type="button" class="btn btn-primary btn-blue" data-dismiss="modal">Cancel</a>
+		        <a type="button" class="btn btn-primary btn-or-5" href="mode-2-star.html">Bắt đầu thi đấu</a>
+	    	</div>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<!----------------------------------end chon nguoi khai cuoc-------------------------------------->
+	<div class="container-fluid bgt-mode">
+		<div class="row">
+			<div class="col-md-4 logo">
+				<img src="images/logo-1.png" alt="Billiard">
+			</div>
+			<div class="col-md-4 text-center">
+				<div class="float-left w-100 pt-70">
+					<h2 class="title_header">Mode record 2</h2>
+				</div>
+			</div>
+			<div class="col-md-4 ">
+				
+			</div>
+		</div>
+		<div class="row">
+			<div class="container pt-140">
+				<div class="row main-bgt ">
+					<div class="col-4 bgt-blue p-0">
+						<div class="title b-line"><h3>hãy chọn cơ thủ</h3></div>
+						<div class="main-ct">
+							<a href="list-member.html">
+								<div class="thanh-vien-item">
+									<div class="circle"><img src="images/thanh-vien-1.png"></div>
+									<div class="name-thanh-vien">Người chơi 1</div>
+								</div>
+							</a>
+							<a href="list-member.html">
+								<div class="thanh-vien-item">
+									<div class="circle"><img src="images/thanh-vien-1.png"></div>
+									<div class="name-thanh-vien">Người chơi 2</div>
+								</div>
+							</a>
+						</div>									
+					</div>
+					<div class="col-8 pr-0">
+						<div class="bgt-blue">
+							<div class="title b-line"><h3>Hãy thiết lập điểm số, số lượt cơ (nếu cần)</h3></div>
+							<div class="main-ct">
+								<div class="row mg-b-32 mg-t-20">
+									<div class="col-md-6">
+										<p class="mg-b-10">Sửa điểm</p>
+										<button type="button" class="point-end" data-toggle="modal" data-target="#exampleModal">Chọn điểm cho người chơi 1</button>
+									</div>
+									<div class="col-md-6">
+										<p class="mg-b-10">Sửa điểm</p>
+										<button type="button" class="point-end" data-toggle="modal" data-target="#exampleModal">Chọn điểm cho người chơi 2</button>
+									</div>
+								</div>
+								<div class="row mg-b-32 mg-t-20">
+									<div class="col-md-6">
+										<p class="mg-b-10">Số lượt cơ mục tiêu</p>
+										<button type="button" class="point-end" data-toggle="modal" data-target="#LuotCoModal">Không giới hạn</button>
+									</div>
+									<div class="col-md-6">
+										<p class="mg-b-10">Thời gian kết thúc trận</p>
+										<button type="button" class="point-end" data-toggle="modal" data-target="#ThoiGianModal">Không giới hạn</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12 margin0 ">
+				<div class="margin0 d-table w-auto pt-30 pb-100"> 
+					<a type="button" class="btn btn-primary btn-blue shadow_button" href="index.html">kết thúc mode</a>
+					<a type="button" class="btn btn-primary btn-orange-sm" data-toggle="modal" data-target="#ChonNguoiKCModal">Bắt đầu thi đấu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+<script type="text/javascript" src="jquery-3.5.1.min.js"></script>
+<script type="text/javascript" src="js/popper.min.js"></script>
+<script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+<script type="text/javascript" src="js/script.js"></script>
+</body>
+</html>
