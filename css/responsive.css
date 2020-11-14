@@ -1,0 +1,92 @@
+@media only screen and (max-width: 1200px) {
+    .download .download-boxes {
+        flex-wrap: wrap;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .button {
+        padding: 0.5rem 1rem;
+    }
+    .header-top .flags img {
+        width: 40px;
+    }
+    .header .header-top .header-right {
+        display: flex;
+        justify-content: end;
+    }
+    .about-us {
+        padding: 100px 0;
+    }
+    .about-us .content {
+        width: 100%;
+    }
+    .strategy .content .col {
+        padding: 20px;
+        margin: 10px;
+    }
+    .medium-purple {
+        font-size: 200% !important;
+    }
+    .col.col-left {
+        padding-right: 15px;
+    }
+    .col.col-right {
+        padding-left: 15px;
+    }
+    .contact .col-right form input {
+        padding: 10px;
+    }
+    .download .download-boxes {
+        justify-content: center;
+    }
+    .download .download-box {
+        max-width: 80%;
+        margin: 20px 0;
+    }
+    .rounded-form {
+        width: 100%;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .main-input {
+        padding: 5px 15px;
+    }
+    .header .header-top .row .col {
+        flex-basis: 100%;
+    }
+    .header .header-top .header-left {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    .header .header-top .header-right {
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .header .header-top .header-right .flags {
+        margin: 15px 0;
+    }
+    .header-bottom .menu li>a {
+        padding: 0.5rem;
+    }
+    .stat .stat-content .col {
+        flex-basis: 100%;
+        margin: 15px 0;
+        text-align: center !important;
+    }
+    .stat .stat-content .col.text-center {
+        border: none;
+    }
+    .medium-purple {
+        font-size: 150% !important;
+        line-height: 2.5rem;
+    }
+    .col.col-left, .col.col-right {
+        flex-basis: 100%;
+    }
+    .sm-hidden {
+        display: none;
+    }
+}
