@@ -1,0 +1,59 @@
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+
+class NaverController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    public function register_stream_wrapper($projectId)
+    {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+    
+    // Phương thức index
+    public function indexAction() {
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        //https://nid.naver.com/nidlogin.login
+        $crawler = $client->request('POST', 'https://nid.naver.com/nidlogin.login');
+        $form = $crawler->filter('#frmNIDLogin')->form();
+        $crawler = $client->submit($form, array(
+            'id' => '0604057',
+            'pw' => 'yakeun87!@'
+        ));
+//         $crawler = $client->submit($form, array(
+//             'localechange' => "",
+//             'encpw'=> 'a484b7b471717736e085bb15c3322ff489b2b7bd0e431478fa87bf9a829200ed1f495466153d589496fe90cfa2a5e963c29196149d8b0ef5d7a2c980d5fe41efacad5c6e0aecba1c77dde708bf3544121c67c5e29ba98eafa798a58f2cf3871f312eeb3a8270e635f353b325e1b30cf2b5839ad9deabfac18c544ca08fabdc6',
+//             'enctp'=> '1',
+//             'svctype' => '1',
+//             'smart_LEVEL' => '1',
+//             'bvsd' => 'N4IgLiBcIMwKwFMYBMDGqAsBaA7B1AbFhssgIxYAcATDNbqgGaNkCGC1qAnKwAxa8QAGhABnKCGEgAtlGojRAIyi8FqFSICuyyKpCb1kMiLAA7HXrOHj4Q7wC%2BQA',
+//             'encnm' => '100015630',
+//             'locale' => 'en_US',
+//             'url' => 'https%3A%2F%2Fwww.naver.com',
+//             'id' => '',
+//             'pw' => ''
+//         ));
+        //'id' => '0604057',
+        //'pw' => 'yakeun87!@'
+        $crawler = $client->request('GET', 'https://partner.booking.naver.com/booking-list-view');
+        
+        
+        echo '<pre>';
+        print_r($crawler);
+        echo '</pre>';
+        //56ad7bb155beb3562e5e65421d4c93f6f7118a167deb3aef1245d6819ccba6a6b093c14925763a8ad23fde69de1a973dd22b1839504bca2f1e00f043eac83cf7416ad6ebd84d93356a4838fb9e84f7a75e6dcb3f17348e45fca0608f71f5d37f81a222b4c83fc3935eec9e783ce0f6ea99edbfb45d296bfe706931f8e1d3927d
+        //http://localhost:8000/testNaver/index.php??
+    }
+}
+
+?>

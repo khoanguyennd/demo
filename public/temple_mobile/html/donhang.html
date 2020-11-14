@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Tbridge - Quản lý đơn hàng</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            *{margin: 0px; padding: 0px;}
+            .cl{clear: both;}
+            .pboth{font-weight: bold;}
+            @media (min-width: 1200px){
+            }
+            @media (min-width: 992px) and (max-width: 1200px){
+
+            }
+            @media (min-width: 768px) and (max-width: 992px){
+
+            }
+            @media (min-width: 500px) and (max-width: 768px){
+                .t_qldh{padding: 10px;}
+                .t_header_qldh{position: relative; border-bottom: 1px solid #a9a9a9; padding: 5px 0px 10px 0px;}
+                .t_header_qldh a{position: absolute;top: 5px; left: 0px;}
+                .t_header_qldh h2{text-align: center;}
+                
+                .t_menu_qldh{padding: 15px 0px; height: 21px; border-bottom: 1px solid #a9a9a9;}
+                .t_menu_qldh ul{list-style: none;}
+                .t_menu_qldh ul li{float: left; width: 20%;}
+                .t_menu_qldh ul li a{text-decoration: none; font-weight: bold; color: #000;}
+                .t_active{border-bottom: 3px solid red;height: 33px;}
+                .t_active a{color: red !important;}
+                .t_btn_qldh{border: 1px solid #DB4437;font-weight: bold; background: #DB4437; padding: 5px; color: #FFF;}
+                
+                .t_search_qldh{padding: 15px; position: relative; background: #f2f2f2; margin-top: 10px; border: 1px solid #a9a9a9;}
+                .t_search_qldh input[type="text"]{width: 99%; height: 30px; line-height: 30px;}
+                .t_qldh_p_select{padding-top:10px;}
+                .t_search_qldh input[type="button"]{background: url('img/search2.png') no-repeat 0px 0px; width: 40px; position: absolute; top: 18px; right: 10px; border: 0px; height: 40px;}
+                .t_action{padding: 10px 0px}
+                .p_t_action_1{width: 40%; float: left; padding-top: 3px;}
+                .p_t_action_2{width: 60%; float: left; text-align: right}
+                .t_list_order{padding: 10px 0px; margin-top: 10px;}
+                
+                .rows_order{border: 1px solid #a9a9a9; margin-bottom: 10px;padding: 35px 10px 10px 30px; position: relative;}
+                .rows_order_info p{margin-bottom: 5px;}
+                .rows_order_span{background: #376092; padding: 3px; color: #fff; position: absolute; top: 0px; left: 0px;}
+                .rows_order_check{width: 15%; float: left; padding-top: 30px;}
+                .rows_order_info{width: 85%; float: left; color: #000}
+            }
+            @media (min-width: 350px) and (max-width: 500px){
+                .t_qldh{padding: 10px;}
+                .t_header_qldh{position: relative; border-bottom: 1px solid #a9a9a9; padding: 5px 0px 10px 0px;}
+                .t_header_qldh a{position: absolute;top: 5px; left: 0px;}
+                .t_header_qldh h2{text-align: center;}
+                
+                .t_menu_qldh{padding: 15px 0px; height: 21px; border-bottom: 1px solid #a9a9a9;}
+                .t_menu_qldh ul{list-style: none;}
+                .t_menu_qldh ul li{float: left; width: 20%;}
+                .t_menu_qldh ul li a{text-decoration: none; font-weight: bold; color: #000;}
+                .t_active{border-bottom: 3px solid red;height: 33px;}
+                .t_active a{color: red !important;}
+                .t_btn_qldh{border: 1px solid #DB4437;font-weight: bold; background: #DB4437; padding: 5px; color: #FFF;}
+                
+                .t_search_qldh{padding: 15px; position: relative; background: #f2f2f2; margin-top: 10px; border: 1px solid #a9a9a9;}
+                .t_search_qldh input[type="text"]{width: 99%; height: 30px; line-height: 30px;}
+                .t_qldh_p_select{padding-top:10px;}
+                .t_search_qldh input[type="button"]{background: url('img/search2.png') no-repeat 0px 0px; width: 40px; position: absolute; top: 18px; right: 10px; border: 0px; height: 40px;}
+                .t_action{padding: 10px 0px}
+                .p_t_action_1{width: 40%; float: left; padding-top: 3px;}
+                .p_t_action_2{width: 60%; float: left; text-align: right}
+                .t_list_order{padding: 10px 0px; margin-top: 10px;}
+                
+                .rows_order{border: 1px solid #a9a9a9; margin-bottom: 10px;padding: 35px 10px 10px 30px; position: relative;}
+                .rows_order_info p{margin-bottom: 5px;}
+                .rows_order_span{background: #376092; padding: 3px; color: #fff; position: absolute; top: 0px; left: 0px;}
+                .rows_order_check{width: 15%; float: left; padding-top: 30px;}
+                .rows_order_info{width: 85%; float: left; color: #000}
+            }
+            @media (max-width: 350px){  
+                .t_qldh{padding: 10px;}
+                .t_header_qldh{position: relative; border-bottom: 1px solid #a9a9a9; padding: 5px 0px 10px 0px;}
+                .t_header_qldh a{position: absolute;top: 5px; left: 0px;}
+                .t_header_qldh h2{text-align: center;}
+                
+                .t_menu_qldh{padding: 15px 0px; height: 21px; border-bottom: 1px solid #a9a9a9;}
+                .t_menu_qldh ul{list-style: none;}
+                .t_menu_qldh ul li{float: left; width: 20%;}
+                .t_menu_qldh ul li a{text-decoration: none; font-weight: bold; color: #000;}
+                .t_active{border-bottom: 3px solid red;height: 33px;}
+                .t_active a{color: red !important;}
+                .t_btn_qldh{border: 1px solid #DB4437;font-weight: bold; background: #DB4437; padding: 5px; color: #FFF;}
+                
+                .t_search_qldh{padding: 15px; position: relative; background: #f2f2f2; margin-top: 10px; border: 1px solid #a9a9a9;}
+                .t_search_qldh input[type="text"]{width: 99%; height: 30px; line-height: 30px;}
+                .t_qldh_p_select{padding-top:10px;}
+                .t_search_qldh input[type="button"]{background: url('img/search2.png') no-repeat 0px 0px; width: 40px; position: absolute; top: 18px; right: 10px; border: 0px; height: 40px;}
+                .t_action{padding: 10px 0px}
+                .p_t_action_1{width: 40%; float: left; padding-top: 3px;}
+                .p_t_action_2{width: 60%; float: left; text-align: right}
+                .t_list_order{padding: 10px 0px; margin-top: 10px;}
+                
+                .rows_order{border: 1px solid #a9a9a9; margin-bottom: 10px;padding: 35px 10px 10px 30px; position: relative;}
+                .rows_order_info p{margin-bottom: 5px;}
+                .rows_order_span{background: #376092; padding: 3px; color: #fff; position: absolute; top: 0px; left: 0px;}
+                .rows_order_check{width: 15%; float: left; padding-top: 30px;}
+                .rows_order_info{width: 85%; float: left; color: #000}
+            }
+        </style>
+    </head>
+    <body>
+        <div class="t_qldh">
+            <div class="t_header_qldh">
+                <a href="">
+                    <img src="img/back.png" alt=""/>
+                </a>
+                <h2>Quản lý đơn hàng</h2>
+            </div>
+            <div class="t_menu_qldh">
+                <ul>
+                    <li class="t_active"><a href="">Toàn bộ</a></li>
+                    <li><a href="">Mua xong</a></li>
+                    <li><a href="">Xử dụng <br/> xong</a></li>
+                    <li><a href="">Hoàn tiền <br/> xong</a></li>
+                    <li><a href="">Hết hạn <br/> sử dụng</a></li>
+                </ul>
+            </div>
+            <div class="t_search_qldh">
+                <p>
+                    <input type="text" value="" placeholder="Tìm tên/số điện thoại/mã vé" />
+                </p>
+                <p class="t_qldh_p_select">
+                    <select style="width: 100%; height: 30px; line-height: 30px;">
+                        <option value="">Hôm nay</option>
+                        <option value="">Toàn bộ kênh</option>
+                        <option value="">Toàn bộ NCC</option>
+                    </select>
+                </p>
+                <input type="button" value="" />
+                <div class="cl"></div>
+            </div>
+            <div class="t_action">
+                <p class="p_t_action_1">Tổng 231 kết quả</p>
+                <p class="p_t_action_2">      
+                    <input class="t_btn_qldh" type="button" value="Chọn tất cả" />
+                    <input class="t_btn_qldh" type="button" value="Sử dụng" />
+                    <input class="t_btn_qldh" type="button" value="Khôi phục" />
+                </p><div class="cl"></div>
+            </div>
+            <div class="t_list_order">
+                <div class="rows_order">
+                    <span class="rows_order_span">Mua xong</span>
+                    <div class="rows_order_check">
+                        <input type="checkbox" value="" />
+                    </div>
+                    <div class="rows_order_info">
+                        <p class="pboth">T-Bridge : T123CD123451</p>
+                        <p class="pboth">Gmarket : P0909_111</p>
+                        <p>충주 미노스랩 힐링앤 사조리조트</p>
+                        <p>89.25M 객실 1박</p>
+                        <p>홍길동 [ 010-222-2222 ]</p>
+                        <p>Ngày mua : 2020-02-01</p>
+                    </div><div class="cl"></div>
+                </div>
+                <div class="rows_order">
+                    <span class="rows_order_span">Mua xong</span>
+                    <div class="rows_order_check">
+                        <input type="checkbox" value="" />
+                    </div>
+                    <div class="rows_order_info">
+                        <p class="pboth">T-Bridge : T123CD123451</p>
+                        <p class="pboth">Gmarket : P0909_111</p>
+                        <p>충주 미노스랩 힐링앤 사조리조트</p>
+                        <p>89.25M 객실 1박</p>
+                        <p>홍길동 [ 010-222-2222 ]</p>
+                        <p>Ngày mua : 2020-02-01</p>
+                    </div><div class="cl"></div>
+                </div>
+                <div class="rows_order">
+                    <span class="rows_order_span">Mua xong</span>
+                    <div class="rows_order_check">
+                        <input type="checkbox" value="" />
+                    </div>
+                    <div class="rows_order_info">
+                        <p class="pboth">T-Bridge : T123CD123451</p>
+                        <p class="pboth">Gmarket : P0909_111</p>
+                        <p>충주 미노스랩 힐링앤 사조리조트</p>
+                        <p>89.25M 객실 1박</p>
+                        <p>홍길동 [ 010-222-2222 ]</p>
+                        <p>Ngày mua : 2020-02-01</p>
+                    </div><div class="cl"></div>
+                </div>
+                <div class="rows_order">
+                    <span class="rows_order_span">Mua xong</span>
+                    <div class="rows_order_check">
+                        <input type="checkbox" value="" />
+                    </div>
+                    <div class="rows_order_info">
+                        <p class="pboth">T-Bridge : T123CD123451</p>
+                        <p class="pboth">Gmarket : P0909_111</p>
+                        <p>충주 미노스랩 힐링앤 사조리조트</p>
+                        <p>89.25M 객실 1박</p>
+                        <p>홍길동 [ 010-222-2222 ]</p>
+                        <p>Ngày mua : 2020-02-01</p>
+                    </div><div class="cl"></div>
+                </div>
+                <div class="rows_order">
+                    <span class="rows_order_span">Mua xong</span>
+                    <div class="rows_order_check">
+                        <input type="checkbox" value="" />
+                    </div>
+                    <div class="rows_order_info">
+                        <p class="pboth">T-Bridge : T123CD123451</p>
+                        <p class="pboth">Gmarket : P0909_111</p>
+                        <p>충주 미노스랩 힐링앤 사조리조트</p>
+                        <p>89.25M 객실 1박</p>
+                        <p>홍길동 [ 010-222-2222 ]</p>
+                        <p>Ngày mua : 2020-02-01</p>
+                    </div><div class="cl"></div>
+                </div>
+                <div class="cl"></div>
+            </div>
+            <div class="cl"></div>
+        </div>
+    </body>
+</html>

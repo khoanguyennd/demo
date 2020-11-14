@@ -1,0 +1,108 @@
+<?php
+class CoupangController extends Controller {
+
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    
+    function callAPI($method, $url, $data) {
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        //echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json, text/plain, */*'
+        ));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            die("Connection Failure");
+        }
+        curl_close($curl);
+        return json_decode($result,true);
+    }
+    // Phương thức index
+    public function indexAction() { //tour      
+        $sql="SELECT * FROM tb_salechannel sc WHERE sc.productId IS NOT NULL AND sc.channelId =1";
+        $this->_model->setQuery($sql);
+        $results = $this->_model->readAll();
+        foreach ($results as $value => $giatri) {
+           $data =  $this -> callAPI("GET","https://trip.coupang.com/api/inquiry/web/products/".$giatri['productId']."/inquiries?page=0",null);
+           $totalPages= $data ['pagination']['totalPages'];
+           $totalCount= $data ['pagination']['totalCount'];
+           $page= $data ['pagination']['page'];
+           $countPerPage= $data ['pagination']['countPerPage'];
+           $result=$data['result'];
+           //echo $totalCount.'<br>';
+           for($i=0;$i<$totalCount;$i++){
+               $writer = $result [$i]['writer'];
+               $vendorItemName = $result [$i]['vendorItemName'];
+               $vendorItemId = $result [$i]['vendorItemId'];
+               $productId = $result [$i]['productId'];
+               $inquiryId = $result [$i]['inquiryId'];
+               $inquiryAt = $result [$i]['inquiryAt'];
+               $createdAt = $result [$i]['createdAt'];
+               $content = $result [$i]['content'];
+               $comments= $result [$i]['comments'];
+               $commentCount=$result [$i]['commentCount'];
+               $record=[
+                   'inquiryId' => $inquiryId,
+                   'question_name' => $writer['member']['name'],
+                   'question_email' => $writer['member']['email'],
+                   'question_content' => $content,
+                   'question_created' => date( "Y-m-d h:i:s", strtotime($createdAt) ),
+    //                'reply_name' => $reply_name,
+    //                'reply_email' => $reply_email,
+    //                'reply_content' => $reply_content,
+    //                'reply_created' => $reply_created,
+                   'question_purchase' => "NO",
+                   'question_status' => 1,
+                   'orderNumber' => "",
+                   'dealId' => $productId, // deal ID
+                   'dealName' => "",
+                   'optionId' => $vendorItemId,
+                   'optionName' => $vendorItemName,
+                   'channel_name' => "COUPANG"
+                   
+               ];
+               if($commentCount>0){
+                   $record['question_status']=2;
+                   $record['reply_name']=$comments[0]['writer']['displayWriter'];
+                   $record['reply_email']="";
+                   $record['reply_content']=$comments[0]['content'];
+                   $record['reply_created']=date( "Y-m-d h:i:s", strtotime($comments[0]['createdAt']) );
+               }
+               
+               $result1 = $this->_model->loadRecord('question', ['inquiryId' => $inquiryId ]);
+               if ($result1) {
+                   $this->_model->updateRecord('question', $record,  ['inquiryId' => $inquiryId ]);
+               } else {
+                   $this->_model->insertRecord('question', $record);
+               }
+           }
+
+        }
+       
+    }
+
+}
+
+?>

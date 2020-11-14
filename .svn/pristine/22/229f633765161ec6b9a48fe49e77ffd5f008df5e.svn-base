@@ -1,0 +1,337 @@
+<style>
+    canvas{
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+</style>
+<script src="<?= URL_PUBLIC ?>js/Chart.min.js"></script>
+<script src="<?= URL_PUBLIC ?>js/utils.js"></script>
+<?php
+$data11 = $this->getData('data11');
+$data22 = $this->getData('data22');
+$data33 = $this->getData('data33');
+$data44 = $this->getData('data44');
+?>
+<script>
+    var config1 = {
+        type: 'line',
+        data: {
+            labels: <?= json_encode($this->getItem('charjs', 'day')) ?>,
+            datasets: [{
+                    label: '<?= $this->language('l_charjsweek1') ?>',
+                    backgroundColor: '#5bb1d9',
+                    borderColor: '#5bb1d9',
+                    data:<?= json_encode($data22) ?>,
+                    fill: false,
+                },
+                {
+                    label: '<?= $this->language('l_charjsweek2') ?>',
+                    fill: false,
+                    backgroundColor: '#fdd100',
+                    borderColor: '#fdd100',
+                    data: <?= json_encode($data11) ?>
+                }]
+        },
+        options: {
+            responsive: true,
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            }
+        }
+    };
+    var config2 = {
+        type: 'line',
+        data: {
+            labels: <?= json_encode($this->getItem('charjs', 'day')) ?>,
+            datasets: [{
+                    label: '<?= $this->language('l_charjsweek1') ?>',
+                    backgroundColor: '#5bb1d9',
+                    borderColor: '#5bb1d9',
+                    data:<?= json_encode($data33) ?>,
+                    fill: false,
+                }, {
+                    label: '<?= $this->language('l_charjsweek2') ?>',
+                    fill: false,
+                    backgroundColor: '#fdd100',
+                    borderColor: '#fdd100',
+                    data: <?= json_encode($data44) ?>,
+                }]
+        },
+        options: {
+            responsive: true,
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            }
+        }
+    };
+
+    window.onload = function () {
+        var ctx1 = document.getElementById('canvas1').getContext('2d');
+        var ctx2 = document.getElementById('canvas2').getContext('2d');
+        window.myLine = new Chart(ctx1, config1);
+        window.myLine = new Chart(ctx2, config2);
+    };
+
+</script>
+<div class="t_wraper">
+    <div class="t_search">
+        <div class="t_c_logo">
+            <a href="<?= $this->route('dashboard') ?>">
+                <img src="<?= URL_PUBLIC ?>temple_mobile/img/logo_c.jpg" alt=""/>
+            </a>
+        </div>
+        <div class="t_c_search">
+            <form action="<?= $this->route('order', ['method' => 'sale']) ?>" method="POST">
+                <div>
+                    <input class="t_c_search_input" name="text_ten_phone_mave" type="text" placeholder="<?= $this->language("l_textsearch") ?>" />
+                    <input class="t_c_search_submit" name="m_search_mobi_home" type="submit" value="" />
+                </div>
+            </form>
+        </div>
+        <div class="cl"></div>
+    </div>
+    <div class="t_maincontent">                
+        <div style="padding-bottom: 15px;">
+            <div class="namecompany">
+                <?= $this->getData('company'); ?>  &nbsp;              
+            </div>
+            <div class="t_refresh" >
+                <span><?=date('m')?>월<?=date('d')?>일 <?=date('H')?>시<?=date('i')?>분</span>
+                <a href="<?= $this->route('dashboard') ?>">
+                    <img src="<?= URL_PUBLIC ?>temple_mobile/img/refresh.png" alt=""/>
+                </a>
+            </div><div class="cl"></div>
+        </div>
+        <div class="t_ketqua">
+            <div class="t_ketqua_col1">
+                <p class="t_ketqua_col1_title">
+                    <a href="<?= $this->route('order', ['method' => 'done']) ?>">
+                        <?= $this->getItem('productAmountUnuse', 'amount') . ' ' . $this->language('l_product') ?>
+                    </a>
+                </p>
+                <p><?= $this->language('l_dashboard5') ?></p>
+            </div>
+            <div class="t_ketqua_col2">
+                <p class="t_ketqua_col2_title">
+                    <a href="<?= $this->route('question', ['method' => 'unreply']) ?>">    
+                        <?= $this->getItem('questionNotReply', 'amount') . ' ' . $this->language('l_question') ?>
+                    </a>
+                </p>
+                <p><?= $this->language('l_dashboard7') ?></p>
+            </div><div class="cl"></div>
+        </div>
+        <div class="t_tinhhinh">
+            <h3 style="padding: 10px 0px; border-bottom: 1px solid #a9a9a9;"><?= $this->language("l_tinhhinhbanve") ?></h3>
+            <table class="tb_th" >
+                <tr>
+                    <th style="border-top: 1px solid #fff;border-left: 1px solid #fff;">&nbsp;</th>
+                    <th style="text-align: left; background: #000; color: #fff;"><?= $this->language('l_homqua') ?> <?= $this->getData('homqua_show'); ?></th>
+                    <th style="text-align: left; background: #000; color: #fff;"><?= $this->language('l_homnay') ?> <?= $this->getData('homnay_show'); ?></th>
+                </tr>
+                <?php
+                $amountsoldrealtotal_homqua = $this->getData('amountsoldrealtotal_homqua');
+                $amountsoldrealtotal_homnay = $this->getData('amountsoldrealtotal_homnay');
+                $amountsoldusetotal_homqua = $this->getData('amountsoldusetotal_homqua');
+                $amountsoldusetotal_homnay = $this->getData('amountsoldusetotal_homnay');
+                ?>
+                <tr>
+                    <td style="border-left: 1px solid #000;"><?= $this->language("l_amountsoldreal") ?></td>
+                    <td><?php
+                        if ($amountsoldrealtotal_homqua == 0) {
+                            echo "0";
+                        } else {
+                            echo $amountsoldrealtotal_homqua;
+                        }
+                        ?></td>
+                    <td><?php
+                        if ($amountsoldrealtotal_homnay == 0) {
+                            echo "0";
+                        } else {
+                            echo $amountsoldrealtotal_homnay;
+                        }
+                        ?></td>
+                </tr>                
+                <tr>
+                    <td style="border-left: 1px solid #000;"><?= $this->language("l_amountsolduse") ?></td>
+                    <td><?php
+                        if ($amountsoldusetotal_homqua == 0) {
+                            echo "0";
+                        } else {
+                            echo $amountsoldusetotal_homqua;
+                        }
+                        ?></td>
+                    <td><?php
+                        if ($amountsoldusetotal_homnay == 0) {
+                            echo "0";
+                        } else {
+                            echo $amountsoldusetotal_homnay;
+                        }
+                        ?></td>
+                </tr>
+                <tr>
+                    <td style="border-left: 1px solid #000;"><?= $this->language("l_soveban") ?></td>
+                    <td><?= $this->getData('tong_muaxong_homqua'); ?></td>
+                    <td><?= $this->getData('tong_muaxong_homnay'); ?></td>
+                </tr>
+                <tr>
+                    <td style="border-left: 1px solid #000;"><?= $this->language("l_sovesudung") ?></td>
+                    <td><?= $this->getData('tong_sudung_homqua'); ?></td>
+                    <td><?= $this->getData('tong_sudung_homnay'); ?></td>
+                </tr>
+            </table>
+        </div>
+        <div class="t_allorder">
+            <p>
+                <a href="<?= $this->route('order', ['method' => 'sale']) ?>">
+<?= $this->language('l_orderall') ?> >
+                </a>
+            </p>
+        </div>
+        <div class="t_bieudo">
+            <h3><?= $this->language('l_dashboard8') ?></h3>
+            <div class="table_content">
+                <canvas id="canvas1"></canvas>
+            </div>
+        </div>
+        <div class="t_bieudo">
+            <h3><?= $this->language('l_dashboard9') ?></h3>
+            <div class="table_content">
+                <canvas id="canvas2"></canvas>
+            </div>
+        </div>
+        <div class="t_mess">
+            <h3 style="margin-bottom: 10px;"><?= $this->language('l_notification6') ?></h3>                        
+<?php
+$result = $this->getData('notification_mobi');
+foreach ($result as $no) {
+    ?>
+                <p style="cursor: pointer;" id="myBtn<?= $no['notification_id'] ?>"><?= date('m.d', $no['notification_created']) ?>  <?= $no['notification_title'] ?></p>
+                <!-- The Modal -->
+                <div id="myModal<?= $no['notification_id'] ?>" class="modal">
+                    <!-- Modal content -->
+                    <div class="modal-content">
+                        <span class="close<?= $no['notification_id'] ?>">&times;</span>
+                        <h3><?= $this->language("l_xemthongbao") ?></h3>
+                        <div style="padding: 20px 0px 7px 0px;">
+                            <p style="font-weight: bold;margin-bottom: 0px;font-size: 16px;">
+                                <span><?= date('m.d', $no['notification_created']) ?></span>
+                                <span><?= $no['notification_title'] ?></span>
+                            </p>
+                        </div>
+                        <div style="border: 1px solid #a9a9a9;padding: 15px;">
+    <?= $no['notification_title'] ?>
+                        </div><div class="cl"></div>
+                    </div>
+                </div>
+                <style>
+                    .close<?= $no['notification_id'] ?> {color:#000;cursor:pointer;float:right;font-size:40px;margin-top:-10px;  font-weight: bold;}
+                </style>
+                <script>
+                    var modal<?= $no['notification_id'] ?> = document.getElementById("myModal<?= $no['notification_id'] ?>");
+                    var btn<?= $no['notification_id'] ?> = document.getElementById("myBtn<?= $no['notification_id'] ?>");
+                    var span = document.getElementsByClassName("close<?= $no['notification_id'] ?>")[0];
+                    btn<?= $no['notification_id'] ?>.onclick = function () {
+                        modal<?= $no['notification_id'] ?>.style.display = "block";
+                    }
+                    span.onclick = function () {
+                        modal<?= $no['notification_id'] ?>.style.display = "none";
+                    }
+                    window.onclick = function (event) {
+                        if (event.target == modal<?= $no['notification_id'] ?>) {
+                            modal<?= $no['notification_id'] ?>.style.display = "none";
+                        }
+                    }
+                </script>
+<?php } ?>
+        </div>
+        <div class="t_home_short">
+            <p>티브리지(주)  대표이사 : 000</p>
+            <p>사업자 등록번호 000-00-00000</p>
+            <p>서울시 000 00000</p>
+            <div class="t_home_short_a">
+                <button style="border: 0px; background: none;" type="button" name="popdieukhoan" id="popdieukhoan">⏐ <?= $this->language('l_dieukhoan') ?></button>
+                &nbsp;&nbsp;
+                <button style="border: 0px; background: none;" type="button" name="popchinhsach" id="popchinhsach">⏐ <?= $this->language('l_chinhsach') ?></button>                            
+            </div>
+
+        </div>
+        <div class="cl"></div>
+    </div>
+    <div class="t_footer">
+        <div class="t_footer_1">
+            <a href="<?= $this->route('logout') ?>" title="<?= $this->language('l_areyousure') ?>" onclick="return confirm('<?= $this->language('l_areyousure') ?>');"><?= $this->language('l_logout') ?></a>
+        </div>
+        <div class="t_footer_2">
+            <input type="button" class="pcversion" value="PC version" />
+        </div>
+    </div><div class="cl"></div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#popdieukhoan").on('click', function () {
+            $.fn_popup(true, 'popdieukhoan');
+            $("#rule1").addClass("active");
+            $("#rule2").removeClass("active");
+            $('.tab_content > div').hide();
+            $("#tab1a").show();
+        });
+        $("#popchinhsach").on('click', function () {
+            $.fn_popup(true, 'popdieukhoan');
+            $("#rule2").addClass("active");
+            $("#rule1").removeClass("active");
+            $('.tab_content > div').hide();
+            $("#tab2a").show();
+        });
+        if (location.hash) {
+            $('.tab_head a').removeClass('active');
+            $('.tab_head a[href=' + location.hash + ']').addClass('active');
+            $('.tab_content > div').hide();
+            $(location.hash + 'a').show();
+        }
+        $(".form_tab .tab_head").on('click', 'a', function () {
+            var id = $(this).attr('data-tab');
+            if (id) {
+                $(this).closest('ul').find('a').removeClass('active');
+                $(this).addClass('active');
+                $('.tab_content > div').hide();
+                $('#' + id + 'a').show();
+            }
+        });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+        $('.pcversion').on('click', function () {
+            $.fn_ajax('setversion', {}, function (result) {
+                window.location="<?= $this->route('dashboard')?>";
+                return false;
+            }, true);
+        });
+    });
+</script>
+<style>
+    div.form_tab .tab_head li a.active {
+        background: #fff;
+        border-bottom: 3px solid red;
+        border-right: 0px;
+        color: red;
+    }
+    div.form_tab .tab_head li a {
+        background: #fff;
+        color: #000;
+        border: 0px;
+        height:44px;
+    }
+    div.form_tab .tab_content {border-top: 0px !important;}
+</style>

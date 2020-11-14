@@ -1,0 +1,404 @@
+<?php 
+if(!isset($_POST['encryptedLoginName'])){
+    
+}else{
+$time = round(microtime(true) * 1000); ?>
+<script type="text/javascript" src="https://www.11st.co.kr/js/common/rsa.js?noCache=<?=$time?>"></script>
+<form name="login_form" method="POST" action="">
+        <input type="hidden" id="encryptedLoginName" name="encryptedLoginName" value="">
+        <input type="hidden" id="encryptedPassWord" name="encryptedPassWord" value="">
+        <input type="hidden" id="priority" name="priority" value="">
+        <input type="hidden" name="authMethod" value="login">
+        <input type="hidden" name="returnURL" value="">
+        <input type="hidden" name="loginName" id="user-id"  value="ysjlabs">
+        <input type="hidden" id="passWord" name="passWord" value='yakeun87!@' >
+
+</form>
+<script>
+function checkForm() {
+    var form = document.login_form;
+    try {
+        if(rsa){
+
+            try{
+                form.priority.value=93;
+                form.encryptedLoginName.value=rsa.encrypt('ysjlabs');
+                form.encryptedPassWord.value=rsa.encrypt('yakeun87!@');
+                form.loginName.value = "";
+                form.passWord.value = "";
+            }catch(ex){
+                Logger.LoggingMsg('ID/PW RSA encrypt 오류');
+            }
+        }
+    } catch(ex){
+        Logger.LoggingMsg('로그인 자바스크립트 오류');
+    }
+
+    form.submit();
+}
+checkForm();
+</script>
+<?php }?>
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+class ST11stController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+ 
+    // Phương thức index
+    public function indexAction($start_date = null, $end_date = null) {
+        if ($start_date == null && $end_date == null) {
+            $start_date = (date("Y") - 1)  . date("md");
+            $end_date = date("Ymd");
+        }
+
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $crawler = $client->request('POST', 'https://login.11st.co.kr/auth/front/selleroffice/login.tmall?returnURL=http://soffice.11st.co.kr');
+        
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'encryptedLoginName' => '5c9930fcf66bf5d4fe8803db86387a427b56b013452be0c765b9011d179c105f38f590019b05ee1503dcf5ed29dcda81b9b641603b34cf7a927c9f3e5fc8202b6db9e4d7b9963d75994f8623a46d5971f80b5d186cd982a87ad7bb134834bfa732939c06e523e1ca81d161e6d628c7da0adc290832d191d5c66f9aa80b9a7097',
+            'encryptedPassWord' => '5aaae845004b40e1133f7c7428500e11836b648aebf3dbbf22b6a570649c3b0db7d4bc47c5a28b7a7ba3f1fac7e5cc4e9b1a0efce66627db241a15a1b9e1f7662432509ac9493d52bfdbc055fa8ab7730a89749aa75bc8fb6f76fff5cefdc95c82fc6dc69a8fc187e238b1b9cdbfcd226e730c19e99d708d92e3960517c9bd79',
+            'loginName' => 'ysjlabs',
+            'passWord' => 'yakeun87!@'));
+        $data = [
+            'encryptedLoginName'=> '75af1daa73e96bf48beaf632088af7d65d4b26d39ed4c6be2705ca2be7fbe31a87bee07c30e6d95a6800f7e25d837ce6766a45a345b9ca6e36359070577e2e5c8146f532d110a9f7a15838b5e8d6c32e51b72bc0f65ab8f8187d216e28381a92cca716bbbf25a818cf4dd95b4c0ef46bf1318599a6456c666002cefee094b17e',
+            'encryptedPassWord'=> '58186cc9c573d9061b9d505b2745be8b98351f05a6aac6c62845a41cd044889e2f3f5f595359b98a29f709abe1092dd58341a3d7260545d1eb5aafc0efad5f73aeedbeaa453923a53a8a7d57a42da8195de1c076e314dd4099336007fb418a9d8fc08034c6591720018d508b924626cdcce7f8d82dedfe0f67ab65e6eb3e053a',
+            'priority'=> 93,
+            'authMethod'=> 'login',
+            'returnURL'=> 'http://soffice.11st.co.kr?ts=1596181197873',
+            'loginName'=> 'ysjlabs',
+            'passWord' => 'yakeun87!@',
+        ];
+        $crawler = $client->request('POST', 'https://login.11st.co.kr/auth/front/selleroffice/logincheck.tmall', $data);
+ 
+        $data = [
+            'method' => 'getOrderLogisticsList',
+            'listType' => 'orderingLogistics',
+            'start'=> 0,
+            'limit'=> 30,
+            'shDateType'=> '01',
+            'shDateFrom'=> $start_date,
+            'shDateTo'=> $end_date,
+            'shBuyerType'=> '',
+            'shBuyerText'=>'',
+            'shProductStat'=> 'ALL',
+            'shDelayReport' => '',
+            'shPurchaseConfirm' => '',
+            'shGblDlv'=> 'N',
+            'prdNo' => '',
+            'shStckNo' => '',
+            'shOrderType' => 'on',
+            'shToday' => '',
+            'shDelay'=> '',
+            'addrSeq'=> '',
+            'isAbrdSellerYn' => '',
+            'abrdOrdPrdStat' => '',
+            'isItalyAgencyYn' => '',
+            'shErrYN' => '',
+            'gblRcvrNm' => '%EA%B8%80%EB%A1%9C%EB%B2%8C%ED%86%B5%ED%95%A9%EB%B0%B0%EC%86%A1%EC%A7%80',
+            'gblRcvrMailNo'=> '17382',
+            'gblRcvrBaseAddr'=> '%EA%B2%BD%EA%B8%B0%EB%8F%84%20%EC%9D%B4%EC%B2%9C%EC%8B%9C%20%EB%A7%88%EC%9E%A5%EB%A9%B4%20%EB%A7%88%EB%8F%84%EB%A1%9C%20177%20',
+            'gblRcvrDtlsAddr'=>' %EA%B2%BD%EA%B8%B0%EB%8F%84%20%EC%9D%B4%EC%B2%9C%EC%8B%9C%20%EB%A7%88%EC%9E%A5%EB%A9%B4%20%EB%A7%88%EB%8F%84%EB%A1%9C%20177%20%204%EC%B8%B5%20%EC%A0%84%EC%84%B8%EA%B3%84%5BEMS%5D%EB%B0%B0%EC%86%A1%20%EB%8B%B4%EB%8B%B9%EC%9E%90',
+            'gblRcvrTlphn'=> '1599-5115',
+            'gblRcvrPrtblNo'=> '000-000-0000',
+            'shOrdLang'=> '',
+            'shDlvClfCd'=> '',
+            'shVisitDlvYn'=> 'N',
+            'shUsimDlvYn'=> 'N'
+        ];
+
+        $crawler = $client->request('POST', 'https://soffice.11st.co.kr/escrow/OrderingLogisticsAction.tmall?method=getOrderLogisticsList&listType=orderingLogistics&start=0&limit=30&shDateType=01&shDateFrom='. $start_date . '&shDateTo=' . $end_date . '&shBuyerType=&shBuyerText=&shProductStat=ALL&shDelayReport=&shPurchaseConfirm=&shGblDlv=N&prdNo=&shStckNo=&shOrderType=on&shToday=&shDelay=&addrSeq=&isAbrdSellerYn=&abrdOrdPrdStat=&isItalyAgencyYn=&shErrYN=&gblRcvrNm=%25EA%25B8%2580%25EB%25A1%259C%25EB%25B2%258C%25ED%2586%25B5%25ED%2595%25A9%25EB%25B0%25B0%25EC%2586%25A1%25EC%25A7%2580&gblRcvrMailNo=17382&gblRcvrBaseAddr=%25EA%25B2%25BD%25EA%25B8%25B0%25EB%258F%2584%2520%25EC%259D%25B4%25EC%25B2%259C%25EC%258B%259C%2520%25EB%25A7%2588%25EC%259E%25A5%25EB%25A9%25B4%2520%25EB%25A7%2588%25EB%258F%2584%25EB%25A1%259C%2520177%2520&gblRcvrDtlsAddr=%25EA%25B2%25BD%25EA%25B8%25B0%25EB%258F%2584%2520%25EC%259D%25B4%25EC%25B2%259C%25EC%258B%259C%2520%25EB%25A7%2588%25EC%259E%25A5%25EB%25A9%25B4%2520%25EB%25A7%2588%25EB%258F%2584%25EB%25A1%259C%2520177%2520%25204%25EC%25B8%25B5%2520%25EC%25A0%2584%25EC%2584%25B8%25EA%25B3%2584%255BEMS%255D%25EB%25B0%25B0%25EC%2586%25A1%2520%25EB%258B%25B4%25EB%258B%25B9%25EC%259E%2590&gblRcvrTlphn=1599-5115&gblRcvrPrtblNo=000-000-0000&shOrdLang=&shDlvClfCd=&shVisitDlvYn=N&shUsimDlvYn=N', $data);
+        $dataOrder = json_decode($client->getResponse()->getContent(),true);
+        // echo "<pre>";
+        // print_r($dataOrder);
+        // die;
+        if ($dataOrder['orderingLogistics']) {
+            foreach ($dataOrder['orderingLogistics'] as $items) {
+                //$sellerProductId = microtime(true) * 10000;
+                if (isset($items['INVC_NO'])) {
+                    $ticket = [
+                        'ticketNumber' => $items['INVC_NO'],
+                        'purchasedAt' => $items['ORD_STL_END_DT'], // Ngày đặt hàng
+                        'price' => str_replace(',' , '', $items['SEL_PRC']), // giá bán
+                        'useAmount' => $items['ORD_QTY'],// $items['ORDER_AMT'], // Số lượng đơn đặt hàng
+                        'totalAmount' => $items['ORD_QTY'],
+                        'dealId' => $items['PRD_NO']
+                    ];
+                    $result = $this->_model->loadRecords('ticket', ['ticketNumber' => $items['INVC_NO']]);
+                    if ($result) {
+                        $this->_model->updateRecord('ticket', $ticket, ['ticketNumber' => $items['INVC_NO']]);
+                    }else {
+                        $this->_model->insertRecord('ticket', $ticket);
+                    }                    
+                    $dealName=str_replace('<DIV style="TEXT-ALIGN: center; PADDING-BOTTOM: 2px; MARGIN-TOP: 0px; TEXT-OVERFLOW: ellipsis; OVERFLOW: hidden"><FONT style="CURSOR: pointer; TEXT-DECORATION: underline">', '', $items['PRD_NM_VIEW']);
+                    $dealName=str_replace('</FONT></DIV>', '', $dealName);
+                    $ticketPurchasers = [
+                        'orderNumber' => $items['ORD_NO'], //
+                        'ticketNumber' => $items['INVC_NO'],
+                        'purchaseDateTime' => $items['ORD_STL_END_DT'], // Ngày đặt hàng
+                        'price' => str_replace(',' , '', $items['SEL_PRC']), // giá bán
+                        'fee' => str_replace(',' , '', $items['SEL_FEE_RT']), // Phí dịch vụ
+                        'dealId' => $items['PRD_NO'], //
+                        'dealName' => $dealName,
+                        'optionId' => "",
+                        'optionName' => "",
+                        'userName' => $items['MEM_ID'], // Người mua (ID)
+                        'phoneNumber' => $items['RCVR_PRTBL_NO'], //   Thông tin liên lạc 2
+                        'channel_name' =>  "11ST"
+                    ];
+                    
+                    $result = $this->_model->loadRecords('ticketPurchasers', ['ticketNumber' => $items['INVC_NO']]);
+                    if ($result) {
+                        $this->_model->updateRecord('ticketPurchasers', $ticketPurchasers, ['ticketNumber' => $items['INVC_NO']]);
+                    }else {
+                        $this->_model->insertRecord('ticketPurchasers', $ticketPurchasers);
+                    }
+                    
+                    
+                }
+            }
+        }
+        
+    }
+        
+    public function getProductAction($start_date = null, $end_date = null) {
+        if ($start_date == null && $end_date == null) {
+            $start_date = (date("Y") - 1)  . date("md");
+            $end_date = date("Ymd");
+        }
+        
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $crawler = $client->request('POST', 'https://login.11st.co.kr/auth/front/selleroffice/login.tmall?returnURL=http://soffice.11st.co.kr');
+        
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'encryptedLoginName' => '5c9930fcf66bf5d4fe8803db86387a427b56b013452be0c765b9011d179c105f38f590019b05ee1503dcf5ed29dcda81b9b641603b34cf7a927c9f3e5fc8202b6db9e4d7b9963d75994f8623a46d5971f80b5d186cd982a87ad7bb134834bfa732939c06e523e1ca81d161e6d628c7da0adc290832d191d5c66f9aa80b9a7097',
+            'encryptedPassWord' => '5aaae845004b40e1133f7c7428500e11836b648aebf3dbbf22b6a570649c3b0db7d4bc47c5a28b7a7ba3f1fac7e5cc4e9b1a0efce66627db241a15a1b9e1f7662432509ac9493d52bfdbc055fa8ab7730a89749aa75bc8fb6f76fff5cefdc95c82fc6dc69a8fc187e238b1b9cdbfcd226e730c19e99d708d92e3960517c9bd79',
+            'loginName' => 'ysjlabs',
+            'passWord' => 'yakeun87!@'));
+        $data = [
+            'encryptedLoginName'=> '75af1daa73e96bf48beaf632088af7d65d4b26d39ed4c6be2705ca2be7fbe31a87bee07c30e6d95a6800f7e25d837ce6766a45a345b9ca6e36359070577e2e5c8146f532d110a9f7a15838b5e8d6c32e51b72bc0f65ab8f8187d216e28381a92cca716bbbf25a818cf4dd95b4c0ef46bf1318599a6456c666002cefee094b17e',
+            'encryptedPassWord'=> '58186cc9c573d9061b9d505b2745be8b98351f05a6aac6c62845a41cd044889e2f3f5f595359b98a29f709abe1092dd58341a3d7260545d1eb5aafc0efad5f73aeedbeaa453923a53a8a7d57a42da8195de1c076e314dd4099336007fb418a9d8fc08034c6591720018d508b924626cdcce7f8d82dedfe0f67ab65e6eb3e053a',
+            'priority'=> 93,
+            'authMethod'=> 'login',
+            'returnURL'=> 'http://soffice.11st.co.kr?ts=1596181197873',
+            'loginName'=> 'ysjlabs',
+            'passWord' => 'yakeun87!@',
+        ];
+        $crawler = $client->request('POST', 'https://login.11st.co.kr/auth/front/selleroffice/logincheck.tmall', $data);
+        $crawler = $client->request('POST', 'https://soffice.11st.co.kr/product/SellProductAjaxAction.tmall?method=getSellProductListJSON&srchTyp=prdNew&start=0&limit=30&prdNo=&prdNm=&searchType=PRDNO&dateType=CREATE&category1=&category2=&category3=&category4=&chkSelStatCds=&selMthdCd=&createDt=&createDtTo=&stckQty=&remainSelDt=&premiumAplDt=&dlvCstInstBasiCd=&dlvCstPayTypCd=&premiumPlusAplDt=&data=&searchListingItemClsf=&drivingListingItemClsf=&shopNo=&prdTypCd=&omPrdYn=&svcAreaCd=&stdPrdYn=');
+        $content = html_entity_decode($client->getResponse()->getContent());
+        $content= substr($content,1);
+        $content= substr($content,0,-1);
+        $dataProduct = json_decode($content,true);
+        
+        for ($i = 0; $i < $dataProduct['TOTAL_COUNT']; $i++) {
+            $goodsId= $dataProduct['DATA_LIST'][$i]['prdNo'];
+            $result = $this->_model->loadRecords('salechannel', ['travelProductId' =>$goodsId]);
+            if ($result) {
+                $this->_model->updateRecord('salechannel', ['channelId' => 6, 'productId' => $goodsId, 'vendorItemPackageId' =>$goodsId] , ['travelProductId' => $goodsId]);
+            }else {
+                $this->_model->insertRecord('salechannel', ['travelProductId' => $goodsId , 'channelId' => 6, 'productId' => $goodsId, 'vendorItemPackageId' => $goodsId]);
+            }
+        }
+    }
+    public function questionAction($start_date = null, $end_date = null) {
+
+        if ($start_date == null && $end_date == null) {
+            $start_date = (date("Y") - 1) . '/' .  date("m/d");
+            $end_date = date("Y/m/d"); 
+        }
+        //echo str_replace("/","-", $start_date).' 00:00:00';
+        $this->_model->updateRecord('question', ['isDelete' => 1], ['where' => 'question_created > "'.str_replace("/","-", $start_date).' 00:00:00" AND channel_name="11ST"']);  
+        
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $crawler = $client->request('POST', 'https://login.11st.co.kr/auth/front/selleroffice/login.tmall?returnURL=http://soffice.11st.co.kr');
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'encryptedLoginName' => '5c9930fcf66bf5d4fe8803db86387a427b56b013452be0c765b9011d179c105f38f590019b05ee1503dcf5ed29dcda81b9b641603b34cf7a927c9f3e5fc8202b6db9e4d7b9963d75994f8623a46d5971f80b5d186cd982a87ad7bb134834bfa732939c06e523e1ca81d161e6d628c7da0adc290832d191d5c66f9aa80b9a7097',
+            'encryptedPassWord' => '5aaae845004b40e1133f7c7428500e11836b648aebf3dbbf22b6a570649c3b0db7d4bc47c5a28b7a7ba3f1fac7e5cc4e9b1a0efce66627db241a15a1b9e1f7662432509ac9493d52bfdbc055fa8ab7730a89749aa75bc8fb6f76fff5cefdc95c82fc6dc69a8fc187e238b1b9cdbfcd226e730c19e99d708d92e3960517c9bd79',
+            'loginName' => 'ysjlabs',
+            'passWord' => 'yakeun87!@'));
+
+        $data = [
+            'encryptedLoginName'=> '75af1daa73e96bf48beaf632088af7d65d4b26d39ed4c6be2705ca2be7fbe31a87bee07c30e6d95a6800f7e25d837ce6766a45a345b9ca6e36359070577e2e5c8146f532d110a9f7a15838b5e8d6c32e51b72bc0f65ab8f8187d216e28381a92cca716bbbf25a818cf4dd95b4c0ef46bf1318599a6456c666002cefee094b17e',
+            'encryptedPassWord'=> '58186cc9c573d9061b9d505b2745be8b98351f05a6aac6c62845a41cd044889e2f3f5f595359b98a29f709abe1092dd58341a3d7260545d1eb5aafc0efad5f73aeedbeaa453923a53a8a7d57a42da8195de1c076e314dd4099336007fb418a9d8fc08034c6591720018d508b924626cdcce7f8d82dedfe0f67ab65e6eb3e053a',
+            'priority'=> 93,
+            'authMethod'=> 'login',
+            'returnURL'=> 'http://soffice.11st.co.kr?ts=1596181197873',
+            'loginName'=> 'ysjlabs',
+            'passWord' => 'yakeun87!@',
+        ];
+
+        $crawler = $client->request('POST', 'https://login.11st.co.kr/auth/front/selleroffice/logincheck.tmall', $data);
+
+        $data = [
+            'method' => 'getQnaTempListJSON'
+        ];
+
+        $crawler = $client->request('POST', 'https://soffice.11st.co.kr/product/AuthUnityBoardAction.tmall', $data);
+
+        $data = [
+            'method' => 'getProductQnaSellerListJSON',
+            'start'=> 0,
+            'limit'=> 300, // get 300
+            'prdNoBox' => '',
+            'sltTxtGubun'=> 'name',
+            'searchQnaDtlsCd' => '',
+            'answerStatus' => '',
+            'srchTxt' => '',
+            'startDate'=> $start_date,
+            'endDate'=> $end_date,
+            'periodPart'=> '01',
+            'supplyCmNo'=> 'undefined',
+            'searchClsf'=> 'NORMAL',
+            'ntCodeType' => '',
+            'trnsStatCd'=> '',
+            'isPaging'=> 'Y'
+        ];
+        //prdNoBox: 2619767173
+        // lấy tổng số câu hỏi    
+        $crawler = $client->request('POST', 'https://soffice.11st.co.kr/product/AuthUnityBoardAction.tmall', $data);
+        $dataQuestions = $client->getResponse()->getContent();
+        $dataQuestions = substr($dataQuestions, 1);
+        $dataQuestions = substr($dataQuestions, 0,-1);
+        $dataQuestions = json_decode($dataQuestions, true);
+        
+        if ($dataQuestions['BOARD_LIST']) {
+            foreach ($dataQuestions['BOARD_LIST'] as $items) {
+                $result = $this->_model->loadRecords('question', ['inquiryId' => trim($items['subInfoNo']),'channel_name'=>'11ST']);
+                $data = [
+                    'question_name' => trim($items['memberBO']['memID']),
+                    'question_content' => trim($items['unityBoardInfoBO']['unityBoardInfoContentBO']['brdInfoCont']),
+                    'question_created' => trim($items['unityBoardInfoBO']['createDt']),
+                    'dealId' => $items['unityBoardInfoBO']['brdInfoClfNo'], //$items['subInfoNo'],
+                    'channel_name' => '11ST',
+                    'inquiryId' => $items['subInfoNo'], //$items['productBO']['prdNo']
+                    'isDelete' => 0
+                ];
+                if (!empty($items['answerCont'])) {
+                    $data['question_status'] = 2;
+                    $data['reply_name'] = trim($items['answerCont']);
+                    $data['reply_created'] = trim($items['answerDt']);
+                }
+
+                if ($result) {
+                    $this->_model->updateRecord('question', $data, ['inquiryId' => trim($items['subInfoNo']) ,'channel_name'=>'11ST']);
+                } else {
+                    $this->_model->insertRecord('question', $data);
+                }
+            }
+        }
+    }
+
+    public function replyQuestionAction($inquiryId, $content){
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $crawler = $client->request('POST', 'https://login.11st.co.kr/auth/front/selleroffice/login.tmall?returnURL=http://soffice.11st.co.kr');
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'encryptedLoginName' => '5c9930fcf66bf5d4fe8803db86387a427b56b013452be0c765b9011d179c105f38f590019b05ee1503dcf5ed29dcda81b9b641603b34cf7a927c9f3e5fc8202b6db9e4d7b9963d75994f8623a46d5971f80b5d186cd982a87ad7bb134834bfa732939c06e523e1ca81d161e6d628c7da0adc290832d191d5c66f9aa80b9a7097',
+            'encryptedPassWord' => '5aaae845004b40e1133f7c7428500e11836b648aebf3dbbf22b6a570649c3b0db7d4bc47c5a28b7a7ba3f1fac7e5cc4e9b1a0efce66627db241a15a1b9e1f7662432509ac9493d52bfdbc055fa8ab7730a89749aa75bc8fb6f76fff5cefdc95c82fc6dc69a8fc187e238b1b9cdbfcd226e730c19e99d708d92e3960517c9bd79',
+            'loginName' => 'ysjlabs',
+            'passWord' => 'yakeun87!@'));
+
+        $data = [
+            'encryptedLoginName'=> '75af1daa73e96bf48beaf632088af7d65d4b26d39ed4c6be2705ca2be7fbe31a87bee07c30e6d95a6800f7e25d837ce6766a45a345b9ca6e36359070577e2e5c8146f532d110a9f7a15838b5e8d6c32e51b72bc0f65ab8f8187d216e28381a92cca716bbbf25a818cf4dd95b4c0ef46bf1318599a6456c666002cefee094b17e',
+            'encryptedPassWord'=> '58186cc9c573d9061b9d505b2745be8b98351f05a6aac6c62845a41cd044889e2f3f5f595359b98a29f709abe1092dd58341a3d7260545d1eb5aafc0efad5f73aeedbeaa453923a53a8a7d57a42da8195de1c076e314dd4099336007fb418a9d8fc08034c6591720018d508b924626cdcce7f8d82dedfe0f67ab65e6eb3e053a',
+            'priority'=> 93,
+            'authMethod'=> 'login',
+            'returnURL'=> 'http://soffice.11st.co.kr?ts=1596181197873',
+            'loginName'=> 'ysjlabs',
+            'passWord' => 'yakeun87!@',
+        ];
+
+        $crawler = $client->request('POST', 'https://login.11st.co.kr/auth/front/selleroffice/logincheck.tmall', $data);
+
+        $data = [
+            'method' => 'getQnaTempListJSON'
+        ];
+
+        $crawler = $client->request('POST', 'https://soffice.11st.co.kr/product/AuthUnityBoardAction.tmall', $data);
+
+        $start_date = (date("Y") - 1) . '/' .  date("m/d");
+        $end_date = date("Y/m/d");
+
+        $data = [
+            'method' => 'getProductQnaSellerListJSON',
+            'start'=> 0,
+            'limit'=> 30,
+            'prdNoBox' => '',
+            'sltTxtGubun'=> 'name',
+            'searchQnaDtlsCd' => '',
+            'answerStatus' => '',
+            'srchTxt' => '',
+            'startDate'=> $start_date,
+            'endDate'=> $end_date,
+            'periodPart'=> '01',
+            'supplyCmNo'=> 'undefined',
+            'searchClsf'=> 'NORMAL',
+            'ntCodeType' => '',
+            'trnsStatCd'=> '',
+            'isPaging'=> 'Y'
+        ];
+
+        $crawler = $client->request('POST', 'https://soffice.11st.co.kr/product/AuthUnityBoardAction.tmall', $data);
+
+        $dataQuestions = $client->getResponse()->getContent();
+        $dataQuestions = substr($dataQuestions, 1, strlen($dataQuestions) -1);
+        $dataQuestions = substr($dataQuestions, 0, strlen($dataQuestions) -1);
+        $dataQuestions = json_decode($dataQuestions, true);
+
+        $hgrnkBrdInfoNo = '';
+        $brdInfoClfNo ='';
+        $buyerId ='';
+
+        foreach ($dataQuestions['BOARD_LIST'] as $question) {
+            if ($inquiryId == $question['subInfoNo']) {
+                $hgrnkBrdInfoNo = $question['unityBoardInfoBO']['brdInfoNo'];
+                $brdInfoClfNo = $question['unityBoardInfoBO']['brdInfoClfNo'];
+                $buyerId = $question['memberBO']['memID'];
+                break;
+            }
+        }
+        // echo $hgrnkBrdInfoNo . '-' . $brdInfoClfNo . '-' . $buyerId;
+        // die();
+        $data = [
+            'brdInfoNo' => $inquiryId,//'148175316'
+            'hgrnkBrdInfoNo' => $hgrnkBrdInfoNo,//'148097117'
+            'brdInfoClfNo' => $brdInfoClfNo,//'2770257979' dealId
+            'brdInfoCont' => $content,
+            'brdInfoSbjct' => '',
+            'method' => 'updateProductQnaAnswer',
+            'buyerId' => $buyerId,//'mjdi****'
+            'flag' => 'sellerPrdQna',
+            'partFlag' => 'seller',
+            'searchClsf' => 'NORMAL',
+            'ntCodeType' => '',
+            'prdNoBox' => '(unable to decode value)',
+            'sltTxtGubun' => 'name',
+            'srchTxt' => '',
+            'searchQnaDtlsCd' => '',
+            'startDate' => $start_date,
+            'endDate' => $end_date,
+            'sltDuration' => 'RECENT_MONTH',
+            'answerStatus' => '',
+            'sltQnaTemp' => '',
+            'answerCont' => $content
+        ];
+        $crawler = $client->request('POST', 'https://soffice.11st.co.kr/product/ProductQnaUpdate.tmall', $data);
+        return $crawler;
+    }
+}
+
+?>

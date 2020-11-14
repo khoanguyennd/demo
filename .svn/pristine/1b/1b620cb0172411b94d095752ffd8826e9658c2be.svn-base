@@ -1,0 +1,171 @@
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+
+class CoupangController extends Controller {
+
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    
+    function callAPI($method, $url, $data) {
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        //echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json, text/plain, */*'
+        ));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            die("Connection Failure");
+        }
+        curl_close($curl);
+        return json_decode($result,true);
+    }
+    // Phương thức index
+    public function indexAction() { //tour // chưa xong     
+        $sql="SELECT * FROM tb_salechannel sc WHERE sc.productId IS NOT NULL AND sc.channelId =1";
+        $this->_model->setQuery($sql);
+        $results = $this->_model->readAll();
+        // echo "<pre>";
+        // print_r($results);
+        // die();
+        foreach ($results as $value => $giatri) {
+           $data =  $this -> callAPI("GET","https://trip.coupang.com/api/inquiry/web/products/".$giatri['productId']."/inquiries?page=0",null);
+           $totalPages= $data ['pagination']['totalPages'];
+           $totalCount= $data ['pagination']['totalCount'];
+           $page= $data ['pagination']['page'];
+           $countPerPage= $data ['pagination']['countPerPage'];
+           $result=$data['result'];
+           //echo $totalCount.'<br>';
+           for($i=0;$i<$totalCount;$i++){
+               $writer = $result [$i]['writer'];
+               $vendorItemName = $result [$i]['vendorItemName'];
+               $vendorItemId = $result [$i]['vendorItemId'];
+               $productId = $result [$i]['productId'];
+               $inquiryId = $result [$i]['inquiryId'];
+               $inquiryAt = $result [$i]['inquiryAt'];
+               $createdAt = $result [$i]['createdAt'];
+               $content = $result [$i]['content'];
+               $comments= $result [$i]['comments'];
+               $commentCount=$result [$i]['commentCount'];
+               $record=[
+                   'inquiryId' => $inquiryId,
+                   'question_name' => $writer['member']['name'],
+                   'question_email' => $writer['member']['email'],
+                   'question_content' => $content,
+                   'question_created' => date( "Y-m-d h:i:s", strtotime($createdAt) ),
+    //                'reply_name' => $reply_name,
+    //                'reply_email' => $reply_email,
+    //                'reply_content' => $reply_content,
+    //                'reply_created' => $reply_created,
+                   'question_purchase' => "NO",
+                   'question_status' => 1,
+                   'orderNumber' => "",
+                   'dealId' => $productId, // deal ID
+                   'dealName' => "",
+                   'optionId' => $vendorItemId,
+                   'optionName' => $vendorItemName,
+                   'channel_name' => "COUPANG"
+                   
+               ];
+               if($commentCount>0){
+                   $record['question_status']=2;
+                   $record['reply_name']=$comments[0]['writer']['displayWriter'];
+                   $record['reply_email']="";
+                   $record['reply_content']=$comments[0]['content'];
+                   $record['reply_created']=date( "Y-m-d h:i:s", strtotime($comments[0]['createdAt']) );
+               }
+               
+               $result1 = $this->_model->loadRecord('question', ['inquiryId' => $inquiryId ]);
+               if ($result1) {
+                   $this->_model->updateRecord('question', $record,  ['inquiryId' => $inquiryId ]);
+               } else {
+                   $this->_model->insertRecord('question', $record);
+               }
+           }
+
+        }
+    }
+    
+    public function questionAction($start_date = null, $end_date = null) { //tour
+        $data =[    'username' => 'VENDOR,tbridge',
+                    'password' => 'coupang135!'];
+        
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $client->request('POST', 'https://with.coupang.com/login',$data);
+        if ($start_date == null && $end_date == null) {
+            $lastYear = date('Y') - 1;
+            $start_date = $lastYear . "-" . date("m-d");
+            $end_date = date('Y-m-d');
+        }
+        $this->_model->updateRecord('question', ['isDelete' => 1], ['where' => 'question_created > "'.date('Y-m-d',strtotime($start_date)).' 00:00:00" AND channel_name="COUPANG"']);  
+        $crawler = $client->request('GET', 'https://with.coupang.com/inquiry/fetch?inquiryType=PRODUCT&inquiryStartAt='.$start_date.'&inquiryEndedAt='.$end_date.' &answerType=ALL&productId=&vendorItemIds=&size=300&page=1');
+        $dataQuestions = json_decode($client->getResponse()->getContent(),true);
+        if ($dataQuestions['inquirySearchResponseDtos']) {
+            foreach ($dataQuestions['inquirySearchResponseDtos'] as $items) {
+                $data = [
+                    'question_name' => trim($items['memberName']),
+                    'question_email' => trim($items['memberEmail']),
+                    'question_content' => trim($items['content']),
+                    'question_created' => trim($items['inquiryAt']),
+                    'dealId' => $items['productId'], 
+                    'dealName' => $items['productName'], 
+                    'optionId' => $items['vendorItemId'], 
+                    'optionName' => $items['vendorItemName'], 
+                    'channel_name' => 'COUPANG',
+                    'inquiryId' => $items['inquiryId'], //$items['productBO']['prdNo']
+                    'isDelete' => 0
+                ];
+                if ($items['answered'] == 1) {
+                    $commentCount= $items['commentCount']-1;
+                    $data['question_status'] = 2;
+                    $data['reply_name'] =    trim($items['inquiryCommentList'][$commentCount]['inquiryCommentId']);
+                    $data['reply_content'] = trim($items['inquiryCommentList'][$commentCount]['content']);
+                    $data['reply_created'] = trim($items['inquiryCommentList'][$commentCount]['inquiryCommentAt']);
+                }
+                $result = $this->_model->loadRecords('question', ['inquiryId' => $items['inquiryId'],'channel_name'=>'COUPANG']);
+                if ($result) {
+                    $this->_model->updateRecord('question', $data, ['inquiryId' => $items['inquiryId'] ,'channel_name'=>'COUPANG']);
+                } else {
+                    $this->_model->insertRecord('question', $data);
+                }
+            }
+        }
+        
+    }
+    public function replyQuestionAction($inquiryId, $content) { //tour
+        $data =[    'username' => 'VENDOR,tbridge',
+                    'password' => 'coupang135!'     ];
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $client->request('POST', 'https://with.coupang.com/login',$data);
+        $data =[    'inquiryId' => $inquiryId,
+                    'comment' => $content,
+                    'vendorId' => 'A00183931' ];
+        $client->request('POST', 'https://with.coupang.com/inquiry/save',$data);
+    }
+   
+}
+
+?>

@@ -1,0 +1,1408 @@
+<?php
+$sellerProductId = $this->_params['sellerProductId'];
+$isUseDirect = 1;
+$useExternalTicketNumber = 0;
+$useBarcode = 0;
+$ticketUsage = "E_TICKET";
+$ticketSendCriteriaType = "DAY";
+$ticketSendSpentTime = 0;
+$ticketSendLimitTime = 0;
+// publication
+if ($this->getData('publication') != null) {
+    $publicationId = $this->getItem('publication', 'publicationId');
+    $useBarcode = $this->getItem('publication', 'useBarcode');
+    $isUseDirect = $this->getItem('publication', 'isUseDirect');
+    $useExternalTicketNumber = $this->getItem('publication', 'useExternalTicketNumber');
+    $externalCouponUseType = $this->getItem('publication', 'externalCouponUseType');
+    $ticketUsage = $this->getItem('publication', 'ticketUsage');
+    $ticketSendCriteriaType = $this->getItem('publication', 'ticketSendCriteriaType');
+    $ticketSendSpentTime = $this->getItem('publication', 'ticketSendSpentTime');
+    $ticketSendLimitTime = $this->getItem('publication', 'ticketSendLimitTime');
+}
+// sellerProduct
+$introduction = $this->getItem('sellerProduct', 'travelTypeId');
+$benefits = $this->getItem('sellerProduct', 'benefits');
+$inclusionNotice = $this->getItem('sellerProduct', 'inclusionNotice');
+$exclusionNotice = $this->getItem('sellerProduct', 'exclusionNotice');
+$additionalInfoPrompt = $this->getItem('sellerProduct', 'additionalInfoPrompt');
+$instantBooking = $this->getItem('sellerProduct', 'instantBooking');
+$methodUsage = $this->getItem('sellerProduct', 'methodUsage');
+// $user = $this->getData('user');
+// userinfo
+$userid = $this->getItem('userinfo', 'userid');
+$company = $this->getItem('userinfo', 'name');
+$roadFullAddr = $this->getItem('userinfo', 'roadFullAddr');
+$jibunAddr = $this->getItem('userinfo', 'jibunAddr');
+$zipNo = $this->getItem('userinfo', 'zipNo');
+$siNm = $this->getItem('userinfo', 'city');
+$sggNm = $this->getItem('userinfo', 'district');
+$emdNm = $this->getItem('userinfo', 'province');
+
+$timework = $this->getItem('userinfo', 'timework');
+$dayoff = $this->getItem('userinfo', 'dayoff');
+$phonetable = $this->getItem('userinfo', 'phonetable');
+$phoneadvisory = $this->getItem('userinfo', 'phoneadvisory');
+$phonecancel = $this->getItem('userinfo', 'phonecancel');
+$hotline = $this->getItem('userinfo', 'hotline');
+$parking = $this->getItem('userinfo', 'parking');
+$parking_fee = $this->getItem('userinfo', 'parking_fee');
+$website = $this->getItem('userinfo', 'website');
+$email = $this->getItem('userinfo', 'email');
+$fax = $this->getItem('userinfo', 'fax');
+//
+
+$list_notice = $this->getData('list_notice');
+$list_informationuse = $this->getData('list_informationuse');
+$list_informationaddition = $this->getData('list_informationaddition');
+?>
+<link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>css/jsDatePick_ltr.min.css" />
+<script type="text/javascript" src="<?= URL_PUBLIC ?>js/jsDatePick.min.1.3.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript">
+    function validatePhone(value) {
+        var filter = /\(?([0-9]{2})\)?([ .-]?)([0-9]{3})\2([0-9]{4})/;
+        if (filter.test(value)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    $(document).ready(function () {
+        $('#complete').on('click', function () {
+            //$('#nf').submit();
+            var ff = document.nf;
+            var step = $(this).attr('data-step');
+            document.getElementById("step").value = step;
+            
+            var address=document.getElementById("roadFullAddr").value;
+            if (address == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_accaddressfind') ?>");
+                $(".address").css("border", "1px solid red");
+                return false;
+            }
+            var aphonetable = document.getElementById("aphonetable").value;
+            if (aphonetable == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonetable') ?>");
+                $("#aphonetable").css("border", "1px solid red");
+                return false;
+            }
+            if (validatePhone(aphonetable)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonetable') ?>");
+                //$('#aphonetable').focus();
+                $("#aphonetable").css("border", "1px solid red");
+                return false;
+            }
+
+            var aphoneadvisory = document.getElementById("aphoneadvisory").value;
+            if (aphoneadvisory == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphoneadvisory') ?>");
+                $("#aphoneadvisory").css("border", "1px solid red");
+                return false;
+            }
+            if (validatePhone(aphoneadvisory)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphoneadvisory') ?>");
+                //$('#aphoneadvisory').focus();
+                $("#aphoneadvisory").css("border", "1px solid red");
+                return false;
+            }
+
+            var aphonecancel = document.getElementById("aphonecancel").value;
+            if (aphonecancel == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonecancel') ?>");
+                $("#aphonecancel").css("border", "1px solid red");
+                return false;
+            }
+            if (validatePhone(aphonecancel)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonecancel') ?>");
+                //$('#aphonecancel').focus();
+                $("#aphonecancel").css("border", "1px solid red");
+                return false;
+            }
+
+            var ahotline = document.getElementById("ahotline").value;
+            if (ahotline == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnhotline') ?>");
+                //$('#ahotline').focus();
+                $("#ahotline").css("border", "1px solid red");
+                return false;
+            }
+            if (validatePhone(ahotline)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnhotline') ?>");
+                //$('#ahotline').focus();
+                $("#ahotline").css("border", "1px solid red");
+                return false;
+            }
+            
+            var csContactInfo = document.getElementById("introduction").value;
+            if (csContactInfo == '') {
+                $.fn_alert(true, true, "내용을 입력하세요.");
+                $("#introduction").css("border", "1px solid red");
+                return false;
+            }
+            var csContactInfo = document.getElementById("csContactInfo").value;
+            if (csContactInfo == '') {
+                $.fn_alert(true, true, "예약안내");
+                $("#csContactInfo").css("border", "1px solid red");
+                return false;
+            }
+            ff.submit();            
+        });
+        // Hàm kiểm tra email và thông báo lỗi
+        $.isEmail = function (aemail) {
+            if (aemail == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_inputemail') ?>");
+                return false;
+            }
+            if ($.validateEmail(aemail) == false) {
+                $.fn_alert(true, true, "<?= $this->language('l_erremail') ?>");
+                return false;
+            }
+            return true;
+        }
+        $('#saveTemp').on('click', function () {
+            var ff = document.nf;
+
+            var step = $(this).attr('data-step');
+            document.getElementById("step").value = step;
+
+            if (!$.trim($('#noteAddr').html()).length) {
+                $.fn_alert(true, true, "<?= $this->language('l_businessinfoaddress') ?>");
+                $('#noteAddr').focus();
+                return false;
+            }
+
+            var externalCouponUseType = document.getElementById("externalCouponUseType").value;
+            if (externalCouponUseType == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnexternalCouponUseType') ?>");
+                $('#externalCouponUseType').focus();
+                return false;
+            }
+
+            if (!$.trim($('#noteAddr').html()).length) {
+                $.fn_alert(true, true, "필수 입력사항을 체크 해 주세요.");
+                return false;
+            }
+
+// 		var atimework= document.getElementById("atimework").value;
+// 		if(atimework == ''){
+//         	$.fn_alert(true, true, "운영시간을 입력하세요");
+//         	$('#atimework').focus();
+//         	return false;
+//         }
+            var aphonetable = document.getElementById("aphonetable").value;
+            if (aphonetable == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonetable') ?>");
+                $('#aphonetable').focus();
+                return false;
+            }
+            if (validatePhone(aphonetable)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonetable') ?>");
+                $('#aphonetable').focus();
+                return false;
+            }
+
+            var aphoneadvisory = document.getElementById("aphoneadvisory").value;
+            if (aphoneadvisory == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphoneadvisory') ?>");
+                $('#aphoneadvisory').focus();
+                return false;
+            }
+            if (validatePhone(aphoneadvisory)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphoneadvisory') ?>");
+                $('#aphoneadvisory').focus();
+                return false;
+            }
+
+            var aphonecancel = document.getElementById("aphonecancel").value;
+            if (aphonecancel == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonecancel') ?>");
+                $('#aphonecancel').focus();
+                return false;
+            }
+            if (validatePhone(aphonecancel)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonecancel') ?>");
+                $('#aphonecancel').focus();
+                return false;
+            }
+
+            var ahotline = document.getElementById("ahotline").value;
+            if (ahotline == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnhotline') ?>");
+                $('#ahotline').focus();
+                return false;
+            }
+            if (validatePhone(ahotline)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnhotline') ?>");
+                $('#ahotline').focus();
+                return false;
+            }
+
+            var website = document.getElementById("website").value;
+            if (website != "" && isValidURL(website) == false) {
+                $.fn_alert(true, true, "website false");
+                $('#website').focus();
+                return false;
+            }
+
+            var email = document.getElementById("email").value;
+            if (email != "" && $.isEmail(email) == false) {
+                $('#email').focus();
+                return false;
+            }
+
+            var fax = document.getElementById("fax").value;
+
+            var csContactInfo = document.getElementById("csContactInfo").value;
+            if (csContactInfo == '') {
+                $.fn_alert(true, true, "예약안내");
+                $('#csContactInfo').focus();
+                return false;
+            }
+
+            ff.submit();
+        });
+        // Trở lại
+        $('#backlink').on('click', function () {
+            var step = $(this).attr('data-step');
+            if (step) {
+                $('#step').val(step);
+                $.fn_ticketcontinue(step);
+            }
+        });
+        $($.elt_popup).on('click', '.ticketconfirm .continue', function () {
+            $.fn_ticketconfirm(false);
+            var externalCouponUseType = $("#externalCouponUseType").val();
+            if (externalCouponUseType == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnexternalCouponUseType') ?>");
+                $('#externalCouponUseType').focus();
+                return false;
+            }
+            var aphonetable = document.getElementById("aphonetable").value;
+            if (aphonetable == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonetable') ?>");
+                $('#aphonetable').focus();
+                return false;
+            }
+            if (validatePhone(aphonetable)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonetable') ?>");
+                $('#aphonetable').focus();
+                return false;
+            }
+
+            var aphoneadvisory = document.getElementById("aphoneadvisory").value;
+            if (aphoneadvisory == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphoneadvisory') ?>");
+                $('#aphoneadvisory').focus();
+                return false;
+            }
+            if (validatePhone(aphoneadvisory)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphoneadvisory') ?>");
+                $('#aphoneadvisory').focus();
+                return false;
+            }
+
+            var aphonecancel = document.getElementById("aphonecancel").value;
+            if (aphonecancel == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonecancel') ?>");
+                $('#aphonecancel').focus();
+                return false;
+            }
+            if (validatePhone(aphonecancel)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnphonecancel') ?>");
+                $('#aphonecancel').focus();
+                return false;
+            }
+
+            var ahotline = document.getElementById("ahotline").value;
+            if (ahotline == '') {
+                $.fn_alert(true, true, "<?= $this->language('l_warnhotline') ?>");
+                $('#ahotline').focus();
+                return false;
+            }
+            if (validatePhone(ahotline)) {
+            } else {
+                $.fn_alert(true, true, "<?= $this->language('l_warnhotline') ?>");
+                $('#ahotline').focus();
+                return false;
+            }
+
+
+            var website = document.getElementById("website").value;
+            if (website != "" && isValidURL(website) == false) {
+                $.fn_alert(true, true, "website false");
+                $('#website').focus();
+                return false;
+            }
+
+            var email = document.getElementById("email").value;
+            if (email != "" && $.isEmail(email) == false) {
+                $('#email').focus();
+                return false;
+            }
+
+            var fax = document.getElementById("fax").value;
+
+
+            var introduction = document.getElementById("introduction").value;
+            if (introduction == '') {
+                $.fn_alert(true, true, "상품소개");
+                $('#introduction').focus();
+                return false;
+            }
+
+            var csContactInfo = document.getElementById("csContactInfo").value;
+            if (csContactInfo == '') {
+                $.fn_alert(true, true, "예약안내");
+                $('#csContactInfo').focus();
+                return false;
+            }
+            $('#nf').submit();
+        });
+
+        // Chuyển hướng khi lưu thành công
+        setTimeout(function () {
+            var urlstep = $('#locationurlstep').attr('data-urlstep');
+            if (urlstep==5) {
+                //$.fn_confirm(true, {'class':"viewmanageproduct"}, '임시저장 되었습니다.');
+                //$($.elt_popup).on('click', '.confirm .viewmanageproduct .continue', function(){		
+                //	window.location.href = '<?= $this->route('listproduct', ['method' => 'sale']) ?>';
+                //});
+                $.fn_alert(true, true, "임시저장 되었습니다.");
+            }
+            
+            if(urlstep==6){
+                $.fn_ajax('checkComplete', {'sellerProductId': <?= $sellerProductId ?>}, function (result) {
+                //alert(result.flag);
+                //console.log(result);
+                if (result.flag == true) {
+                    var str = result.strchannel;
+                    $.fn_confirm(true, {'class': "viewmanageproduct"}, str, "채널사별로 상품을 등록합니다.");
+                    $($.elt_popup).find('.back').val("취소");
+            		$($.elt_popup).find('.continue').val("확인");
+                    $($.elt_popup).on('click', '.confirm .viewmanageproduct .continue', function () {
+                        $.fn_ajax('complete', {'sellerProductId': <?= $sellerProductId ?>}, function (result1) {
+                        });
+                        window.location.href = '<?= $this->route('listproduct', ['method' => 'sale']) ?>';
+                    });
+                }
+                if (result.flag == false) {
+                    var str = "";
+                    if (result.ticket1 != "") {
+                        str += "<?= $this->language('l_top1') ?> :" + result.ticket1;
+                        str += "<br>";
+                    }
+                    if (result.ticket2 != "") {
+                        str += "<?= $this->language('l_top2') ?> :" + result.ticket2;
+                        str += "<br>";
+                    }
+                    if (result.ticket3 != "") {
+                        str += "<?= $this->language('l_top3') ?> :" + result.ticket3;
+                        str += "<br>";
+                    }
+                    if (result.ticket4 != "") {
+                        str += "<?= $this->language('l_top4') ?> :" + result.ticket4;
+                        str += "<br>";
+                    }
+                    if (result.ticket5 != "") {
+                        var res = result.ticket5.split(",");
+                        //alert(res.length);
+                        var vitri = "";
+                        for (var i = 0; i < res.length-1; i++) { 
+                            if(i==0&&(res[i]=="locations"||res[i]=="contacts")){
+                                vitri = "error_move_locations";
+                            }
+                            if(i==0&&res[i]=="introduction"){
+                                vitri = "error_move_introduction";
+                            }
+                            if (res[i] == "locations") {
+                                $("#locations").css("border", "1px solid red");
+                            }
+                            if (res[i] == "contacts") {
+                                $("#aphonetable").css("border", "1px solid red");
+                                $("#ahotline").css("border", "1px solid red");
+                                $("#aphoneadvisory").css("border", "1px solid red");
+                                $("#aphonecancel").css("border", "1px solid red");
+                            }
+                            if (res[i] == "introduction") {                                
+                                $("#"+res[i]).css("border", "1px solid red");
+                                $("#csContactInfo").css("border", "1px solid red");
+                            }
+
+                        }
+                        document.getElementById(vitri).scrollIntoView();
+                        str += "<?= $this->language('l_top5') ?> :" + result.ticket5;
+                    }
+
+                    $.fn_alert(true, "필수 입력사항을 체크 해 주세요.", str);
+                        }
+                    }, false, true);
+            }
+            
+        }, 500);
+        // Thêm form mới
+        $('input.btn.addnewform').on('click', function () {
+            flagChanges();
+            var element = $(this).closest('div.rownotificationitem');
+            var length = $(element).find('._addform').length + 1;
+            if (length < 11) {
+                var newform = $(element).find('._addform:first-child').clone();
+                var title = $(element).find('h3').attr('data-title') + length;
+                $(newform).find('h3').text(title);
+                $(newform).find('input[type="hidden"]').val('0');
+                $(newform).find('input[type="text"], textarea').val('');
+                var checkname = $(newform).find('input[type="checkbox"]').attr('data-name');
+                $(newform).find('input[type="checkbox"]').prop("checked", true);
+                $(newform).find('input[type="checkbox"]').attr('name', checkname + length);
+                $(element).find('#rownotificationitem').append(newform);
+                $.fn_checkMaxLength($(newform).find('.checkMaxLength'));
+
+            }
+        });
+    });
+    var elm;
+    function isValidURL(u) {
+        if (!elm) {
+            elm = document.createElement('input');
+            elm.setAttribute('type', 'url');
+        }
+        elm.value = u;
+        return elm.validity.valid;
+    }
+
+    function saveTemp(step) {
+        var ff = document.nf;
+        document.getElementById("step").value = step;
+        ff.submit();
+    }
+
+    function backlink(step) {
+        window.location.assign("<?php echo $this->route('editticket4') . "/" . $sellerProductId; ?>");
+    }
+
+    function delContacts(id) {
+        document.getElementById("tbContacts" + id).remove();
+    }
+
+    function flagChanges() {
+        localStorage.setItem('flagChange', '1');
+    }
+    function goPopup() {
+        // 주소검색을 수행할 팝업 페이지를 호출합니다.
+        // 호출된 페이지(jusoPopup_utf8.php)에서 실제 주소검색URL(http://www.juso.go.kr/addrlink/addrLinkUrl.do)를 호출하게 됩니다.
+        var pop = window.open("<?= URL_BASE ?>/php_sample/jusoPopup_utf8.php", "pop", "width=570,height=420, scrollbars=yes, resizable=yes");
+        // 모바일 웹인 경우, 호출된 페이지(jusoPopup_utf8.php)에서 실제 주소검색URL(http://www.juso.go.kr/addrlink/addrMobileLinkUrl.do)를 호출하게 됩니다.
+        //var pop = window.open("/jusoPopup_utf8.php","pop","scrollbars=yes, resizable=yes"); 
+    }
+
+    function jusoCallBack(roadFullAddr, jibunAddr, zipNo, siNm, sggNm, emdNm) {
+        flagChanges();
+        $(".address").css("border", "0px");
+        document.getElementById('roadFullAddr').value = roadFullAddr;
+        document.getElementById('jibunAddr').value = jibunAddr;
+        document.getElementById('zipNo').value = zipNo;
+        document.getElementById('siNm').value = siNm;
+        document.getElementById('sggNm').value = sggNm;
+        document.getElementById('emdNm').value = emdNm;
+        //한국
+        document.getElementById('noteAddr').innerHTML = "<p> <?= $this->language('l_accaddress') ?> : " + roadFullAddr + "</p>" + "<p> <?= $this->language('l_acccode') ?> : " + jibunAddr + "</p>" + "<p> <?= $this->language('l_acczipcode') ?> : " + zipNo + "</p>";
+    }
+    function oncheckuseExternalTicketNumber(chk) {
+        if (chk.checked)
+            document.getElementById("divuseBarcode").style.display = "block";
+        else
+            document.getElementById("divuseBarcode").style.display = "none";
+    }
+    function onticketUsage(select) {
+        flagChanges();
+        if (select.value == "E_TICKET" || select.value == "BARCODE" || select.value == "ON_SITE") {
+            document.getElementById("divticketSendCriteriaType").style.display = "block";
+            document.getElementById("divticketSendSpentTime").style.display = "block";
+            document.getElementById("divuseBarcode").style.display = "block";
+        } else {
+            document.getElementById("divticketSendCriteriaType").style.display = "none";
+            document.getElementById("divticketSendSpentTime").style.display = "none";
+            document.getElementById("divticketSendLimitTime").style.display = "none";
+        }
+    }
+</script>
+
+
+
+<div class="ct_head" id="locationurlstep" data-urlstep="<?= $this->getData('urlstep') ?>" data-step="5"><?php require PATH_INCLUDES . 'top.php'; ?></div>
+<div class="ct_content">
+    <div class="forminput">
+        <form name="nf" method="POST" action="<?= $this->route('editticket5') ?>/<?= $this->_params['sellerProductId'] ?>" id="nf">
+
+            <div class="form_group clearfix frrow">
+
+                <h3><?= $this->language('l_conditionused') ?></h3>
+                <div class="row rmclass" data-action="viewperson" data-perid="14">
+                    <div class="form_group clearfix" style="display: none;">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_codeproduct') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-3">
+                            <input type="text" name="sellerProductId" id="sellerProductId" value="<?= $sellerProductId ?>" readonly="readonly" class="input full" autocomplete="off"> 
+                            <input name="btnSumit" id="btnSumit" type="hidden" value="editticket5" /> 
+                            <input name="publicationId" id="publicationId" type="hidden" value="<?= $publicationId ?>" />
+                        </div>
+                        <div class="form_item col-xs-7 align-left"></div>
+
+                    </div>
+
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3>구매즉시예약</h3>
+                        </div>
+                        <div class="form_item col-xs-1" style="margin-top: 8px;text-align: left;">
+                            <input type="radio" id="checkinstantBooking1" <?php if ($instantBooking == 1) echo 'checked="checked"'; ?> name="instantBooking" value="1" onclick="flagChanges()"/> 
+                            <label for="checkinstantBooking1"><?= $this->language('l_yes') ?></label>
+
+                        </div>
+                        <div class="form_item col-xs-1" style="margin-top: 8px;text-align: left;">
+                            <input type="radio" id="checkinstantBooking0" <?php if ($instantBooking == 0) echo 'checked="checked"'; ?> name="instantBooking" value="0" onclick="flagChanges()" /> 
+                            <label for="checkinstantBooking0">	<?= $this->language('l_no') ?></label>
+                        </div>
+                        <div class="form_item col-xs-8 align-left"></div>
+                    </div>
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_isUseDirect') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-2" style="text-align: left;">
+                            <select name="isUseDirect" class="select small full" onchange="flagChanges()">
+                                <option <?php if ($isUseDirect == 1) echo 'selected="selected"'; ?> value="1">구매시 바로사용 가능</option>
+                                <option <?php if ($isUseDirect == 30) echo 'selected="selected"'; ?> value="30">구매 후 익일 뒤 가능</option>
+                                <option <?php if ($isUseDirect == 60) echo 'selected="selected"'; ?> value="60">구매 후 30분 뒤 가능</option>
+                                <option <?php if ($isUseDirect == 2) echo 'selected="selected"'; ?> value="2">구매 후 1시간 뒤 가능</option>
+                                <option <?php if ($isUseDirect == 3) echo 'selected="selected"'; ?> value="3">구매 후 특정일자 뒤 가능</option>
+                                <option <?php if ($isUseDirect == 0) echo 'selected="selected"'; ?> value="0">기타</option>
+                            </select>
+                        </div>
+                        <div class="form_item col-xs-8 align-left"></div>
+                    </div>
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3>사용완료 처리방식</h3>
+                        </div>
+                        <div class="form_item col-xs-2" style="margin-top: 8px;text-align: left;">
+                            <input type="radio" id="checkmethodUsage1" <?php if ($methodUsage == 1) echo 'checked="checked"'; ?> name="methodUsage" value="1" onclick="flagChanges()"/>
+                            <label for="checkmethodUsage1">입장과동시 처리</label>
+                        </div>
+                        <div class="form_item col-xs-2" style="margin-top: 8px;text-align: left;">
+                            <input type="radio" id="checkmethodUsage0" <?php if ($methodUsage == 0) echo 'checked="checked"'; ?> name="methodUsage" value="0" onclick="flagChanges()" /> 
+                            <label for="checkmethodUsage0">구매확정과동시 처리</label>
+                        </div>
+                        <div class="form_item col-xs-6 align-left"></div>
+                    </div>
+                </div>
+                <h3>티켓조건</h3>
+                <div class="row rmclass" data-action="viewperson" data-perid="14">
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_externalCouponUseType') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-6" style="margin-top: 8px;text-align: left;">
+                            <input type="checkbox" id="checkuseExternalTicketNumber" onclick="oncheckuseExternalTicketNumber(this)" 
+                                   <?php if ($useExternalTicketNumber == 1) echo 'checked="checked"'; ?> name="useExternalTicketNumber" onclick="flagChanges()"/> 
+                            <label for="checkuseExternalTicketNumber" ><?= $this->language('l_useExternalTicketNumber') ?></label>
+                            <input name="externalCouponUseType" id="externalCouponUseType" type="hidden" value="REAL_TIME" 
+                                   class="input full" placeholder="[REAL_TIME, NONE]" style="text-transform: uppercase;" onchange="flagChanges()"/>
+                                   <?php //$externalCouponUseType;  ?>	
+                        </div>
+                        <div class="form_item col-xs-4 align-left"></div>
+                    </div>
+                    <div class="form_group clearfix" id="divuseBarcode" style="<?php if ($useExternalTicketNumber == 0) echo 'display: none;'; ?>" >
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_useBarcode') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-1" style="margin-top: 8px;text-align: left;">
+                            <input type="radio" id="checkuseBarcode1" <?php if ($useBarcode == 1) echo 'checked="checked"'; ?> name="useBarcode" value="1" onclick="flagChanges()"/>
+                            <label for="checkuseBarcode1"><?= $this->language('l_yes') ?></label>
+                        </div>
+                        <div class="form_item col-xs-1" style="margin-top: 8px;text-align: left;">
+                            <input type="radio" id="checkuseBarcode0" <?php if ($useBarcode == 0) echo 'checked="checked"'; ?> name="useBarcode" value="0" onclick="flagChanges()"/>
+                            <label for="checkuseBarcode0"><?= $this->language('l_no') ?></label>
+                        </div>
+                        <div class="form_item col-xs-8 align-left"></div>
+                    </div>
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_ticketUsage') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-2">
+                            <select name="ticketUsage" class="select small full" onchange="onticketUsage(this)">
+                                <option value="E_TICKET" <?php if ($ticketUsage == "E_TICKET") echo 'selected="selected"'; ?>><?= $this->language('l_pub_E_TICKET') ?></option>
+                                <option value="PURCHASE" <?php if ($ticketUsage == "PURCHASE") echo 'selected="selected"'; ?>><?= $this->language('l_pub_PURCHASE') ?></option>
+                                <option value="BARCODE" <?php if ($ticketUsage == "BARCODE") echo 'selected="selected"'; ?>><?= $this->language('l_pub_BARCODE') ?></option>
+                                <option value="BARCODE_REAL_TIME" <?php if ($ticketUsage == "BARCODE_REAL_TIME") echo 'selected="selected"'; ?>><?= $this->language('l_pub_BARCODE_REAL_TIME') ?></option>
+                                <option value="DELIVERY" <?php if ($ticketUsage == "DELIVERY") echo 'selected="selected"'; ?>><?= $this->language('l_pub_DELIVERY') ?></option>
+                                <option value="ON_SITE" <?php if ($ticketUsage == "ON_SITE") echo 'selected="selected"'; ?>><?= $this->language('l_pub_ON_SITE') ?></option>
+                            </select>
+                        </div>
+                        <div class="form_item col-xs-8 align-left"></div>
+                    </div>
+
+                    <div class="form_group clearfix" id="divticketSendCriteriaType" style="<?php if ($ticketUsage == "PURCHASE" || $ticketUsage == "BARCODE_REAL_TIME" || $ticketUsage == "DELIVERY") echo 'display: none;'; ?>">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_ticketSendCriteriaType') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-2">
+                            <select name="ticketSendCriteriaType" class="select small full" onchange="flagChanges()">
+                                <option value="DAY" <?php if ($ticketSendCriteriaType == "DAY") echo 'selected="selected"'; ?>><?= $this->language('l_pub_DAY') ?></option>
+                                <option value="TIME" <?php if ($ticketSendCriteriaType == "TIME") echo 'selected="selected"'; ?>><?= $this->language('l_pub_TIME') ?></option>
+                                <option value="NONE" <?php if ($ticketSendCriteriaType == "NONE") echo 'selected="selected"'; ?>><?= $this->language('l_pub_NONE') ?></option>
+                            </select>
+                        </div>
+                        <div class="form_item col-xs-8 align-left"></div>
+                    </div>
+
+                    <div class="form_group clearfix" id="divticketSendSpentTime" style="<?php if ($ticketUsage == "PURCHASE" || $ticketUsage == "BARCODE_REAL_TIME" || $ticketUsage == "DELIVERY") echo 'display: none;'; ?>">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_ticketSendSpentTime') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-1">
+                            <input name="ticketSendSpentTime" id="ticketSendSpentTime"type="text" value="<?= ($ticketSendSpentTime ? $ticketSendSpentTime : 0) ?>" 
+                                   class="input full" onkeypress='validate(event)' onchange="flagChanges()"/>
+                        </div>
+                        <div class="form_item col-xs-10 align-left"></div>
+                    </div>
+
+                    <div class="form_group clearfix" id="divticketSendLimitTime" style="<?php if ($ticketUsage == "PURCHASE" || $ticketUsage == "BARCODE_REAL_TIME" || $ticketUsage == "DELIVERY") echo 'display: none;'; ?>">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_ticketSendLimitTime') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-1">
+                            <input name="ticketSendLimitTime" id="ticketSendLimitTime" type="text" value="<?= ($ticketSendLimitTime ? $ticketSendLimitTime : 0) ?>" 
+                                   class="input full" onkeypress='validate(event)' onchange="flagChanges()"/>
+                        </div>
+                        <div class="form_item col-xs-10 align-left"></div>
+                    </div>
+                </div>
+                <h3 id="error_move_locations">회사정보</h3>
+                <div class="row rmclass" data-action="viewperson" data-perid="14">
+
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_company') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-2">
+                            <input type="text" class="input full" name="acompany" onchange="flagChanges()"
+                                   value="<?= $company ?>" id="acompany" maxlength="50">
+                        </div>
+                        <div class="form_item col-xs-8 align-left"></div>
+                    </div>	
+                    <div class="form_group clearfix address">
+                        <div class="form_item col-xs-2">
+                            <h3><span class="spanred">*</span><?= $this->language('l_businessinfoaddress') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-9" style="text-align: left;">
+                            <input type="button" class="btn hover small" value="<?= $this->language('l_accaddressfind') ?>" onclick="goPopup();"> <br>
+                            <div class="note" id="noteAddr">
+                                <?php if ($roadFullAddr != "") { ?>
+                                    <p> <?= $this->language('l_accaddress') ?> : <?= $roadFullAddr ?></p>
+                                    <p> <?= $this->language('l_acccode') ?> : <?= $jibunAddr ?></p>
+                                    <p> <?= $this->language('l_acczipcode') ?> : <?= $zipNo ?></p>
+                                <?php } ?>
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-1 align-left">
+                            <input type="hidden" value="<?= $roadFullAddr ?>" name="aroadFullAddr" id="roadFullAddr"> 
+                            <input type="hidden" value="<?= $jibunAddr ?>" name="ajibunAddr" id="jibunAddr"> 
+                            <input type="hidden" value="<?= $zipNo ?>" name="azipNo" id="zipNo"> 
+                            <input type="hidden" value="<?= $siNm ?>" name="asiNm" id="siNm"> 
+                            <input type="hidden" value="<?= $sggNm ?>" name="asggNm" id="sggNm">
+                            <input type="hidden" value="<?= $emdNm ?>" name="aemdNm" id="emdNm"> 
+                            <input type="hidden" value="<?= $userid ?>" name="auserid" id="userid">
+                        </div>
+                    </div>
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_worktimeout') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-6">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty checkMaxLength" data-text="<?= $this->language('l_warnname') ?>" onchange="flagChanges()"
+                                       placeholder="<?= $this->language('l_example') . $this->language('l_workinweek') ?> 10:00~21:00, <?= $this->language('l_worksaturday') ?> 10:00~24:00" value="<?= $timework ?>" name="atimework" id="atimework" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-4">
+                            <p class="height1 align-left checkMaxLengthView"><?= strlen($timework) ?>/100 <?= $this->language('l_warnname') ?></p>
+                        </div>
+                    </div>
+
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_workdayoff') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-6">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty checkMaxLength" data-text="<?= $this->language('l_warnname') ?>"  onchange="flagChanges()"
+                                       placeholder="<?= $this->language('l_example') . $this->language('l_worktimeoff') ?>" value="<?= $dayoff ?>" name="adayoff" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-4">
+                            <p class="height1 align-left checkMaxLengthView"><?= strlen($dayoff) ?>/100 <?= $this->language('l_warnname') ?></p>
+                        </div>
+                    </div>
+                    <!-- Chek gan so dien thoai giong nhau -->
+                    <script>
+                        function as_tick1(source) {
+                            if (source.checked) {
+                                aphonetable = $("input[name='aphonetable']").val();
+                                $("#ahotline").val(aphonetable).trigger('change');
+                                $("#ahotline").attr('readonly', true);
+                            } else {
+                                $("#ahotline").removeAttr("readonly");
+                                $("#ahotline").val("").trigger('change');
+                            }
+                        }
+                        function as_tick2(source) {
+                            if (source.checked) {
+                                aphonetable = $("input[name='aphonetable']").val();
+                                $("#aphoneadvisory").val(aphonetable).trigger('change');
+                                $("#aphoneadvisory").attr('readonly', true);
+                            } else {
+                                $("#aphoneadvisory").removeAttr("readonly");
+                                $("#aphoneadvisory").val("").trigger('change');
+                            }
+                        }
+                        function as_tick3(source) {
+                            if (source.checked) {
+                                aphonetable = $("input[name='aphonetable']").val();
+                                $("#aphonecancel").val(aphonetable).trigger('change');
+                                $("#aphonecancel").attr('readonly', true);
+                            } else {
+                                $("#aphonecancel").removeAttr("readonly");
+                                $("#aphonecancel").val("").trigger('change');
+                            }
+                        }
+                        function changeAllPhone(source) {
+                            if ($("#checkhotline").is(':checked'))
+                                $("#ahotline").val(source).trigger('change');
+                            if ($("#checkphoneadvisory").is(':checked'))
+                                $("#aphoneadvisory").val(source).trigger('change');
+                            if ($("#checkphonecancel").is(':checked'))
+                                $("#aphonecancel").val(source).trigger('change');
+                        }
+
+                    </script>
+
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><span class="spanred">*</span><?= $this->language('l_landlinenumber') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-2">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty v-numericphone" placeholder="<?= $this->language('l_example') ?>02-000-0000" onchange="flagChanges()" 
+                                       value="<?= $phonetable ?>" onkeyup="changeAllPhone(this.value)" name="aphonetable" id="aphonetable" maxlength="11">
+                            </div>
+
+                        </div>
+                        <div class="form_item col-xs-2" style="width: 110px;height: 10px;"> 
+                            <div class="inputconfirm">
+
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-2">
+                            <h3><span class="spanred">*</span><?= $this->language('l_landlinenumber3') ?></h3>
+                        </div>	
+                        <div class="form_item col-xs-2">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty v-numericphone" placeholder="<?= $this->language('l_example') ?>02-000-0000" onchange="flagChanges()" 
+                                       value="<?= $hotline ?>" name="ahotline" id="ahotline" maxlength="11" >
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-2" style="padding-top: 10px;width: 110px;">
+                            <div class="inputconfirm">
+                                <input type="checkbox" value="" id="checkhotline" onclick="as_tick1(this);" <?php if ($phonetable == $hotline) echo 'checked="checked"'; ?> > 
+                                <label for="checkhotline">대표전화와 동일</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><span class="spanred">*</span><?= $this->language('l_landlinenumberservice') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-2">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty v-numericphone" placeholder="<?= $this->language('l_example') ?>02-000-0000" onchange="flagChanges()" 
+                                       value="<?= $phoneadvisory ?>" name="aphoneadvisory" id="aphoneadvisory" maxlength="11">
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-2" style="padding-top: 10px;width: 110px;">
+                            <div class="inputconfirm">
+                                <input type="checkbox" value="" id="checkphoneadvisory" onclick="as_tick2(this);" <?php if ($phonetable == $phoneadvisory) echo 'checked="checked"'; ?>> 
+                                <label for="checkphoneadvisory">대표전화와 동일</label>
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-2">
+                            <h3><span class="spanred">*</span><?= $this->language('l_landlinenumber2') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-2">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty v-numericphone" placeholder="<?= $this->language('l_example') ?>02-000-0000" onchange="flagChanges()" 
+                                       value="<?= $phonecancel ?>" name="aphonecancel" id="aphonecancel"maxlength="11" >
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-2" style="padding-top: 10px;width: 110px;">
+                            <div class="inputconfirm">
+                                <input type="checkbox" value="" id="checkphonecancel" onclick="as_tick3(this);" <?php if ($phonetable == $phonecancel) echo 'checked="checked"'; ?>> 
+                                <label for="checkphonecancel">대표전화와 동일</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_parking') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-3" style="margin-top: 8px;text-align: left;">
+                            <input type="radio" name="checkparking" value="0" <?php if ($parking == 0) echo 'checked="checked"'; ?>id="checkparking0" onclick="flagChanges()"> 
+                            <label for="checkparking0"><?= $this->language('l_parking1') ?></label>
+                            <input type="radio" name="checkparking" value="1" <?php if ($parking == 1) echo 'checked="checked"'; ?> id="checkparking1" onclick="flagChanges()"> 
+                            <label for="checkparking1"><?= $this->language('l_parking2') ?></label>
+                            <script type="text/javascript">
+                                $(document).ready(function () {
+                                    $('input[name="checkparking"]').on('click', function () {
+                                        var dis = ($(this).val() == '0') ? true : false;
+                                        $('input[name="aparking_fee"]').val('<?= $parking_fee ?>').find('+i').remove();
+                                        $('input[name="aparking_fee"]').get(0).disabled = dis;
+                                    });
+                                    //$('input#checkparking0').click();
+                                });
+                            </script>
+                        </div>
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_parking3') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-3">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty v-numericprice" onchange="flagChanges()" <?php if ($parking == 0) echo 'disabled="disabled"'; ?> 
+                                       value="<?= $parking_fee ?>" name="aparking_fee" maxlength="100"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_website') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-6">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty" placeholder="http://  주소를 입력하세요. "  onchange="flagChanges()"
+                                       value="<?= $website ?>" name="website" id="website" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-4"></div>
+                    </div>
+
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><?= $this->language('l_emailandfax') ?></h3>
+                        </div>
+                        <div class="form_item col-xs-3">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty" placeholder="<?= $this->language('l_example') ?>tibrage@mmm.mm" onchange="flagChanges()"
+                                       value="<?= $email ?>" name="email" id="email" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-3">
+                            <div class="inputconfirm">
+                                <input type="text" class="input full checkEmpty v-numericphone" placeholder="<?= $this->language('l_example') ?>010-0000-0000" onchange="flagChanges()"
+                                       value="<?= $fax ?>" name="fax" id="fax" maxlength="11">
+                            </div>
+                        </div>
+                        <div class="form_item col-xs-4"></div>
+                    </div>
+                </div>
+                <h3 id="error_move_introduction">상품소개 및 예약안내</h3>
+                <div class="row rmclass rownotificationitem" data-action="viewperson" data-period="14" style="padding: 10px">
+                    <!-- 상품소개 [Gioi thieu san pham] -->
+                    <div id="rownotificationitem">
+                        <?php
+                        if (count($list_informationuse) > 0) {
+                            ?>
+                            <div class="form_group _addform clearfix">
+                                <div>
+                                    <div class="form_item col-xs-2"><h3><span class="spanred">*</span>상품소개</h3></div>
+                                    <div class="form_item col-xs-8">
+                                        <input type="text" class="input full" name="titleInformationUse[]" value="<?= $list_informationuse[0]['title'] ?>">
+                                    </div>
+                                    <div class="form_item col-xs-2"></div>
+                                    <div style="clear: both"></div>	
+                                    <div class="form_item col-xs-8 col-xs-offset-2">
+                                        <input type="hidden" name="typeInformationUse[]" value="<?= $list_informationuse[0]['type'] ?>">
+                                        <input type="hidden" name="idInformationUse[]" value="<?= $list_informationuse[0]['id'] ?>">
+                                        <textarea required="required" name="contentInformationUse[]" id="<?= $list_informationuse[0]['type'] ?>" class="input full checkMaxLength" maxlength="2000" onchange="flagChanges()" 
+                                                  data-text="<?= $this->language('l_warnname') ?>" style="height: 100px" placeholder="내용을 입력하세요."><?= $list_informationuse[0]['content'] ?></textarea>
+                                    </div>
+                                    <div class="form_item col-xs-2 align-left">
+                                        <p class="checkMaxLengthView"><?= strlen($list_informationuse[0]['content']) ?>/2000 <?= $this->language('l_warnname') ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form_group _addform clearfix">
+                                <div>
+                                    <div class="form_item col-xs-2"><h3><span class="spanred">*</span>예약안내</h3></div>
+                                    <div class="form_item col-xs-8">
+                                        <input type="text" class="input full" name="titleInformationUse[]" value="<?= $list_informationuse[1]['title'] ?>">
+                                    </div>
+                                    <div class="form_item col-xs-2"></div>
+                                    <div style="clear: both"></div>	
+                                    <div class="form_item col-xs-8 col-xs-offset-2">
+                                        <input type="hidden" name="typeInformationUse[]" value="<?= $list_informationuse[1]['type'] ?>">
+                                        <input type="hidden" name="idInformationUse[]" value="<?= $list_informationuse[1]['id'] ?>">
+                                        <textarea required="required" name="contentInformationUse[]" id="<?= $list_informationuse[1]['type'] ?>" class="input full checkMaxLength" maxlength="2000" onchange="flagChanges()" 
+                                                  data-text="<?= $this->language('l_warnname') ?>" style="height: 100px" placeholder="내용을 입력하세요."><?= $list_informationuse[1]['content'] ?></textarea>
+                                    </div>
+                                    <div class="form_item col-xs-2 align-left">
+                                        <p class="checkMaxLengthView"><?= strlen($list_informationuse[1]['content']) ?>/2000 <?= $this->language('l_warnname') ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php } else {
+                            ?>
+                            <div class="form_group _addform clearfix">
+                                <div>
+                                    <div class="form_item col-xs-2"><h3>상품소개 </h3></div>
+                                    <div class="form_item col-xs-8">
+                                        <input type="text" class="input full" name="titleInformationUse[]" value="">
+                                    </div>
+                                    <div class="form_item col-xs-2"></div>
+                                    <div style="clear: both"></div>
+
+                                    <div class="form_item col-xs-8 col-xs-offset-2">
+                                        <input type="hidden" name="typeInformationUse[]" value="introduction">	
+                                        <input type="hidden" name="idInformationUse[]" value="0">
+                                        <textarea required="required" name="contentInformationUse[]"  id="introduction" class="input full checkMaxLength" maxlength="2000" onchange="flagChanges()" data-text="<?= $this->language('l_warnname') ?>" style="height: 100px" placeholder="내용을 입력하세요."></textarea>
+                                    </div>
+                                    <div class="form_item col-xs-2 align-left">
+                                        <p class="checkMaxLengthView">0/2000 <?= $this->language('l_warnname') ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form_group _addform clearfix">
+                                <div>
+                                    <div class="form_item col-xs-2"><h3>예약안내</h3></div>	
+                                    <div class="form_item col-xs-8">
+                                        <input type="text" class="input full" name="titleInformationUse[]" value="">
+                                    </div>
+                                    <div class="form_item col-xs-2"></div>
+                                    <div style="clear: both"></div>
+                                    <div class="form_item col-xs-8 col-xs-offset-2">
+                                        <input type="hidden" class="input full" name="typeInformationUse[]" value="csContactInfo">
+                                        <input type="hidden" name="idInformationUse[]" value="0">
+                                        <textarea required="required" name="contentInformationUse[]" id="csContactInfo"  class="input full checkMaxLength" maxlength="2000" onchange="flagChanges()" data-text="<?= $this->language('l_warnname') ?>" style="height: 100px" placeholder="내용을 입력하세요."></textarea>
+                                    </div>
+                                    <div class="form_item col-xs-2 align-left">
+                                        <p class="checkMaxLengthView">0/2000 <?= $this->language('l_warnname') ?></p>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>	
+
+
+
+                <script type="text/javascript">
+                    $(document).ready(function () {
+                        // Thêm form mới
+                        var noticeArray = [
+                            ["notice", 0],
+                            ["benefits", 0],
+                            ["inclusionNotice", 0],
+                            ["exclusionNotice", 0],
+                            ["trafficInfo", 0],
+                            ["publicTransportInfo", 0]
+                        ];
+                        //alert(noticeArray[0][0]);
+                        $('input.btn.addnewform1').on('click', function () {
+                            flagChanges();
+                            var element = $(this).closest('div.rownotificationitem');
+                            var length = $(element).find('._addform').length;
+                            $.each($(element).find('._addform select'), function (index, value) {
+                                var valSelect = $(this).val();
+                                for (var i = 0; i < 6; i++) {
+                                    if (noticeArray[i][0] == $(this).val())
+                                        noticeArray[i][1] = 1;
+                                }
+                                $.each($(this).find('option'), function (index, value) {
+                                    if ($(this).val() == valSelect) {
+                                        $(this).attr('disabled', false);
+                                    } else {
+                                        $(this).attr('disabled', true);
+                                    }
+
+                                });
+
+                            });
+                            if (length == 5) {
+                                $('input.btn.addnewform1').css("display", "none");
+                            }
+                            console.log(noticeArray);
+                            if (length < 6) {
+                                length = length + 1;
+                                var newform = $(element).find('._addform:first-child').clone();
+                                var title = $(element).find('h3').attr('data-title') + length;
+                                var co = 0;
+                                $.each($(newform).find('select option'), function (index, value) {
+                                    $(this).attr('disabled', false);
+                                    for (var i = 0; i < 6; i++) {
+                                        if (noticeArray[i][0] == $(this).val() && noticeArray[i][1] == 1) {
+                                            $(this).attr('disabled', true);
+                                            $(this).attr('selected', false);
+                                        }
+                                    }
+                                    if (co == 0 && $(this).attr('disabled') != 'disabled') {
+                                        $(this).attr('selected', true);
+                                        co = 1
+                                    }
+                                });
+                                $(newform).find('h3').text(title);
+                                $(newform).find('input[type="hidden"]').val('0');
+                                $(newform).find('input[type="text"], textarea').val('');
+                                var checkname = $(newform).find('input[type="checkbox"]').attr('data-name');
+                                $(newform).find('input[type="checkbox"]').prop("checked", true);
+                                $(newform).find('input[type="checkbox"]').attr('name', checkname + length);
+                                $(element).find('#rownotificationitem').append(newform);
+                                $.fn_checkMaxLength($(newform).find('.checkMaxLength'));
+
+                            }
+                        });
+                    })
+                </script>
+                <h3>이용안내</h3>
+                <div class="row rmclass rownotificationitem"
+                     data-action="viewperson" data-perid="14">
+                    <div id="rownotificationitem">
+                        <?php
+                        if (count($list_notice) > 0) {
+                            $i = 0;
+                            foreach ($list_notice as $value => $giatri) {
+                                $i++;
+                                ?>
+                                <div class="form_group _addform clearfix">
+                                    <div class="form_item col-xs-2">
+                                        <h3 class="height2" data-title="공지사항">공지사항 <?= $i ?></h3>
+                                    </div>
+                                    <div class="form_item col-xs-8">
+                                        <div class="lrow clearfix">
+                                            <div class="form_item col-xs-4">
+                                                <select name="typeNotice[]" class="select full" onchange="flagChanges()">
+                                                    <option value="notice" <?php if ($giatri['type'] == "notice") echo 'selected="selected"';
+                        else echo 'disabled="disabled"'; ?> >이용안내 및 유의사항</option>
+                                                    <option value="benefits"  <?php if ($giatri['type'] == "usageNotice") echo 'selected="selected"';
+                        else echo 'disabled="disabled"'; ?>>혜택.보너스</option> 
+                                                    <option value="inclusionNotice" <?php if ($giatri['type'] == "inclusionNotice") echo 'selected="selected"';
+                        else echo 'disabled="disabled"'; ?>>포함사항 기재</option>
+                                                    <option value="exclusionNotice" <?php if ($giatri['type'] == "exclusionNotice") echo 'selected="selected"';
+                        else echo 'disabled="disabled"'; ?>>불포함 사항 기재</option>
+                                                    <option value="trafficInfo" <?php if ($giatri['type'] == "trafficInfo") echo 'selected="selected"';
+                        else echo 'disabled="disabled"'; ?>>찾아가는길</option> 
+                                                    <option value="publicTransportInfo" <?php if ($giatri['type'] == "publicTransportInfo") echo 'selected="selected"';
+                        else echo 'disabled="disabled"'; ?>>대중교통정보</option> 
+                                                </select>
+                                            </div>
+                                            <div class="form_item col-xs-8">
+                                                <input type="hidden" name="idNotice[]" value="<?= $giatri['id'] ?>"> 
+                                                <input type="text" onchange="flagChanges()" class="input full" name="titleNotice[]" value="<?= $giatri['title'] ?>" placeholder="타이틀을 입력하세요.">
+                                            </div>
+                                        </div>
+                                        <div class="lrow clearfix">
+                                            <div class="form_item">
+                                                <textarea name="contentNotice[]" class="input full checkMaxLength" maxlength="2000" data-text="<?= $this->language('l_warnname') ?>"  onchange="flagChanges()"
+                                                          style="height: 100px" placeholder="내용을 입력하세요."><?= $giatri['content'] ?></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form_item col-xs-2 align-left">
+                                        <p class="checkMaxLengthView"><?= strlen($giatri['content']) ?>/2000 <?= $this->language('l_warnname') ?></p>
+                                    </div>
+                                </div>
+    <?php }
+}else {
+    ?>
+
+                            <div class="form_group _addform clearfix">
+                                <div class="form_item col-xs-2">
+                                    <h3 class="height2" data-title="공지사항">공지사항 1</h3>
+                                </div>
+                                <div class="form_item col-xs-8">
+                                    <div class="lrow clearfix">
+                                        <div class="form_item col-xs-4">
+                                            <select name="typeNotice[]" class="select full" onchange="flagChanges()">
+                                                <option value="notice">이용안내 및 유의사항</option>
+                                                <option value="benefits">혜택.보너스</option> 
+                                                <option value="inclusionNotice">포함사항 기재</option>
+                                                <option value="exclusionNotice">불포함 사항 기재</option>
+                                                <option value="trafficInfo">찾아가는길</option> 
+                                                <option value="publicTransportInfo">대중교통정보</option> 
+                                            </select>
+                                        </div>
+                                        <div class="form_item col-xs-8">
+                                            <input type="hidden" name="idNotice[]" value="0"> 
+                                            <input type="text" class="input full" name="titleNotice[]" value="" placeholder="타이틀을 입력하세요." onchange="flagChanges()">
+                                        </div>
+                                    </div>
+                                    <div class="lrow clearfix">
+                                        <div class="form_item">
+                                            <textarea name="contentNotice[]" class="input full checkMaxLength" maxlength="2000" data-text="<?= $this->language('l_warnname') ?>" onchange="flagChanges()"
+                                                      style="height: 100px" placeholder="내용을 입력하세요."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form_item col-xs-2 align-left">
+                                    <p class="checkMaxLengthView">0/2000 <?= $this->language('l_warnname') ?></p>
+                                </div>
+                            </div>
+
+<?php } ?>
+
+                    </div>
+                    <div class="form_group">
+                        <div class="form_item">
+                            <input type="button" class="btn hover small addnewform1" name=""	value="+추가하기">
+                        </div>
+                    </div>
+                </div>
+
+
+                <h3>추가정보</h3>
+                <div class="row rmclass rownotificationitem "
+                     data-action="viewperson" data-perid="14">
+                    <div id="rownotificationitem">
+<?php
+if (count($list_informationaddition) > 0) {
+    $i = 0;
+    foreach ($list_informationaddition as $value => $giatri) {
+        $i++;
+        ?>
+                                <div class="form_group _addform clearfix">
+                                    <div class="form_item col-xs-2">
+                                        <h3 class="height2" data-title="추가정보">추가정보 <?= $i ?></h3>
+                                    </div>
+                                    <div class="form_item col-xs-8">
+                                        <div class="lrow">
+                                            <div class="form_item align-left">
+                                                <ul class="clearfix">
+                                                    <li>
+                                                        <label><input type="checkbox" name="type1InformationAddition<?= $i ?>" data-name="type1InformationAddition" onclick="flagChanges()"
+                                                                      value="TEXT" <?php if ($giatri['type1'] == 1) echo 'checked="checked"'; ?> >텍스트</label>
+                                                    </li>
+                                                    <li>
+                                                        <label><input type="checkbox" name="type2InformationAddition<?= $i ?>" data-name="type2InformationAddition" 
+                                                                      value="VIDEO" <?php if ($giatri['type2'] == 1) echo 'checked="checked"'; ?> onclick="flagChanges()">동영상</label>
+                                                    </li>
+                                                    <li>
+                                                        <label><input type="checkbox" name="type3InformationAddition<?= $i ?>" data-name="type3InformationAddition" 
+                                                                      value="ADDRESS" <?php if ($giatri['type3'] == 1) echo 'checked="checked"'; ?>" onclick="flagChanges()">주소입력</label>
+                                                    </li>
+                                                    <li>
+                                                        <label><input type="checkbox" name="type4InformationAddition<?= $i ?>" data-name="type4InformationAddition" 
+                                                                      value="IMAGE" <?php if ($giatri['type4'] == 1) echo 'checked="checked"'; ?> onclick="flagChanges()"> 이미지</label>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="lrow">
+                                            <input type="hidden" name="idInformationAddition[]" value="<?= $giatri['id'] ?>">	
+                                            <input type="text" class="input full" name="titleInformationAddition[]" value="<?= $giatri['title'] ?>" onchange="flagChanges()" placeholder="타이틀을 입력하세요.">
+                                        </div>
+                                        <div class="lrow">
+                                            <textarea name="contentInformationAddition[]" class="input full checkMaxLength" maxlength="300" data-text="<?= $this->language('l_warnname') ?>" onchange="flagChanges()" placeholder="내용을 입력하세요."><?= $giatri['content'] ?></textarea>
+                                        </div>
+                                        <div class="lrow">
+                                            <input type="text" class="input full" name="link1InformationAddition[]" value="<?= $giatri['link1'] ?>" onchange="flagChanges()"placeholder="http://  동영상 주소를 입력하세요. ">
+                                        </div>
+                                        <div class="lrow">
+                                            <input type="text" class="input full" name="link2InformationAddition[]" value="<?= $giatri['link2'] ?>" onchange="flagChanges()"placeholder="http://  주소를 입력하세요.">
+                                        </div>
+                                        <!-- <div class="col-xs-12 lrow align-left">
+                                                <input type="button" class="btn hover small" name=""
+                                                        onclick="goPopup();" value="이미지등록">
+                                        </div> -->
+                                    </div>
+                                    <div class="form_item col-xs-2 align-left">
+                                        <p class="checkMaxLengthView" style="margin-top: 100px;">0/300 <?= $this->language('l_warnname') ?></p>
+                                    </div>
+                                </div>
+    <?php }
+}else {
+    ?>
+                            <div class="form_group _addform clearfix">
+                                <div class="form_item col-xs-2">
+                                    <h3 class="height2" data-title="추가정보">추가정보 1</h3>
+                                </div>
+                                <div class="form_item col-xs-8">
+                                    <div class="lrow">
+                                        <div class="form_item align-left">
+                                            <ul class="clearfix">
+                                                <li>
+                                                    <label><input type="checkbox" name="type1InformationAddition1" data-name="type1InformationAddition" value="TEXT" checked="checked" onclick="flagChanges()">텍스트</label>
+                                                </li>
+                                                <li>
+                                                    <label><input type="checkbox" name="type2InformationAddition1" data-name="type2InformationAddition" value="VIDEO" checked="checked" onclick="flagChanges()">동영상</label>
+                                                </li>
+                                                <li>
+                                                    <label><input type="checkbox" name="type3InformationAddition1" data-name="type3InformationAddition" value="ADDRESS" checked="checked" onclick="flagChanges()">주소입력</label>
+                                                </li>
+                                                <li>
+                                                    <label><input type="checkbox" name="type4InformationAddition1" data-name="type4InformationAddition" value="IMAGE" checked="checked" onclick="flagChanges()">이미지</label>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="lrow">
+                                        <input type="hidden" name="idInformationAddition[]" value="0">	
+                                        <input type="text" class="input full" name="titleInformationAddition[]" value="" placeholder="타이틀을 입력하세요." onchange="flagChanges()">
+                                    </div>
+                                    <div class="lrow">
+                                        <textarea name="contentInformationAddition[]" class="input full checkMaxLength"maxlength="300" data-text="<?= $this->language('l_warnname') ?>" onchange="flagChanges()" placeholder="내용을 입력하세요."></textarea>
+                                    </div>
+                                    <div class="lrow">
+                                        <input type="text" class="input full" name="link1InformationAddition[]" value="" onchange="flagChanges()" placeholder="http://  동영상 주소를 입력하세요. ">
+                                    </div>
+                                    <div class="lrow">
+                                        <input type="text" class="input full" name="link2InformationAddition[]" value="" onchange="flagChanges()" placeholder="http://  주소를 입력하세요.">
+                                    </div>
+                                    <!-- <div class="col-xs-12 lrow align-left">
+                                            <input type="button" class="btn hover small" name=""
+                                                    onclick="goPopup();" value="이미지등록">
+                                    </div> -->
+                                </div>
+                                <div class="form_item col-xs-2 align-left">
+                                    <p class="checkMaxLengthView" style="margin-top: 100px;">0/300 <?= $this->language('l_warnname') ?></p>
+                                </div>
+                            </div>
+
+<?php } ?>
+                    </div>
+                    <div class="form_group">
+                        <div class="form_item">
+                            <input type="button" class="btn hover small addnewform" name=""
+                                   value="+추가하기">
+                        </div>
+                    </div>
+                </div>
+
+<!-- <h3 class="hiden"><?= $this->language('l_notification') ?></h3>
+<div class="row rmclass hiden" data-action="viewperson" data-perid="14">
+        <div class="form_group clearfix">
+                <div class="form_item col-xs-2">
+                        <h3><?= $this->language('l_introduction') ?></h3>
+                </div>
+                <div class="form_item col-xs-8">
+                        <textarea class="checkMaxLength" name="introduction" id="introduction" maxlength="2000" 
+                        data-text="<?= $this->language('l_warnname') ?>" placeholder="0/2000 <?= $this->language('l_warnname') ?>" 
+                        style="width: 100%; height: 80px; line-height: 24px; resize: none;"><?= $introduction ?></textarea>
+
+                </div>
+                <div class="form_item col-xs-2 align-left">
+                        <p class="height2 checkMaxLengthView"><?= strlen($introduction) ?>/2000 <?= $this->language('l_warnname') ?></p>
+                </div>
+        </div>
+
+        <div class="form_group clearfix">
+                <div class="form_item col-xs-2">
+                        <h3><?= $this->language('l_benefits') ?></h3>
+                </div>
+                <div class="form_item col-xs-8">
+                        <textarea class="checkMaxLength" name="benefits" id="benefits"
+                                maxlength="2000" data-text="<?= $this->language('l_warnname') ?>"
+                                placeholder="0/2000 <?= $this->language('l_warnname') ?>"
+                                style="width: 100%; height: 80px; line-height: 24px; resize: none;"><?= $benefits ?></textarea>
+
+                </div>
+                <div class="form_item col-xs-2 align-left">
+                        <p class="height2 checkMaxLengthView"><?= strlen($benefits) ?>/2000 <?= $this->language('l_warnname') ?></p>
+                </div>
+        </div>
+
+        <div class="form_group clearfix">
+                <div class="form_item col-xs-2">
+                        <h3><?= $this->language('l_inclusionNotice') ?></h3>
+                </div>
+                <div class="form_item col-xs-8">
+                        <textarea class="checkMaxLength" name="inclusionNotice" id="inclusionNotice" maxlength="2000" data-text="<?= $this->language('l_warnname') ?>"
+                                placeholder="0/2000 <?= $this->language('l_warnname') ?>" style="width: 100%; height: 80px; line-height: 24px; resize: none;"><?= $exclusionNotice ?></textarea>
+
+                </div>
+                <div class="form_item col-xs-2 align-left">
+                        <p class="height2 checkMaxLengthView"><?= strlen($exclusionNotice) ?>/2000 <?= $this->language('l_warnname') ?></p>
+                </div>
+        </div>
+
+        <div class="form_group clearfix">
+                <div class="form_item col-xs-2">
+                        <h3><?= $this->language('l_exclusionNotice') ?></h3>
+                </div>
+                <div class="form_item col-xs-8">
+                        <textarea class="checkMaxLength" name="exclusionNotice"
+                                id="exclusionNotice" maxlength="2000"
+                                data-text="<?= $this->language('l_warnname') ?>"
+                                placeholder="0/2000 <?= $this->language('l_warnname') ?>"
+                                style="width: 100%; height: 80px; line-height: 24px; resize: none;"><?= $exclusionNotice ?></textarea>
+
+                </div>
+                <div class="form_item col-xs-2 align-left">
+                        <p class="height2 checkMaxLengthView"><?= strlen($exclusionNotice) ?>/2000 <?= $this->language('l_warnname') ?></p>
+                </div>
+        </div>
+
+        <div class="form_group clearfix">
+                <div class="form_item col-xs-2">
+                        <h3><?= $this->language('l_additionalInfoPrompt') ?></h3>
+                </div>
+                <div class="form_item col-xs-8">
+                        <textarea class="checkMaxLength" name="additionalInfoPrompt"
+                                id="additionalInfoPrompt" maxlength="2000"
+                                data-text="<?= $this->language('l_warnname') ?>"
+                                placeholder="0/2000 <?= $this->language('l_warnname') ?>"
+                                style="width: 100%; height: 80px; line-height: 24px; resize: none;"><?= $additionalInfoPrompt ?></textarea>
+
+                </div>
+                <div class="form_item col-xs-2 align-left">
+                        <p class="height2 checkMaxLengthView"><?= strlen($additionalInfoPrompt) ?>/2000 <?= $this->language('l_warnname') ?></p>
+                </div>
+        </div>
+</div> -->
+
+
+
+
+                <div class="table_content">
+                    <table class="table" style="float: right;">
+                        <tr>
+                            <td colspan="8">
+                                <input type="hidden" name="step" id="step" value="5">
+                                <div class="btnupload">										
+                                    <button type="button" style="width: 100px; float: right;" class="btn hover "  id="complete" data-step="6">등록완료</button>
+                                    <button type="button" style="width: 100px; float: right;margin-right: 5px" class="btn hover "  id="saveTemp" data-step="5"><?= $this->language('l_savedraft') ?></button>
+                                    <button type="button" style="width: 100px; float: right;margin-right: 5px" class="btn hover "  id="backlink" data-step="4"><?= $this->language('l_back') ?></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+
+</div>

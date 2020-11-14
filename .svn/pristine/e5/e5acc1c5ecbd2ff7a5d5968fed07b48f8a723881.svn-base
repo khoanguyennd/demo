@@ -1,0 +1,147 @@
+<?php 
+
+class ChannelModel extends Model{
+	
+	// Phương thức khới tạo
+	public function __construct(){
+		parent::__construct();
+	}
+	
+	// Phương thức lấy ra tổng số channel
+	public function countChannelType(){
+	    $sql  = 'SELECT COUNT(usr.idx) as record FROM '.$this->setTable('user').' as usr,'.$this->setTable('channels').' as chn ';
+	    $sql .= 'WHERE usr.idx=chn.userid';
+	    $this->setQuery($sql);
+	    return $this->read();
+	}
+	
+	// Phương thức lấy ra channel với tham số truyền vào là id
+	public function loadChannel($id){
+	    $items = $this->loadRecord('channels', ['channel_cid'=>mb_strtoupper($id)]);
+	    if(!$items){$items = false;}
+	    return $items;
+	}
+	
+	// Phương thức lấy ra channeltypes
+	public function loadChannelTypes($cid){
+	    return $this->loadRecords('channeltypes', ['channelid'=>$cid]);
+	}
+
+	// Phương thức hiển thị danh sách channel type
+	public function loadChannelType(){
+	    $sql  = 'SELECT usr.ID, chn.channel_id, chn.channel_cid, chn.channel_name, chn.channel_type,chn.channel_created ';
+	    $sql .= 'FROM '.$this->setTable('user').' as usr,'.$this->setTable('channels').' as chn ';
+	    $sql .= 'WHERE usr.idx=chn.userid';
+	    $this->setQuery($sql);
+	    return $this->readAll();
+	}
+	
+	// Phương thức insert Channel
+	public function insertChannel($data){
+	    return $this->insertRecord('channels', $data);
+	}
+	
+	// Phương thức import channel types
+	public function importTypeExcel($data, $cid){
+	    $result = ['cols'=>'', 'vals'=>' VALUES '];
+	    foreach ($data as $key => $value){
+	        $items = $this->createData(Structure::channeltypes([
+	            'type_depth1'=>$value['type_depth1'],	            
+	            'type_depth2'=>$value['type_depth2'],
+	            'type_depth3'=>$value['type_depth3'],
+	            'type_depth4'=>$value['type_depth4'],	            
+	            'type_linkform'=>$value['type_linkform'],
+	            'type_apivalue'=>$value['type_apivalue'],	            
+	            'type_rate'=>($value['type_rate'] * 100),
+	            'type_status'=>(strtoupper($value['type_status'])=='Y'?1:0),
+	            'channelid'=>$cid,
+	        ]));
+            if($items){
+                $result['cols'] = '('.$items['cols'].')';
+                $result['vals'] .= '('.$items['vals'].'),';
+            }
+	    }
+	    $sql = 'INSERT INTO `'.$this->setTable('channeltypes').'` '.substr(implode('', $result), 0, -1) . ';';
+	    $this->setQuery($sql);
+	    if($this->execute()){
+	        return true;
+	    }
+	    return false;
+	}
+
+	// Phương thức insert Channel type
+	public function insertChannelType($data){
+	    return $this->insertRecord('channeltypes', $data);
+	}
+	
+    // Phương thức lấy ra danh sách menu product types
+	public function loadProductTypes($mode = false){
+        $sql  = 'SELECT * FROM '.$this->setTable('producttypes');
+        if($mode == true){
+            $sql .= ' WHERE type_status=1 AND type_id !=0';
+        }else{
+            $sql .= ' WHERE type_id !=0';
+        }
+        $this->setQuery($sql);
+        return $this->readAll();
+    }
+
+    // Phương thức lấy ra danh sách menu product types
+    public function loadProductTypesByLevel(){
+        $sql  = 'SELECT p1.type_value v1,p1.type_code c1,p2.type_value v2,p2.type_code c2,p3.type_value v3,p3.type_code c3,p4.type_value v4,p4.type_code c4
+                 FROM ' . $this->setTable('producttypes') . ' p1,' . $this->setTable('producttypes')  . ' p2, ' . $this->setTable('producttypes') . ' p3, ' . $this->setTable('producttypes') . ' p4
+                 WHERE p4.type_parentid = p3.type_id AND p3.type_parentid=p2.type_id AND p2.type_parentid=p1.type_id
+        ';
+
+        $this->setQuery($sql);
+        return $this->readAll();
+    }
+
+    // Phương thức lấy ra danh sách menu channel types
+    public function listChannelTypes($channel_id){
+        $sql  = 'SELECT ct.type_depth1, ct.type_depth2, ct.type_depth3, ct.type_depth4, ct.type_linkform, ct.type_apivalue2, ct.type_rate 
+                 FROM ' . $this->setTable('channeltypes') .  ' ct 
+                 WHERE ct.channelid = ' . (int)$channel_id
+        ;
+
+        $this->setQuery($sql);
+        return $this->readAll();
+    }
+
+    // Phương thức lấy ra danh sách menu match types
+    public function listMatchTypes($channel_id){
+        $sql  = 'SELECT p1.type_value v1,p1.type_code c1,p2.type_value v2,p2.type_code c2,p3.type_value v3,p3.type_code c3,p4.type_value v4,p4.type_code c4 , mc.type_depth1,
+                        mc.type_depth2, mc.type_depth3, mc.type_depth4, mc.type_linkform, mc.type_rate, mc.type_apivalue2
+                 FROM ' . $this->setTable('producttypes') . ' p1, ' . $this->setTable('producttypes') . ' p2, ' . $this->setTable('producttypes') . ' p3, ' . $this->setTable('producttypes') .
+            '                p4 LEFT JOIN ( SELECT mt.typeId, ct.*
+                                            FROM ' . $this->setTable('matchtype') . ' mt, ' . $this->setTable('channeltypes') .  '  ct, ' . $this->setTable('channels')  . '  c
+                                            WHERE mt.channeltypeId = ct.type_id AND ct.channelid =c.channel_id AND mt.channelId= ' . (int)$channel_id . ' ) mc
+                                                    ON p4.type_id=mc.typeId
+                 WHERE p4.type_parentid = p3.type_id AND p3.type_parentid=p2.type_id AND p2.type_parentid=p1.type_id;
+        ';
+
+        $this->setQuery($sql);
+        return $this->readAll();
+    }
+    
+    // Phương thức cập nhật product types
+    public function updateProductType($data, $id){
+        return $this->updateRecord('producttypes', $data, ['type_id'=>$id]);
+    }
+
+    // Phương thức thêm một channel types
+    public function insertProductType($data){
+        return $this->insertRecord('producttypes', $data);
+    }
+    
+    // Phương thức xóa phân loại product type
+    public function deleteProductType($strid){
+        if($strid){
+            $strid= $this->convertId(explode(',', $strid));
+            return $this->deleteRecord('producttypes', ['where'=>'type_id IN ('.$strid.')']);
+        }
+    }
+
+}
+
+?>

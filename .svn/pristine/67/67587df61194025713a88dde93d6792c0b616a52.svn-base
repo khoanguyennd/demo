@@ -1,0 +1,121 @@
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+
+class GmarketController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    public function register_stream_wrapper($projectId)
+    {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+    function callAPI($method, $url, $data) {
+        
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        //echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+       
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'Content-Type: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
+        ));
+     
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            //die("Connection Failure");
+        }
+        echo $result;
+        curl_close($curl);
+        return json_decode($result,true);
+    }
+    // Phương thức index
+    public function indexAction() {
+        
+        $data =[    'Password' => 'yakeun87!@',
+                    'Type' => 'S',
+                    'ReturnUrl' => 'http://www.esmplus.com/Home/Home',
+                    'SiteType' => 'GMKT',
+                    'Id' => 'ysjlabs',
+                    'RememberMe' => 'true',
+                    'RememberMe' => 'false'  ];
+//         $obj = $this->callAPI("POST", "https://www.esmplus.com/SignIn/Authenticate", $data);
+//         echo "<pre>";
+//         print_r($obj);
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        
+        $crawler = $client->request('GET', 'https://www.esmplus.com/Member/SignIn/LogOn?ReturnUrl=%2fHome%2fHome');
+        
+        $crawler = $client->request('POST', 'https://www.esmplus.com/SignIn/Authenticate',$data);
+        
+        $crawler = $client->request('GET', 'https://www.esmplus.com/Member/SignIn/LoginThrough?Nexturl=%2FHome%2FHome');
+        
+        
+        $data = [ 
+            'page' => 1,
+            'limit' => 20,
+            'siteGbn' => 0,
+            'searchAccount' => 459268,
+            'searchDateType' => 'TRD',
+            'searchSDT' => '2020-06-30',
+            'searchEDT' => '2020-07-30',
+            'searchKey' => 'ON',
+            'searchKeyword' => '',
+            'searchStatus' => 5010,
+            'searchAllYn' => 'N',
+            'SortFeild' => 'TransDate',
+            'SortType' => 'Desc',
+            'start' => 0,
+            'searchDistrType' => 'AL',
+            'searchGlobalShopType' => '',
+            'searchOverseaDeliveryYn' => ''
+            
+        ];
+        //$this->callAPI("POST", "https://www.esmplus.com/Escrow/Delivery/BuyDecisionSearch", $data);
+        
+         $crawler = $client->request('POST', 'https://www.esmplus.com/Escrow/Delivery/BuyDecisionSearch',$data);
+         
+         echo '<pre>';
+         print_r(json_decode( $client->getResponse()->getContent(),true));
+         
+         
+//         echo '<pre>';
+//         print_r($crawler->outerHtml());
+//         echo '</pre>';
+        
+        
+        
+       // 
+
+        
+    }
+}
+
+?>

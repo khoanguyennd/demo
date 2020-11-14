@@ -1,0 +1,445 @@
+<?php
+
+class Ticket5Controller extends Controller
+{
+    // Phương thức khởi tạo
+    public function __construct($params)
+    {
+        parent::__construct($params);
+        $this->isLogin();
+        $account = $_SESSION['accountshopping'];
+        if($account['temp']==1)
+            Url::header($this->route('account')."#tab1");
+    }
+    // Phương thức mã hóa password
+    public function md5Password($password)
+    {
+        return md5($password);
+        // return md5(md5('*)2^).-+(479&##' . $password . '#8$#@%^457'));
+    }
+    public function editticket5Action()
+    {
+        $this->editticket5Ajax();
+        $sellerProductId = $this->_params['sellerProductId'];
+        // sellerProduct
+        $sellerProduct = $this->_model->loadSellerproductId($sellerProductId);
+        // Kiểm tra $sellerProductId tồn tại
+        if (!$sellerProduct) {
+            $this->pageError();
+            return false;
+        }
+        $this->_view->setData('sellerProduct', $sellerProduct);
+        // publication
+        $this->_view->setData('publication', $this->_model->loadPublicationSellerProductId($sellerProductId));
+        // contacts
+// 		$this->_view->setData('contacts', $this->_model->loadContactSellerProductId($sellerProductId));	
+        // User
+// 		$this->_view->setData('user', $this->_model->loadUser($sellerProduct['supplier']));       
+        // userinfo     
+        $this->_view->setData('userinfo', $this->_model->loadUserinfo($sellerProduct['supplier']));
+        //contacts1
+        $this->_view->setData('contacts1Info', $this->_model->loadContacts1($sellerProductId));
+        //$this->_view->setData('contacts1Info', $this->_model->loadRecords('contacts1',['sellerProductId'=>$sellerProductId]));
+
+        $list_notice = $this->_model->loadRecords('notice', ['sellerProductId' => $sellerProductId]);
+        $this->_view->setData('list_notice', $list_notice);
+        $this->_view->setData('list_informationuse',$this->_model->loadRecords('informationuse', ['sellerProductId' => $sellerProductId]));
+        $this->_view->setData('list_informationaddition',$this->_model->loadRecords('informationaddition', ['sellerProductId' => $sellerProductId]));
+        // Render
+        $this->_view->render('editticket5');
+    }
+    public function completeAjax(){
+        $sellerProductId = $this->_params['sellerProductId'];
+        $data = [ 'statusedit' => 1, 'status' => 2  ];
+        $this->_model->updateRecord('salechannel', $data, ['where' => "sellerProductId='$sellerProductId'"]);
+    }
+    // Phương thức thực hiện
+    public function checkCompleteAjax()
+    {
+        $result = ['flag' => true];
+        $sellerProductId = $this->_params['sellerProductId'];
+        $sellerProduct= $this->_model->loadRecord('sellerproduct', [ 'sellerProductId' => $sellerProductId]);
+        //ticket1
+        $str="";
+        $sql = "SELECT c.channel_id,c.channel_name,ct.channelid,ct.type_id,ct.type_depth1,ct.type_depth2,ct.type_depth3,ct.type_depth4,ct.type_rate
+                FROM tb_channels c ,tb_channeltypes ct , tb_salechannel sc
+                WHERE c.channel_id =ct.channelid AND ct.type_id=sc.channelTypeId AND sc.isDelete=0
+                			AND sc.sellerProductId=$sellerProductId";
+        $this->_model->setQuery($sql);
+        $list_channel = $this->_model->readAll();
+        if(!$list_channel){
+            $str.=$this->_view->getItem('language', 'l_channelsell').' , ';//"Chưa chọn kênh bán";
+            $result['flag']=false;
+        }else{
+            $strchannel="";
+            foreach ($list_channel as $value => $giatri) {
+                if ($giatri['type_id'] == "") {
+                    $giatri['type_id'] = 0;
+                    $giatri['type_rate'] = 0;
+                }
+                $strchannel .= '
+                <p style="padding-top: 5px;">-  ' . $giatri['channel_name'] . ' : ';
+                if ($giatri['type_id'] != 0) {
+                    $str4 = "";
+                    if ($giatri['type_depth4'] != "") {
+                        $str4 = ' > ' . $giatri['type_depth4'];
+                    }
+                    $strchannel .= $giatri['type_depth1'] . ' > ' . $giatri['type_depth2'] . ' > ' . $giatri['type_depth3'] . $str4 . ' (' . $giatri['type_rate'] . '%)';
+                } else {
+                    $strchannel .= '...';
+                }
+                $strchannel .= '</p> <br>';
+            }
+            $result['strchannel']=$strchannel;
+        }
+        if($sellerProduct==""){
+            $str.=$this->_view->getItem('language', 'l_warnproduct').' , '; //tên sản phẩm
+            $result['flag']=false;
+        }
+        $result['ticket1']=$str;
+        //ticket2
+        $str="";
+        $data=['sellerProductId' => $sellerProductId,'isDelete' => 0];
+        $sort= ['limit' => [ 'position' => 0,'length' => 1000] ,'sort' => [ 'column' => "seq",'order' => "ASC" ] ];
+        $list_travelitems = $this->_model->loadRecords('travelitems', $data, true , $sort);
+        if(!$list_travelitems){
+            $str.=$this->_view->getItem('language', 'l_warnproduct1').' , ';//"Chưa thêm travelitems ";//
+            $result['flag']=false;
+        }
+        $result['ticket2']=$str;
+        
+        //ticket3
+        $str="";
+        $cancelpolicy = $this->_model->loadRecords('cancelpolicy', [ 'sellerProductId' => $sellerProductId ]);
+        if(!$cancelpolicy){
+            $str.=$this->_view->getItem('language', 'l_conditioncancel').' , ';//"Điều kiện hủy/Hoàn tiền ";
+            $result['flag']=false;
+        }
+        $result['ticket3']=$str;
+        
+        //ticket4
+        $str="";
+        $images=$this->_model->loadRecords('images',['sellerProductId'=>$sellerProductId]);
+        if(!$images){
+            $str.=$this->_view->getItem('language', 'l_warnimage').' , ';//"Chưa thêm hình ";
+            $result['flag']=false;
+        }
+        
+        $contents=$this->_model->loadRecords('contents',['sellerProductId'=>$sellerProductId]);
+        if(!$contents){
+            $str.=$this->_view->getItem('language', 'l_contentdetail').' , ';//"Chưa thêm nội dung ";
+            $result['flag']=false;
+        }
+        $result['ticket4']=$str;
+        
+        //ticket5
+        $str="";
+        $publication=$this->_model->loadRecords('publication',['sellerProductId'=>$sellerProductId]);
+        if(!$publication){
+            $str.=$this->_view->getItem('language', 'l_conditionused').' , ';//"Chưa thêm Điều kiện sử dụng ";
+            $result['flag']=false;
+        }
+        $locations=$this->_model->loadRecords('locations',['sellerProductId'=>$sellerProductId]);
+        if(!$locations){
+            $str.=$this->_view->getItem('language', 'l_locations').' , ';//"Chưa thêm định vị ";
+            $result['flag']=false;
+        }
+        
+        $contacts=$this->_model->loadRecords('contacts',['sellerProductId'=>$sellerProductId]);
+        if(!$contacts){
+            $str.=$this->_view->getItem('language', 'l_contacts').' , ';//"Chưa thêm liên hệ ";
+            $result['flag']=false;
+        }
+        
+        $informationuse=$this->_model->loadRecords('informationuse', ['sellerProductId' => $sellerProductId]);
+        if(!$informationuse){
+            $str.=$this->_view->getItem('language', 'l_introduction').' , ';//"Chưa thêm giới thiệu và thông tin sử dụng"; 
+            $result['flag']=false;
+        }
+        $result['ticket5']=$str;
+        
+        echo json_encode($result);
+    }
+    public function editticket5Ajax()
+    {
+        $sellerProductId = $this->_params['sellerProductId'];
+        if (isset($this->_params['btnSumit']) && $this->_params['btnSumit'] == "editticket5") {
+            // update statusedit
+            $step = $this->_params['step'];
+            $publicationId = $this->_params['publicationId'];
+            $useBarcode = 0;
+            if (isset($this->_params['useBarcode'])) {
+                $useBarcode = $this->_params['useBarcode'];
+            }
+            $isUseDirect = 0;
+            if (isset($this->_params['isUseDirect'])) {
+                $isUseDirect = $this->_params['isUseDirect'];
+            }
+            $externalCouponUseType = mb_convert_encoding($this->_params['externalCouponUseType'], 'UTF-8');
+            $useExternalTicketNumber = 0;
+            if (isset($this->_params['useExternalTicketNumber'])) {
+                $useExternalTicketNumber = 1;
+            }
+            $ticketUsage = $this->_params['ticketUsage'];
+            $ticketSendCriteriaType = $this->_params['ticketSendCriteriaType'];
+            $ticketSendSpentTime = $this->_params['ticketSendSpentTime'];
+            $ticketSendLimitTime = $this->_params['ticketSendLimitTime'];
+            $result = $this->_model->loadRecords('publication', [
+                'sellerProductId' => $sellerProductId
+            ]);
+            $data=[ 'publicationId' => "$publicationId",
+                    'useBarcode' => $useBarcode,
+                    'isUseDirect' => $isUseDirect,
+                    'externalCouponUseType' => "$externalCouponUseType",
+                    'useExternalTicketNumber' => $useExternalTicketNumber,
+                    'ticketUsage' => "$ticketUsage",
+                    'ticketSendCriteriaType' => "$ticketSendCriteriaType",
+                    'ticketSendSpentTime' => $ticketSendSpentTime,
+                    'ticketSendLimitTime' => $ticketSendLimitTime
+                  ];
+            if ($result) {
+                $this->_model->updateRecord('publication',$data ,[ 'where' => "sellerProductId='$sellerProductId'"]);
+            } else {
+                $data['sellerProductId']=$sellerProductId;
+                $this->_model->insertRecord('publication', $data);
+            }
+            // Insert table contacts1
+            $this->_model->deleteRecord('contacts1', [
+                "sellerProductId" => $sellerProductId
+            ]);
+
+            $contactId = microtime(true) * 10000;
+            $aparking_fee = 0;
+            if (isset($this->_params['aparking_fee'])) {
+                $aparking_fee = preg_replace('#\D#m', '',$this->_params['aparking_fee']);
+            }
+
+            $this->_model->insertRecord('contacts1', [
+                'sellerProductId' => $sellerProductId,
+                'contactId' => $contactId,
+                'name' => $this->_params['acompany'],
+                'roadNameAddress' => $this->_params['aroadFullAddr'],
+                'landNumberAddress' => $this->_params['ajibunAddr'],
+                'zipCode' => $this->_params['azipNo'],
+                'province' => $this->_params['aemdNm'],
+                'city' => $this->_params['asiNm'],
+                'district' => $this->_params['asggNm'],
+                'timework' => $this->_params['atimework'],
+                'dayoff' => $this->_params['adayoff'],
+                'phonetable' => $this->_params['aphonetable'],
+                'phoneadvisory' => $this->_params['aphoneadvisory'],
+                'phonecancel' => $this->_params['aphonecancel'],
+                'hotline' => $this->_params['ahotline'],
+                'parking' => $this->_params['checkparking'],
+                'parking_fee' => $aparking_fee,
+                'website' => $this->_params['website'],
+                'email' => $this->_params['email'],
+                'fax' => $this->_params['fax']
+            ]);
+
+            $this->_model->deleteRecord('contacts', [
+                "sellerProductId" => $sellerProductId
+            ]);
+
+            $this->_model->insertRecord('contacts', [
+                'sellerProductId' => $sellerProductId,
+                'contactId' => $contactId,
+                'contactType' => "PHONE",
+                'contactUseType' => "REPRESENTATIVE",
+                'contact' => $this->_params['aphonetable']
+            ]);
+            $this->_model->insertRecord('contacts', [
+                'sellerProductId' => $sellerProductId,
+                'contactId' => $contactId,
+                'contactType' => "PHONE",
+                'contactUseType' => "BOOKING_INQUIRY",
+                'contact' => $this->_params['aphoneadvisory']
+            ]);
+            $this->_model->insertRecord('contacts', [
+                'sellerProductId' => $sellerProductId,
+                'contactId' => $contactId,
+                'contactType' => "PHONE",
+                'contactUseType' => "CANCEL_INQUIRY",
+                'contact' => $this->_params['aphonecancel']
+            ]);
+            $this->_model->insertRecord('contacts', [
+                'sellerProductId' => $sellerProductId,
+                'contactId' => $contactId,
+                'contactType' => "PHONE",
+                'contactUseType' => "EMERGENCY",
+                'contact' => $this->_params['ahotline']
+            ]);
+            if($this->_params['website']!="")
+            $this->_model->insertRecord('contacts', [
+                'sellerProductId' => $sellerProductId,
+                'contactId' => $contactId,
+                'contactType' => "WEBSITE",
+                'contactUseType' => "REPRESENTATIVE",
+                'contact' => trim($this->_params['website'])
+            ]);
+            if($this->_params['email']!="")
+            $this->_model->insertRecord('contacts', [
+                'sellerProductId' => $sellerProductId,
+                'contactId' => $contactId,
+                'contactType' => "EMAIL",
+                'contactUseType' => "REPRESENTATIVE",
+                'contact' => $this->_params['email']
+            ]);
+            if($this->_params['fax']!="")
+            $this->_model->insertRecord('contacts', [
+                'sellerProductId' => $sellerProductId,
+                'contactId' => $contactId,
+                'contactType' => "FAX",
+                'contactUseType' => "REPRESENTATIVE",
+                'contact' => $this->_params['fax']
+            ]);
+          
+            $instantBooking = $this->_params['instantBooking'];
+            $methodUsage = $this->_params['methodUsage'];
+            $this->_model->updateRecord('sellerproduct', [
+                'instantBooking' => "$instantBooking",
+                'methodUsage' => "$methodUsage"
+            ], [
+                'where' => "sellerProductId='$sellerProductId'"
+            ]);
+
+            $sellerProduct = $this->_model->loadSellerproductId($sellerProductId);
+            $data = [
+                'userid' => $sellerProduct['supplier'],
+                'name' => $this->_params['acompany'],
+                'roadFullAddr' => $this->_params['aroadFullAddr'],
+                'jibunAddr' => $this->_params['ajibunAddr'],
+                'zipNo' => $this->_params['azipNo'],
+                'nation' => "대한민국",
+                'province' => $this->_params['aemdNm'],
+                'city' => $this->_params['asiNm'],
+                'district' => $this->_params['asggNm'],
+                'timework' => $this->_params['atimework'],
+                'dayoff' => $this->_params['adayoff'],
+                'phonetable' => $this->_params['aphonetable'],
+                'phoneadvisory' => $this->_params['aphoneadvisory'],
+                'phonecancel' => $this->_params['aphonecancel'],
+                'hotline' => $this->_params['ahotline'],
+                'parking' => $this->_params['checkparking'],
+                'parking_fee' => $aparking_fee,
+                'website' => trim($this->_params['website']),
+                'email' => $this->_params['email'],
+                'fax' => $this->_params['fax']
+            ];
+            $userinfo = $this->_model->loadRecord('userinfo', [ 'userid' => $sellerProduct['supplier']]);
+            if ($userinfo) {
+//                $this->_model->updateRecord('userinfo', $data, [
+//                    'userid' => $sellerProduct['supplier']
+//                ]);
+            } else {
+                $this->_model->insertRecord('userinfo', $data);
+            }
+            
+            $this->_model->deleteRecord('locations', [
+                "sellerProductId" => $sellerProductId
+            ]);
+            $locationsId = microtime(true) * 10000;
+            $data = [
+                'sellerProductId' => $sellerProductId,
+                'locationsId' => $locationsId,
+                'roadNameAddress' => $this->_params['aroadFullAddr'],
+                'landNumberAddress' => $this->_params['ajibunAddr'],
+                'nation' => "대한민국",
+                'city' => $this->_params['asiNm'],
+                'district' => $this->_params['asggNm'],
+                'province' => $this->_params['aemdNm'],
+                'zipCode' => $this->_params['azipNo']
+            ];
+            $this->_model->insertRecord('locations', $data);
+            $idNotice = $this->_params['idNotice'];
+            $typeNotice = $this->_params['typeNotice'];
+            $titleNotice = $this->_params['titleNotice'];
+            $contentNotice = $this->_params['contentNotice'];
+            
+            for ($i = 0; $i < count($idNotice); $i++) {
+                $data = [
+                    'sellerProductId' => $sellerProductId,
+                    'type' => $typeNotice[$i],
+                    'title' => $titleNotice[$i],
+                    'content' => $contentNotice[$i]
+                ];
+                if ($idNotice[$i] == "0")
+                    $this->_model->insertRecord('notice', $data);
+                else
+                    $this->_model->updateRecord('notice', $data, ['id' => $idNotice[$i]]);
+            }
+            
+            $idInformationUse = $this->_params['idInformationUse'];
+            $typeInformationUse = $this->_params['typeInformationUse'];
+            $titleInformationUse = $this->_params['titleInformationUse'];
+            $contentInformationUse = $this->_params['contentInformationUse'];
+            for ($i = 0; $i < count($idInformationUse); $i++) {
+                $data = [
+                    'sellerProductId' => $sellerProductId,
+                    'type' => $typeInformationUse[$i],
+                    'title' => $titleInformationUse[$i],
+                    'content' => $contentInformationUse[$i]
+                ];
+                if ($idInformationUse[$i] == "0") {
+                    $this->_model->insertRecord('informationuse', $data);
+                }else{
+                    $this->_model->updateRecord('informationuse', $data, [
+                        'id' => $idInformationUse[$i]
+                    ]);
+                }
+            }
+            
+            $idInformationAddition = $this->_params['idInformationAddition'];
+            $titleInformationAddition = $this->_params['titleInformationAddition'];
+            $contentInformationAddition = $this->_params['contentInformationAddition'];
+            $link1InformationAddition = $this->_params['link1InformationAddition'];
+            $link2InformationAddition = $this->_params['link2InformationAddition'];
+            for ($i = 0; $i < count($idInformationAddition); $i++) {
+                $type1InformationAddition = 0;
+                if (isset($this->_params['type1InformationAddition' . ($i + 1)])) 
+                    $type1InformationAddition = 1;      
+                $type2InformationAddition = 0;
+                if (isset($this->_params['type2InformationAddition' . ($i + 1)])) 
+                    $type2InformationAddition = 1;              
+                $type3InformationAddition = 0;
+                if (isset($this->_params['type3InformationAddition' . ($i + 1)])) 
+                    $type3InformationAddition = 1;               
+                $type4InformationAddition = 0;
+                if (isset($this->_params['type4InformationAddition' . ($i + 1)])) 
+                    $type4InformationAddition = 1;
+                $data = [
+                    'sellerProductId' => $sellerProductId,
+                    'type1' => $type1InformationAddition,
+                    'type2' => $type2InformationAddition,
+                    'type3' => $type3InformationAddition,
+                    'type4' => $type4InformationAddition,
+                    'title' => $titleInformationAddition[$i],
+                    'content' => $contentInformationAddition[$i],
+                    'link1' => $link1InformationAddition[$i],
+                    'link2' => $link2InformationAddition[$i]
+                ];
+                if ($idInformationAddition[$i] == "0") 
+                    $this->_model->insertRecord('informationaddition', $data);
+                else 
+                    $this->_model->updateRecord('informationaddition', $data, ['id' => $idInformationAddition[$i]]);
+                
+            }
+            //'status' => 0
+            $data = [ 'statusedit' => 1 ];
+            $url = $this->route('editticket'.$step) . "/" . $sellerProductId;
+            if ($step == 5) {
+                $this->_model->updateRecord('salechannel', $data, ['where' => "sellerProductId='$sellerProductId'" ]);
+                $this->_view->setData('urlstep', $step);
+            }else if ($step == 6) {
+                $data['status'] = 2 ;
+                $this->_model->updateRecord('salechannel', $data, ['where' => "sellerProductId='$sellerProductId'" ]);
+                $this->_view->setData('urlstep', $step);
+            }
+            else {
+                Url::header($url);
+            }
+        }
+    }
+
+}
+?>

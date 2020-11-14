@@ -1,0 +1,371 @@
+<?php 
+$list_supplier = $this->getData('list_supplier');
+$list_channel = $this->getData('list_channel');
+
+$m_start = $this->getData('m_start');
+$m_end = $this->getData('m_end');
+$m_supplier = $this->getData('m_supplier');
+$m_channel = $this->getData('m_channel');
+$m_restore = $this->getData('m_restore');
+$m_status1 = $this->getData('m_status1');
+$m_status2 = $this->getData('m_status2');
+$m_status3 = $this->getData('m_status3');
+$m_status_3 = $this->getData('m_status_3');
+$m_status4 = $this->getData('m_status4');
+$m_key = $this->getData('m_key');
+$m_name = $this->getData('m_name');
+?>
+<link rel="stylesheet" type="text/css" href="<?=URL_PUBLIC?>css/jquery-ui.css" />
+<script type="text/javascript" src="<?=URL_PUBLIC?>js/jquery-ui.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){		
+		$.onchangetime = function(name){		
+			var d = new Date();
+			$('input.datepick[name="dateend"]').val($.getFormattedDate(d.getFullYear(),(d.getMonth()+1).toString(),d.getDate().toString()));			
+			$.datepickMilisecond('input.datepick[name="dateend"]');
+			if(name=='week'){
+				d.setDate(d.getDate() -7);
+			}
+			if(name=='today'){
+				d.setDate(d.getDate());
+			}
+			if(name=='month'){
+				d.setMonth(d.getMonth() - 1);
+			}
+			if(name=='threemonth'){			
+				d.setMonth(d.getMonth() - 3);
+			}
+			$('input.datepick[name="datestart"]').val($.getFormattedDate(d.getFullYear(),(d.getMonth()+1).toString(),d.getDate().toString()));	
+			$.datepickMilisecond('input.datepick[name="datestart"]');
+		}		
+		$('.changepick').on('click',function(){
+			$(this).closest('td').find('input.btn').removeClass('active');
+			$(this).addClass('active');
+			$.onchangetime($(this).attr('name'));
+		});
+		//$('.btn.changepick[name="today"]').click();
+		
+		// Hiển thị popup chi tiết 1
+		$('table.table').on('click', 'a.vdetail1',function(){
+			$.fn_popup(true, 'revenue1');
+			return false;
+		});
+		// Hiển thị popup chi tiêt 2
+		$('table.table').on('click', 'a.vdetail2',function(){
+			$.fn_popup(true, 'revenue2');
+			return false;
+		});
+		// Thực hiện phân trang
+		$('div.ct_content').on('click', '.pagination a', function(){
+			var length = $(this).attr('data-length');
+			var page = $(this).attr('data-page');
+			if(length && page){
+				$.fn_ajax('searchAndPagination', {'page':page, 'length': length}, function(result){
+					$.fn_result(result);
+					return false;
+				}, true);
+			}
+			return false;
+		});
+		// Thay đổi số dòng hiển thị trên một trang
+		$('div.order').on('change', 'select.select', function(){
+			var length = $(this).val();
+			var page = 1;
+			if(length && page){
+				$.fn_ajax('searchAndPagination', {'page':page, 'length': length}, function(result){
+					$.fn_result(result);
+					return false;
+				}, true);
+			}
+			return false;
+		});
+
+		// Hàm xử lý kết quả trả về		
+		$.fn_result = function(data){
+			if(data.flag == true){
+				$('#tableorder tbody').html(data.rows);
+				$('div.ct_content .pagination').closest('div.form_group').remove();
+				$('div.ct_content').append(data.pagination);
+			}
+		}
+		// Thực hiện lựa chọn tất cả trong bảng
+		$('#tbcheckall').on('click', function(){
+			var checked = $(this).get(0).checked;
+			$('#tableorder tbody input[type="checkbox"]').each(function(){
+				$(this).get(0).checked = checked
+			});			
+		});
+		// Thực hiện sử dụng
+		$('#confirmuse').on('click', function(){
+			var data = $.fn_dataChecked(1, '<?=$this->language('l_orderwarning1')?>');			
+			if(data && data.length > 0){
+				if($(this).attr('data-action') == 'true' && $($.elt_popup+' .confirm').is(':visible')){
+					$.fn_confirm(false);
+					$.fn_changestatus(data);
+					$(this).removeAttr('data-action');
+				}else{
+					$.fn_confirm(true, {'class':'changestatus', 'data-action': 'confirmuse'}, '<?=$this->language('l_orderwarning3')?>');
+					$($.elt_popup).find('.back').val("취소");
+					$($.elt_popup).find('.continue').val("확인");
+					$(this).attr('data-action', 'true');
+				}
+			}	
+		});
+		// Thực hiện khôi phục
+		$('#confirmrestore').on('click', function(){
+			var data = $.fn_dataChecked(2, '<?=$this->language('l_orderwarning2')?>');			
+			if(data && data.length > 0){				
+				if($(this).attr('data-action') == 'true' && $($.elt_popup+' .confirm').is(':visible')){
+					$.fn_confirm(false);
+					$.fn_changestatus(data);
+					$(this).removeAttr('data-action');
+				}else{
+					$.fn_confirm(true, {'class':'changestatus', 'data-action': 'confirmrestore'}, '<?=$this->language('l_orderwarning4')?>');
+					$($.elt_popup).find('.back').val("취소");
+					$($.elt_popup).find('.continue').val("확인");
+					$(this).attr('data-action', 'true');
+				}
+			}			
+		});
+		// Thực hiện thay đổi từng dòng
+		$('#tableorder tbody input[type="button"]').on('click', function(){
+			var element = $(this).closest('tr');
+			var status = $(element).attr('data-status');
+			if(status > -1 && status < 3){
+				$(element).find('input[type="checkbox"]').get(0).checked = true;
+				if(status == 1){
+					$('#confirmuse').click();
+				}else{
+					$('#confirmrestore').click();
+				}
+			}			
+		});
+		// Tiếp tục thực hiện thay đổi trạng thái
+		$($.elt_popup).on('click', '.confirm .changestatus .continue', function(){			
+			$('#'+$(this).attr('data-action')).click();
+		});		
+		$.fn_dataChecked = function(status, contentAlert){
+			var formdata = [];
+			var elemnt = '#tableorder tbody input[type="checkbox"]:checked';
+			if($(elemnt).length > 0){
+				$(elemnt).each(function(){
+					var tbtr = $(this).closest('tr');
+					var cid = $(tbtr).attr('data-id');
+					var cstatus = $(tbtr).attr('data-status');
+					var crestore = $(tbtr).attr('data-restore');				
+					if(status == cstatus){
+						formdata.push({ 'id': cid, 'status': cstatus, 'restore': crestore });
+					}else{
+						$.fn_alert(true, true, contentAlert);
+						formdata = [];
+						return false;
+					}
+				});
+			}else{
+				$.fn_alert(true, true, '<?=$this->language('l_listproduct7')?>');
+			}
+			return formdata;
+		}
+		$.fn_changestatus = function(data){
+			$.fn_ajax('changeStatus', {'status':data}, function(result){
+				if(result.flag == true){
+					$.each(result.id, function(index, value){							
+						var element = '#tableorder tbody tr[data-id="'+value+'"]';
+						$(element).attr({								
+							'data-status':result.statusid[index],
+							'data-restore': result.restoreid[index]
+						});
+						$(element).find('input[type="checkbox"]').get(0).checked = false;
+						$(element).find('input[type="button"]').val(result.action);
+						$(element).find('td:nth-child(2)').text(result.status);
+						$(element).find('td:nth-child(3)').text(result.restore);
+					});
+				}
+			}, true);			
+		}
+		// Thực hiện tại xuất file excel
+		$('button.downloadExcel').on('click', function(result){			
+			var tbody = $('.table').find('td.empty');
+	        if(tbody.length > 0) {
+	            //
+	        }else{
+	        	var titleName = $('#contents .ct_head h3').text();  
+				var description = $('#contents .ct_head p').text(); 						
+				if(titleName && description){
+					window.open(encodeURI(jsData.urlAjax + 'downloadExcel?titleName='+titleName+'&description='+description));
+				}			
+	        }
+			
+		});
+
+		// 
+		$('.websraping').on('click', function(result){		
+			$.fn_ajax('websraping', {}, function(result){
+				console.log(result);
+				if(result.flag == true){
+					document.getElementById("mform").submit();
+				}
+			}, true);	
+		});
+    });
+	window.onload = function(){
+		document.multiselect('#channelSelect');
+	};
+</script>
+<div class="ct_head">
+	<h3><?=$this->language('l_manageorder')?></h3>
+	<p>
+    	<?=date('m')?>월<?=date('d')?>일 <?=date('H')?>시<?=date('i')?>분 <?=$this->language('l_listproduct11')?> (<?=$this->language('l_listproduct12')?>) 
+    	<a href="#" class="btn small websraping" ><?=$this->language('l_update')?></a>
+	</p>
+</div>
+<div class="ct_content">
+	<div class="form_group">
+		<form class="search_member" action="<?=$this->route('order', ['method'=>'sale'])?>" method="POST" name="mform" id="mform">
+			<table class="table">
+				<tr>
+					<th><?=$this->language('l_order1')?></th>
+					<td colspan="3">
+						<input type="text" class="input small datepick" name="datestart" value="<?=$m_start?>" readonly="readonly"> 
+						<span>~</span> 
+						<input type="text" class="input small datepick" name="dateend" value="<?=$m_end?>" readonly="readonly"> 
+						<input type="button" class="btn changepick small" name="week" value="<?=$this->language('l_1week')?>">
+						<input type="hidden" class="btn changepick small" name="today" value="">
+						<input type="button" class="btn changepick small" name="month" value="<?=$this->language('l_1month')?>">
+						<input type="button" class="btn changepick small" name="threemonth" value="<?=$this->language('l_3month')?>">
+					</td>
+					<td rowspan="5" style="line-height: 40px;width: 100px;">
+						<input type="submit" class="btn small full hover" name="m_search" value="<?=$this->language('l_search')?>"> 
+						<input type="submit" class="btn small full hover reset" name="m_reset" value="<?=$this->language('l_reset')?>">
+					</td>
+				</tr>
+				<tr>
+					<th><?=$this->language('l_supplier')?></th>				
+					<td >
+    					<select name="m_supplier" id="supplier" class="select small">
+    							<option <?php if ($m_supplier==0) echo 'selected="selected"';?> value="0"><?=$this->language('l_question4')?></option>
+    							<?php foreach ($list_supplier as $value =>$giatri){?>
+    							<option <?php if ($m_supplier==$giatri['idx']) echo 'selected="selected"';?> value="<?=$giatri['idx']?>"><?=$giatri['ID']?></option>
+    							<?php }?>
+    					</select>	
+					</td>
+					<td colspan="3">
+					</td>
+				</tr>
+				<tr>
+					<th><?=$this->language('l_channelsell')?></th>				
+					<td>
+						<select name="m_channel[]" class="select small" id='channelSelect' multiple>
+    						<?php foreach ($list_channel as $value =>$giatri){?>
+							<option <?php if (in_array($giatri['channel_id'], $m_channel)) echo 'selected="selected"';?> value='<?=$giatri['channel_id']?>'><?=$giatri['channel_name']?></option>
+							<?php }?>
+    					</select>	
+					</td>	
+					<th><?=$this->language('l_order2')?></th>	
+					<td>
+						<input type="checkbox" id="restore" name="m_restore" <?php if ($m_restore==1) echo 'checked="checked"';?> value="1">
+						<label for="restore" ><?=$this->language('l_order3')?></label>
+					</td>			
+				</tr>
+				<tr>
+					<th><?=$this->language('l_order4')?></th>
+					<td colspan="3">
+						<ul class="clearfix">
+                            <!-- 사용가능  사용완료 입금대기 -->
+							<li>
+								<input type="checkbox" id="forstatus1" name="m_status1" <?php if ($m_status1==1) echo 'checked="checked"';?> value="1">
+								<label for="forstatus1"><?=$this->language('l_orderdone')?></label>
+							</li>
+							<li>
+								<input type="checkbox" id="forstatus2" name="m_status2" <?php if ($m_status2==1) echo 'checked="checked"';?> value="2">
+								<label for="forstatus2"><?=$this->language('l_orderusedone')?></label>
+							</li>
+							<li>
+								<input type="checkbox" id="forstatus_3" name="m_status_3" <?php if ($m_status_3==1) echo 'checked="checked"';?> value="-3">
+								<label for="forstatus_3"><?=$this->language('l_orderreturningprice')?></label>
+							</li>
+							<li>
+								<input type="checkbox" id="forstatus3" name="m_status3" <?php if ($m_status3==1) echo 'checked="checked"';?> value="3">
+								<label for="forstatus3"><?=$this->language('l_orderreturnprice')?></label>
+							</li>
+							<li>
+								<input type="checkbox" id="forstatus4" name="m_status4" <?php if ($m_status4==1) echo 'checked="checked"';?> value="-1">
+								<label for="forstatus4"><?=$this->language('l_orderdie')?></label>
+							</li>
+						</ul>
+					</td>
+				</tr>
+				<tr>
+					<th><?=$this->language('l_keyword')?></th>
+					<td style="width: 200px;">
+						<select class="select small full" name="m_key">
+							<option <?php if ($m_key==0) echo 'selected="selected"';?> value="0"><?=$this->language('l_question4')?></option>
+							<option <?php if ($m_key==1) echo 'selected="selected"';?> value="1"><?=$this->language('l_nameproduct')?></option>
+							<option <?php if ($m_key==2) echo 'selected="selected"';?> value="2"><?=$this->language('l_nameoption')?></option>
+							<option <?php if ($m_key==3) echo 'selected="selected"';?> value="3"><?=$this->language('l_order5')?></option>
+							<option <?php if ($m_key==4) echo 'selected="selected"';?> value="4"><?=$this->language('l_order6')?></option>
+							<option <?php if ($m_key==5) echo 'selected="selected"';?> value="5"><?=$this->language('l_codeproduct')?></option>
+							<option <?php if ($m_key==6) echo 'selected="selected"';?> value="6"><?=$this->language('l_order7')?></option>
+							<!-- <option <?php if ($m_key==7) echo 'selected="selected"';?> value="7"><?=$this->language('l_travelItemId')?></option> -->
+							<option <?php if ($m_key==7) echo 'selected="selected"';?> value="7"><?=$this->language('l_order8')?></option>
+						</select>
+					</td>
+					<td colspan="2">	
+						<input type="text" class="input full" name="m_name" placeholder="<?=$this->language('l_keyword')?>" value="<?=$m_name?>">							
+					</td>				
+
+				</tr>
+			</table>
+		</form>
+	</div>
+
+	<div class="form_group clearfix order">		
+
+			<div class="table_head bgwhite">
+				<div class="ctrl_head clearfix">
+					<div class="title col-xs-1">
+						<h3><?=$this->language('l_mbtotal').$this->getData('total')?> <?=$this->language('l_notification16')?></h3>
+					</div>
+					<div class="icons col-xs-2">
+						<select name="" class="select">
+							<option value="20" <?=(($this->getData('length')==20)?'selected':'')?>>20 <?=$this->language('l_notification8')?></option>
+							<option value="50" <?=(($this->getData('length')==50)?'selected':'')?>>50 <?=$this->language('l_notification8')?></option>
+							<option value="100"	<?=(($this->getData('length')==100)?'selected':'')?>>100 <?=$this->language('l_notification8')?></option>
+						</select>
+					</div>
+					<div class="icons col-xs-2">
+						<button type="button" name="" class="btn hover downloadExcel"><?=$this->language('l_Channel26')?></button>
+					</div>
+					<div class="icons col-xs-7 align-right">
+						<button type="button" name="confirmuse" id="confirmuse" class="btn hover"><?=$this->language('l_confirmuse')?></button>
+						<button type="button" name="confirmrestore" id="confirmrestore" class="btn hover"><?=$this->language('l_confirmrestore')?></button>
+					</div>
+				</div>
+			</div>
+				<table class="table" id="tableorder">
+					<thead>
+						<tr>
+							<th><input type="checkbox" name="checkbox" id="tbcheckall" value="all"></th>
+							<!-- <th><?=$this->language('l_accmanage')?></th> -->
+							<th style="min-width: 60px"><?=$this->language('l_order4')?></th>
+							<th style="min-width: 60px"><?=$this->language('l_confirmrestore')?></th>							
+							<th style="min-width: 60px"><?=$this->language('l_Channel7')?></th>							
+							<th style="min-width: 110px"><?=$this->language('l_order9')?></th>	
+							<th style="min-width: 90px"><?=$this->language('l_order10')?></th>
+							<th style="min-width: 100px"><?=$this->language('l_order1')?></th>
+							<th style="min-width: 90px"><?=$this->language('l_order6')?></th>
+							<th style="min-width: 120px"><?=$this->language('l_order11')?></th>
+							<th style="min-width: 90px"><?=$this->language('l_order12')?></th>
+							<th style="min-width: 100px"><?=$this->language('l_nameproduct')?></th>
+							<th style="min-width: 100px"><?=$this->language('l_nameoption')?></th>
+							<th style="min-width: 60px"><?=$this->language('l_order5')?></th>
+							<th style="min-width: 100px"><?=$this->language('l_phonenumeric')?></th>
+							<th style="min-width: 60px"><?=$this->language('l_order13')?></th>						
+						</tr>
+					</thead>
+					<tbody><?=$this->getData('ordertbody')?></tbody>
+				</table>
+	
+	</div>
+	<?=$this->getData('pagination')?>
+</div>

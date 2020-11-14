@@ -1,0 +1,234 @@
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+
+class GmarketController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    public function register_stream_wrapper($projectId)
+    {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+    function callAPI($method, $url, $data) {
+        
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        //echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+       
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'Content-Type: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
+        ));
+     
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            //die("Connection Failure");
+        }
+        echo $result;
+        curl_close($curl);
+        return json_decode($result,true);
+    }
+
+    private function insertOrderData($orderData){
+        if(isset($orderData) && is_array($orderData) && count($orderData)){
+            foreach ($orderData as $key => $val) {
+                $ticket = [
+                    'useAmount' => $val['ServiceUseAmnt'],
+                    'totalAmount' => $val['TotalCnt'],
+                    'ticketNumber' => $val['OrderNo'],
+                    'price' => $val['SupplyPrice'],
+                    'purchasedAt' => $val['PayDate'],
+                    'canceledAt' => $val['PayExpireDate'],
+                    'statusTicket' => $val['DeliveryStatus'],
+                    'modifiedTicket' =>  $val['PayDate'],
+                    'optionId' => $val['GoodsNo'],
+                    'dealId' => $val['BuyerID']
+                ];
+                $queryTicket = $this->_model->loadRecord('ticket', ['ticketNumber' => $val['OrderNo']]);
+                if ($queryTicket) {
+                    $this->_model->updateRecord('ticket', $ticket, ['ticketNumber' => $val['OrderNo']]);
+                } else {
+                    $this->_model->insertRecord('ticket', $ticket);
+                }
+
+                $ticketPurchasers = [
+                    'orderNumber' => $val['OrderNo'],
+                    'ticketNumber' => $val['OrderNo'],
+                    'userName' => $val['PartnerName'],
+                    'phoneNumber' => $val['BuyerHt'],
+                    'dealId' => $val['BuyerID'],
+                    'dealName' => $val['BuyerName'],
+                    'optionId' => $val['GoodsNo'],
+                    'optionName' => $val['GoodsName'],
+                    'price' => $val['SellPrice'],
+                    'purchaseDateTime' => $val['PayDate'],
+                    'paymentDateTime' => $val['DepositConfirmDate'],
+                    'fee' =>  $val['FreeGift'],
+                    'status' => 'CANCEL_COMPLETE'                                     
+                ];
+                $queryTicketPurchasers = $this->_model->loadRecord('ticketPurchasers', ['ticketNumber' => $val['OrderNo']]);
+                if ($queryTicketPurchasers) {
+                    $this->_model->updateRecord('ticketPurchasers', $ticketPurchasers, ['ticketNumber' => $val['OrderNo']]);
+                } else {
+                    $this->_model->insertRecord('ticketPurchasers', $ticketPurchasers);
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+    // Phương thức index
+    public function indexAction() {
+        
+        $data =[    'Password' => 'yakeun87!@',
+                    'Type' => 'S',
+                    'ReturnUrl' => 'http://www.esmplus.com/Home/Home',
+                    'SiteType' => 'GMKT',
+                    'Id' => 'ysjlabs',
+                    'RememberMe' => 'true',
+                    'RememberMe' => 'false'  ];
+        //$obj = $this->callAPI("POST", "https://www.esmplus.com/SignIn/Authenticate", $data);
+        //echo "<pre>";
+        //print_r($obj);
+
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $crawler = $client->request('POST', 'https://www.esmplus.com/SignIn/Authenticate',$data);
+        
+        // $crawler = $client->request('GET', 'https://www.esmplus.com/Member/SignIn/LoginThrough?Nexturl=%2FHome%2FHome');
+        $startDate = '2020-06-30';
+        $endDate = Date('Y-m-d');
+        //get total
+        $dataInputCount=[
+            'siteGbn' => 0,
+            'searchAccount' =>  '459268',
+            'searchDateType' => 'TRD',
+            'searchSDT' => $startDate,
+            'searchEDT' => $endDate,
+            'searchKey' => 'ON',
+            'searchKeyword' => '',
+            'searchStatus' => 5010,
+            'searchAllYn' => 'N',
+            'SortFeild' => 'TransDate',
+            'SortType' => 'Desc',
+            'start' => 0,
+            'searchDistrType' => 'AL',
+            'searchGlobalShopType' => '', 
+            'searchOverseaDeliveryYn'=> ''
+        ];
+        $crawler = $client->request("POST", "https://www.esmplus.com/Escrow/Delivery/GetBuyDecisionTabCount", $dataInputCount);
+        $totalCount = json_decode($client->getResponse()->getContent(), true);
+        $maxPages = ceil((int)$totalCount["totalCnt"]/20);
+
+        $data = [             
+            'limit' => 20,
+            'siteGbn' => 0,
+            'searchAccount' => 459268,
+            'searchDateType' => 'TRD',
+            'searchSDT' => $startDate,
+            'searchEDT' => $endDate,
+            'searchKey' => 'ON',
+            'searchKeyword' => '',
+            'searchStatus' => 5010,
+            'searchAllYn' => 'N',
+            'SortFeild' => 'TransDate',
+            'SortType' => 'Desc',
+            'start' => 0,
+            'searchDistrType' => 'AL',
+            'searchGlobalShopType' => '',
+            'searchOverseaDeliveryYn' => ''            
+        ];
+
+        $orderGmarket = [];
+        for($i=1; $i <= $maxPages; $i++ ){
+            $data['page'] = $i;
+            $crawler = $client->request('POST', 'https://www.esmplus.com/Escrow/Delivery/BuyDecisionSearch',$data);
+            $orderGmarket = array_merge($orderGmarket, json_decode($client->getResponse()->getContent(),true)['data']);
+        }
+        // echo "<pre>";
+        // print_r($orderGmarket);die;
+        $result = $this->insertOrderData($orderGmarket);
+        if($result){
+            echo "update data successfully";
+            die;
+        }
+         
+         
+        //echo '<pre>';
+        //print_r($crawler->outerHtml());
+        //         echo '</pre>';                    
+       // 
+    }
+
+    public function questionAction(){
+        $data =[    'Password' => 'yakeun87!@',
+                'Type' => 'S',
+                'ReturnUrl' => 'http://www.esmplus.com/Home/Home',
+                'SiteType' => 'GMKT',
+                'Id' => 'ysjlabs',
+                'RememberMe' => 'true',
+                'RememberMe' => 'false'  ];
+
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $crawler = $client->request('POST', 'https://www.esmplus.com/SignIn/Authenticate',$data);
+        
+        $lastYear = date('Y') -1;
+        $StartDate = $lastYear . date("md");
+        $EndDate = date('Ymd');        
+        
+        $dataQuestion['page'] =1;
+        $dataQuestion['limit'] =20;
+        $dataQuestion['paramsData'] =[
+            "Site" => "G",
+            "Account" => "All",
+            "DateType" => "DA",
+            "StartDate" => "20200728",
+            "EndDate" => "20200804",
+            "InquryType" => "AL",
+            "QueryType" => "AL",
+            "ReplyType" => "AL",
+            "KeywordType" => "KC",
+            "Keyword" => "",
+            "OrderType" => "0",
+            "PageSize" => 20,
+            "CurrentPage" => 1,
+            "TotalCount" => 0            
+        ];
+        $dataQuestion['SortFeild'] = 'ItemNo';
+        $dataQuestion['SortType'] = 'Asc';
+        $crawler = $client->request("POST", "https://www.esmplus.com/Member/CustomerService/GetInquryList", $dataQuestion);  
+        echo $client->getResponse()->getContent();die;
+        $retuls = json_decode($client->getResponse()->getContent(), true);
+        echo "<pre>";
+        print_r($retuls);
+    }
+}
+
+?>

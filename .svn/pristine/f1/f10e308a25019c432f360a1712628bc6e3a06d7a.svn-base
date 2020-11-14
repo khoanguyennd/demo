@@ -1,0 +1,1772 @@
+<?php
+
+class ListproductController extends Controller
+{
+
+    // Phương thức khởi tạo
+    public function __construct($params)
+    {
+        parent::__construct($params);
+        $this->isLogin();
+        $account = $_SESSION['accountshopping'];
+        if($account['temp']==1)
+            Url::header($this->route('account')."#tab1");
+    }
+
+    public function ListproductAction()
+    {
+        $account = $_SESSION['accountshopping'];
+        $list_channel = array();
+        $m_channel = array();
+        $channel = $this->_model->loadRecords('channels');
+        foreach ($channel as $value => $giatri) {
+            $list_channel[] = array(
+                $giatri['channel_id'],
+                $giatri['channel_name']
+            );
+            $m_channel[]= $giatri['channel_id'];
+        }
+        $this->_view->setData('list_channel', $list_channel);
+
+        $sqlheader = "SELECT p.*,u.ID as nameSupplier,d.channel_name,d.travelProductId,d.status,d.useStartedAt1,d.useEndedAt1,
+                             d.id as salechannelId,d.channel_id,d.productId,d.type_depth1,d.type_depth2,d.type_depth3,d.type_depth4 ";
+        $sql = "FROM `tb_sellerproduct` p LEFT JOIN (SELECT c.*,t.type_depth1,t.type_depth2,t.type_depth3,t.type_depth4,n.channel_name, DATE_FORMAT(c.useStartedAt,'%Y-%m-%d') as useStartedAt1, DATE_FORMAT(c.useEndedAt,'%Y-%m-%d') as useEndedAt1,n.channel_id 
+                	                                 FROM `tb_salechannel` c,`tb_sellerproduct` p,tb_channels n , tb_channeltypes t
+                                                     WHERE p.sellerProductId=c.sellerProductId AND c.channelTypeId=t.type_id AND t.channelid=n.channel_id AND c.isDelete=0) d
+                ON p.sellerProductId=d.sellerProductId LEFT JOIN tb_user u ON p.supplier=u.idx ";
+        
+        if($account['role']==0){
+            $sql.= "WHERE 1!=-1 ";
+        }else{
+            $sql.= "WHERE (p.creator='".$account['ID']."' OR p.creator IN (SELECT u2.ID FROM tb_user u1 ,tb_user u2
+								WHERE u1.ID = '".$account['ID']."' AND u2.idx_parent=u1.idx) ) ";
+        }
+        // Search top
+        if(isset($this->_params['searchtopkeyword'])){
+            $searchtopkeyword = $this->_params['searchtopkeyword'];
+            $sql.= " AND (p.name LIKE '%$searchtopkeyword%' OR p.sellerProductId LIKE '%$searchtopkeyword%') ";
+        }
+        // Search
+        if (isset($this->_params['m_search'])) {
+            $m_start = $this->_params['m_start'];
+            $m_end = $this->_params['m_end'];
+            $m_keytime = $this->_params['m_keytime'];
+            $nolimittime = 0;
+            if (isset($this->_params['nolimittime'])) {
+                $nolimittime = 1;
+                $sql .= " AND p.nolimittime=$nolimittime ";
+            } else {
+                if($m_keytime == 0 )
+                $sql .= " AND d.useStartedAt1>='$m_start' AND d.useStartedAt1<='$m_end' ";
+                if($m_keytime == 1 )
+                $sql .= " AND  d.useEndedAt1>='$m_start' AND d.useEndedAt1<='$m_end'  ";
+            }
+
+            $m_supplier = $this->_params['m_supplier'];
+            if ($m_supplier != 0)
+                $sql .= "AND p.supplier=$m_supplier ";
+            
+            $m_channel = array();
+            if (isset($this->_params['m_channel'])) {
+                $m_channel = $this->_params['m_channel'];
+                if (count($m_channel) > 0) {
+                    $sql .= "AND ( ";
+                    foreach ($m_channel as $value => $giatri) {
+                        $sql .= "d.channel_id=$giatri OR ";
+                    }
+                    $sql = mb_substr($sql, 0, - 3);
+                    $sql .= " ) ";
+                }
+            }
+
+            $m_status = $this->_params['m_status'];
+            if ($m_status != 10) {
+                $sql .= "AND d.status=$m_status ";
+            }
+
+            
+            $type1Id = $this->_params['type1Id'];
+            if($type1Id!="0") $sql .= ' AND d.type_depth1="'.$type1Id.'" ';
+            
+            $type2Id = $this->_params['type2Id'];
+            if($type2Id!="0") $sql .= ' AND d.type_depth2="'.$type2Id.'" ';
+            
+            $type3Id = $this->_params['type3Id'];
+            if($type3Id!="0") $sql .= ' AND d.type_depth3="'.$type3Id.'" ';
+            
+            $type4Id = $this->_params['type4Id'];
+            if($type4Id!="0") $sql .= ' AND d.type_depth4="'.$type4Id.'" ';
+            
+            
+
+            $m_key = $this->_params['m_key'];
+            $m_name = $this->_params['m_name'];
+            if ($m_key == 0) {
+                $sql .= "AND p.name LIKE '%$m_name%' ";
+            }
+            if ($m_key == 1) {
+                $sql .= "AND p.sellerProductId LIKE '%$m_name%' ";
+            }
+        } else {
+            $date = date("Y-m-d");
+            $date = strtotime(date("Y-m-d", strtotime($date)) . "-2 months");
+            //$m_start = date("Y-m-d", $date);
+            $m_start = date("Y-m-d");
+            $m_end = date("Y-m-d");
+            
+            $nolimittime = 0;
+            $m_supplier = 0;
+            $m_status = 10;
+            $type1Id = "0";
+            $type2Id = "0";
+            $type3Id = "0";
+            $type4Id = "0";
+            $m_key = 0;
+            $m_name = "";
+        }
+        $data = $this->_model->loadRecords('channeltypes');
+        $type_depth=[];
+        foreach ($data as $value => $giatri)
+        {
+            $type_depth[$giatri['type_depth1']][$giatri['type_depth2']][$giatri['type_depth3']][$giatri['type_depth4']]=[$giatri['type_id'],$giatri['type_rate']];
+        }
+        $this->_view->setData('type_depth', $type_depth);
+        // status salechannel useEndedAt        
+        $methods = [
+        	'insale'=>' AND d.status=2 ',
+        	'endsale'=>' AND d.status=2 AND d.useEndedAt1='.strtotime(date('Y-m-d', time())).' ',
+        	'onsale'=>' AND d.status=3 '
+        ];
+        if(isset($methods[$this->_params['method']])){
+        	$sql .= $methods[$this->_params['method']];
+        }
+
+        if(isset($this->_params['method']) && $this->_params['method'] == 'insale'){
+            $m_status = 3;
+            $m_start = '';
+            $m_end = '';
+        } elseif(isset($this->_params['method']) && $this->_params['method'] == 'endsale'){
+            $m_status = 3;
+            $m_start = date("Y-m-d");
+            $m_end = date("Y-m-d");
+
+        } else if(isset($this->_params['method']) && $this->_params['method'] == 'onsale'){
+            $m_status = 2;
+            $m_start = '';
+            $m_end = '';
+        }     
+        
+        $this->_view->setData('m_start', $m_start);
+        $this->_view->setData('m_end', $m_end);
+        $this->_view->setData('m_channel', $m_channel);
+        $this->_view->setData('m_status', $m_status);
+        $this->_view->setData('m_supplier', $m_supplier);
+        $this->_view->setData('nolimittime', $nolimittime);
+        $this->_view->setData('type1Id', $type1Id);
+        $this->_view->setData('type2Id', $type2Id);
+        $this->_view->setData('type3Id', $type3Id);
+        $this->_view->setData('type4Id', $type4Id);
+        $this->_view->setData('m_key', $m_key);
+        $this->_view->setData('m_name', $m_name);
+        
+        $sql.=" ORDER BY p.id DESC ";
+        
+        if(isset($this->_params['method']) && $this->_params['method'] == 'notorder'){             
+            $sqlheader='SELECT sp.*,u.idx,u.ID as nameSupplier,t.type_depth1,t.type_depth2,t.type_depth3,t.type_depth4,n.channel_name'
+                    . ',sc.productId,sc.status, DATE_FORMAT(sc.useEndedAt,"%Y-%m-%d") as useEndedAt1, DATE_FORMAT(sc.useStartedAt,"%Y-%m-%d") as useStartedAt1,sc.id as salechannelId';
+            $sql=' FROM tb_sellerproduct sp,tb_salechannel sc,tb_user u, tb_channeltypes t,tb_channels n '
+                    .'WHERE sp.sellerProductId=sc.sellerProductId '
+                    .'AND u.idx=sp.supplier '
+                    .'AND sc.channelTypeId=t.type_id '
+                    .'AND t.channelid=n.channel_id '
+                    .'AND sc.vendorItemPackageId NOT IN( SELECT tp.dealId FROM tb_ticketPurchasers tp,tb_ticket t WHERE tp.ticketNumber = t.ticketNumber AND ( tp.purchaseDateTime >="2020-07-16 00:00:00" AND tp.purchaseDateTime <="2020-07-23 23:59:59" ) ) AND sc.`status`=3';
+        }
+        $_SESSION['sqllistproduct'] = $sql;
+        //echo $sqlheader.$sql;
+        // Tham số phân trang
+        $length = ($this->_params['length'] ? $this->_params['length'] : DEFAULT_LENGTH);
+        $page = ($this->_params['page'] ? $this->_params['page'] : 1);
+        $begin = ($page - 1) * $length;
+        $this->_view->setData('page', $page);
+        $this->_view->setData('length', $length);
+
+        $this->_model->setQuery("SELECT count(*) as count " . $sql);
+        $result = $this->_model->readAll();
+        $this->_view->setData('count', $result[0]['count']);
+        
+        $pagination = $this->paginationParams($result[0]['count'], $this->route('listproduct', ['method'=>$this->_params['method']]));
+        $this->_view->setData('pagination', $pagination['pagination']);
+
+        //echo $sqlheader . $sql . " LIMIT " . $begin . "," . $length;
+
+        $this->_model->setQuery($sqlheader . $sql . " LIMIT " . $begin . "," . $length);
+        $products = $this->_model->readAll();
+        $dem = 0;
+        $list_product = array();
+        foreach ($products as $value => $giatri) {
+            $dem ++;
+            $list_product[] = array(
+                $giatri['id'],
+                $giatri['sellerProductId'],
+                $giatri['name'],
+                $giatri['nameSupplier'],
+                $giatri['type_depth1'],
+                $giatri['type_depth2'],
+                $giatri['type_depth3'],
+                $giatri['type_depth4'],
+                $giatri['channel_name'],
+                $giatri['productId'],
+                $giatri['status'],
+                $giatri['useStartedAt1'],
+                $giatri['useEndedAt1'],
+                $giatri['salechannelId'],
+                $giatri['productId']
+            );
+        }
+        $this->_view->setData('list_product', $list_product);
+        $list_supplier = $this->_model->loadRecords('user', [
+            'idx_parent' => $account['idx']
+        ]);
+        $this->_view->setData('list_supplier', $list_supplier);
+        
+        
+        $this->_view->setData('dem', $dem);
+
+        $this->_view->render('listproduct');
+    }
+
+    // /
+    public function stopsaleAjax()
+    {
+        $result = [
+            'flag' => false
+        ];
+        $checkproduct = $this->_params['checkproduct'];
+        $stopsale = $this->_params['stopsale'];
+        foreach ($checkproduct as $value => $giatri) {
+            $result['flag'] = false;
+            $pieces = explode(";", $giatri);
+            $data = $this->_model->updateRecord('salechannel', [
+                'useEndedAt' => "$stopsale",
+                'statusedit' => 1
+            ], [
+                'id' => $pieces[1]
+            ]);
+            if ($data) {
+                $result['flag'] = true;
+            }
+
+        }
+
+        echo json_encode($result);
+    }
+
+    // /
+    public function changeStatusAjax()
+    {
+        $result = [
+            'flag' => false
+        ];
+        $act = $this->_params['act'];
+        if ($act == "approve") {
+            $checkproduct = $this->_params['checkproduct'];
+            foreach ($checkproduct as $value => $giatri) {
+                $result['flag'] = false;
+                $pieces = explode(";", $giatri);
+                $data = $this->_model->updateRecord('salechannel', [
+                    'status' => 2,
+                    "statusedit" => 1
+                ], [
+                    'id' => $pieces[1]
+                ]);
+                if ($data) {
+                    $result['flag'] = true;
+                }
+            }
+        }
+
+        if ($act == "stop") {
+            $checkproduct = $this->_params['checkproduct'];
+            foreach ($checkproduct as $value => $giatri) {
+                $result['flag'] = false;
+                $pieces = explode(";", $giatri);
+                $data = $this->_model->updateRecord('salechannel', [
+                    'status' => -1,
+                    "statusedit" => 1
+                ], [
+                    'id' => $pieces[1]
+                ]);
+                if ($data) {
+                    $result['flag'] = true;
+                }
+            }
+        }
+        if ($act == "open") {
+            $checkproduct = $this->_params['checkproduct'];
+            foreach ($checkproduct as $value => $giatri) {
+                $result['flag'] = false;
+                $pieces = explode(";", $giatri);
+                $data = $this->_model->updateRecord('salechannel', [
+                    'status' => 2,
+                    "statusedit" => 1
+                ], [
+                    'id' => $pieces[1]
+                ]);
+                if ($data) {
+                    $result['flag'] = true;
+                }
+            }
+        }
+        
+        
+        
+        echo json_encode($result);
+    }
+
+    // Phương thức phân trang ajax
+    public function paginationAjax()
+    {
+        $result1 = [
+            'flag' => false
+        ];
+        // Tham số phân trang
+        $length = ($this->_params['length'] ? $this->_params['length'] : DEFAULT_LENGTH);
+        $page = ($this->_params['page'] ? $this->_params['page'] : 1);
+
+        $begin = ($page - 1) * $length;
+
+        $sql = $_SESSION['sqllistproduct'];
+
+        $this->_model->setQuery("SELECT count(*) as count " . $sql);
+        $result = $this->_model->readAll();
+        $this->_view->setData('count', $result[0]['count']);
+
+        $pagination = $this->paginationParams($result[0]['count'], $this->route('listproduct', ['method'=>'sale']));
+        $result1['divpaging'] = $pagination['pagination'];
+
+        $sqlheader = "SELECT p.*,u.ID as nameSupplier,  d.channel_name,d.travelProductId,d.status,d.useStartedAt1,d.useEndedAt1,
+                            d.id as salechannelId,d.channel_id,d.productId,d.type_depth1,d.type_depth2,d.type_depth3,d.type_depth4 ";
+       // echo $sqlheader . $sql . " LIMIT " . $begin . "," . $length;
+        $this->_model->setQuery($sqlheader . $sql . " LIMIT " . $begin . "," . $length);
+        
+        $products = $this->_model->readAll();
+        $list_product = array();
+        foreach ($products as $value => $giatri) {
+            $list_product[] = array(
+                $giatri['id'],
+                $giatri['sellerProductId'],
+                $giatri['name'],
+                $giatri['nameSupplier'],
+                $giatri['type_depth1'],
+                $giatri['type_depth2'],
+                $giatri['type_depth3'],
+                $giatri['type_depth4'],
+                $giatri['channel_name'],
+                $giatri['productId'],
+                $giatri['status'],
+                $giatri['useStartedAt1'],
+                $giatri['useEndedAt1'],
+                $giatri['salechannelId'],
+                $giatri['productId']
+            );
+        }
+
+        $vitri = 0;
+        $listproductbody = "";
+        foreach ($list_product as $value => $giatri) {
+            $vitri ++;
+           
+            $l_status = "";
+            if ($giatri[10] == 0)
+                $l_status = $this->_view->getItem('language', 'l_status0');
+            if ($giatri[10] == 1)
+                $l_status = $this->_view->getItem('language', 'l_status1');
+            if ($giatri[10] == 2)
+                $l_status = $this->_view->getItem('language', 'l_status2');
+            if ($giatri[10] == 3)
+                $l_status = $this->_view->getItem('language', 'l_status3');
+            if ($giatri[10] == 4)
+                $l_status = $this->_view->getItem('language', 'l_status4');
+            if ($giatri[10] == - 1)
+                $l_status = $this->_view->getItem('language', 'l_status_1');
+            $href='';
+            if($giatri[8] == 'COUPANG' )
+			    $href="https://trip.coupang.com/tp/products/$giatri[14]";  
+			if($giatri[8] == 'TMON' )
+			    $href="http://www.tmon.co.kr/deal/$giatri[14]";
+			if($giatri[8] == 'WMAKE' )
+				$href="https://tour.wd.wemakeprice.com/activity/direct/detail/$giatri[14]";
+			
+            $str='<input type="checkbox" name="checkproduct[]" class="checkbox" data-checkbox="' . $giatri[13] . '" value="' . $giatri[10] . ';' . $giatri[13] . '" id="checkproduct' . $vitri . '">';
+            $listproductbody .= '
+			     <tr>
+					<td>'.$str.'</td>
+					<td><input type="button" onclick="window.location.assign(\'' . URL_BASE . '/editticket1.html/' . $giatri[1] . '\')" class="btn hover small" value="' . $this->_view->getItem('language', 'l_edit') . '"></td>
+					<td>' . $giatri[1] . '</td>
+					<td>' . $giatri[2] . '</td>
+					<td>' . $giatri[3] . '</td>
+					<td>' . $giatri[4] . '>' . $giatri[5] . '>' . $giatri[6] . '>' . $giatri[7] . '</td>
+					<td>' . $giatri[8] . '</td>
+					<td><a href="'.$href.'" target="_blank">' . $giatri[9] . '</a></td>
+					<td class="status" data-status="' . $giatri[13] . '">' . $l_status . '</td>
+					<td>' . $giatri[11] . '</td>
+					<td class="stopsale" data-stopsale="' . $giatri[13] . '">' . $giatri[12] . '</td>
+
+				</tr>';
+        }
+        if($vitri==0)
+            $listproductbody .= '<tr><td colspan="11" class="empty">'.$this->_view->getItem('language', 'l_rowemptydata').'</td></tr>';
+            
+
+        $result1['listproductbody'] = $listproductbody;
+        $result1['flag'] = true;
+
+        echo json_encode($result1);
+    }
+
+    // Phương thức ajax
+    public function savechecklistAjax()
+    {
+        $result = ['flag' => false ];
+        $email1 = $this->_params['email1'];
+        $email2 = $this->_params['email2'];
+        $email3 = $this->_params['email3'];
+        $checkproduct = $this->_params['checkproduct'];
+        foreach ($checkproduct as $value => $giatri) {
+            $pieces = explode(";", $giatri);
+            $this->_model->deleteRecord('emailcheck', ["sellerProductId" => $pieces[1]]);
+            $this->_model->insertRecord('emailcheck', [
+                'sellerProductId' => $pieces[1],
+                'email1' => $email1,
+                'email2' => $email2,
+                'email3' => $email3
+            ]);
+        }
+       
+        $result['flag'] = true;
+        echo json_encode($result);
+    }
+    public function changeType1Ajax()
+    {
+        $type_depth = $_SESSION['type_depth'];
+        $type_depth1 = $this->_params['id_type1'];
+        $str='<select style="width: 150px; height: 24px;" class="TextBoxField" onchange="changeType2(this.value)" name="type2Id" id="type2Id">';
+        $str.='<option value="0"  selected="selected" >'.$this->_view->getItem('language', 'l_question4').'</option>';
+        
+        if($type_depth1!="0")
+        foreach ($type_depth[$type_depth1] as $value => $giatri) {
+                $str .= '<option value="'.$value.'" >'. $value. '</option>';
+        }
+        
+        $str.='</select>';
+        echo $str;
+    }
+
+    public function changeType2Ajax()
+    {
+        $type_depth = $_SESSION['type_depth'];
+        $type_depth1 = $this->_params['id_type1'];
+        $type_depth2 = $this->_params['id_type2'];
+        $str='<select style="width: 150px; height: 24px;" class="TextBoxField" onchange="changeType3(this.value)" name="type3Id" id="type3Id">';
+        $str.='<option value="0"  selected="selected">'.$this->_view->getItem('language', 'l_question4').'</option>';
+
+        if($type_depth2!="0")
+        foreach ($type_depth[$type_depth1][$type_depth2]  as $value => $giatri) {
+                $str .= '<option value="'.$value.'" >'. $value. '</option>';
+        }
+        $str.='</select>';
+        echo $str;
+    }
+    public function changeType3Ajax()
+    {
+        $type_depth = $_SESSION['type_depth'];
+        $type_depth1 = $this->_params['id_type1'];
+        $type_depth2 = $this->_params['id_type2'];
+        $type_depth3 = $this->_params['id_type3'];
+        $str="";
+        
+        $str='<select style="width: 150px; height: 24px;" class="TextBoxField" name="type4Id" id="type4Id">';
+        $str.='<option value="0" selected="selected">'.$this->_view->getItem('language', 'l_question4').'</option>';
+        
+        if($type_depth3!="0")
+        if(count($type_depth[$type_depth1][$type_depth2][$type_depth3])>0){
+            foreach ($type_depth[$type_depth1][$type_depth2][$type_depth3]   as $value => $giatri) {
+                    $str .= '<option value="'.$value.'">'. $value. '</option>';
+            }
+        }
+        $str.='</select>';
+        
+        echo $str;
+    }
+    
+    // Phương thức download file excel
+    public function downloadExcelAjax(){
+        $format = Func::config('listproductDownloadExcel');
+        if($format){
+            $sqlheader = "SELECT p.*,u.ID as nameSupplier,  d.channel_name,d.travelProductId,d.status,d.useStartedAt1,d.useEndedAt1,
+                            d.id as salechannelId,d.channel_id,d.productId,d.type_depth1,d.type_depth2,d.type_depth3,d.type_depth4 ";
+            $sql = $_SESSION['sqllistproduct'];
+            $this->_model->setQuery($sqlheader . $sql);
+            $products = $this->_model->readAll();
+
+            foreach ($products as $value => $giatri) {
+                $type_depth="";
+                $type_depth.= $giatri['type_depth1'];
+                $type_depth.= '>';
+                $type_depth.=  $giatri["type_depth2"];
+                $type_depth.= '>';
+                $type_depth.=  $giatri["type_depth3"];
+                $type_depth.= '>';
+                $type_depth.=  $giatri['type_depth4'];
+                
+                $products[$value]['type_depth']=$type_depth;
+                if($giatri['status']=="")
+                    $products[$value]['status']=0;
+            }
+            if($products){
+                $format['export']['titleName'] = "aaa";
+                $format['export']['description'] = "bbb";
+                $excel = new OfficeExcel();
+                $excel->write($format['filename'], $products, $format['columns'], $format['export']);
+            }
+        }
+    }
+    
+    // Upload Excel Product
+    public function uploadFileExcelProductAjax() {
+        $result = ['flag' => false];
+        if (isset($_FILES['fileupload']) && ($_FILES['fileupload']['error'] == 0)) {
+            $office = new OfficeExcel();
+            //coupang
+            $columns = [
+                [
+                    'title' => 'NO', //NO
+                    'key' => 'key1'
+                ],
+                [
+                    'title' => 'Tên sản phẩm', //Tên sản phẩm
+                    'key' => 'key2'
+                ],
+                [
+                    'title' => 'Loại hình sản phẩm', //Loại hình sản phẩm
+                    'key' => 'key3'
+                ],
+                [
+                    'title' => 'Loại hình bán sản phẩm', //Loại hình bán sản phẩm
+                    'key' => 'key4'
+                ],
+                [
+                    'title' => 'Tên option (bắt buộc)', //Tên option (bắt buộc)
+                    'key' => 'key5'
+                ],
+                [
+                    'title' => 'Option 1', //Option 1
+                    'key' => 'key6'
+                ],
+                [
+                    'title' => 'Option 2', //Option 2
+                    'key' => 'key7'
+                ],
+                [
+                    'title' => 'Loại người tham dự', //Loại người tham dự
+                    'key' => 'key8'
+                ],
+                [
+                    'title' => 'Ngày bắt đầu bán', //Ngày bắt đầu bán
+                    'key' => 'key9'
+                ],
+                [
+                    'title' => 'Ngày kết thúc bán', //Ngày kết thúc bán
+                    'key' => 'key10'
+                ],
+                [
+                    'title' => 'Ngày bắt đầu sử dụng', //Ngày bắt đầu sử dụng
+                    'key' => 'key11'
+                ],
+                [
+                    'title' => 'Ngày kết thúc sử dụng', //Ngày kết thúc sử dụng
+                    'key' => 'key12'
+                ],
+                [
+                    'title' => 'Loại hình giá bình thường', //Loại hình giá bình thường
+                    'key' => 'key13'
+                ],
+                [
+                    'title' => 'Giá bình thường', //Giá bình thường
+                    'key' => 'key14'
+                ],
+                [
+                    'title' => 'Loại thuế', //Loại thuế
+                    'key' => 'key15'
+                ],
+                [
+                    'title' => 'Giới thiệu sản phẩm', //Giới thiệu sản phẩm
+                    'key' => 'key16'
+                ],
+                [
+                    'title' => 'Thông báo', //Thông báo
+                    'key' => 'key17'
+                ],
+                [
+                    'title' => 'Ưu đãi, thưởng', //Ưu đãi, thưởng
+                    'key' => 'key18'
+                ],
+                [
+                    'title' => 'Địa chỉ', //Địa chỉ
+                    'key' => 'key19'
+                ],
+                [
+                    'title' => 'Website', //Website
+                    'key' => 'key20'
+                ],
+                [
+                    'title' => 'Số điện thoại đại diện', //Số điện thoại đại diện
+                    'key' => 'key21'
+                ],
+                [
+                    'title' => 'Điện thoại tư vấn mua hàng', //Điện thoại tư vấn mua hàng
+                    'key' => 'key22'
+                ],
+                [
+                    'title' => 'Điện thoại tư vấn hủy', //Điện thoại tư vấn hủy
+                    'key' => 'key23'
+                ],
+                [
+                    'title' => 'Thời gian tư vấn của trung tâm khách hàng', //Thời gian tư vấn của trung tâm khách hàng
+                    'key' => 'key24'
+                ],
+                [
+                    'title' => 'Type khu vực', //Type khu vực
+                    'key' => 'key25'
+                ],
+                [
+                    'title' => 'Có sử dụng ngay k0', //Có sử dụng ngay k0
+                    'key' => 'key26'
+                ],
+                [
+                    'title' => 'Dưới 19 tuổi k0 đc mua', //Dưới 19 tuổi k0 đc mua
+                    'key' => 'key27'
+                ],
+                [
+                    'title' => 'Phương thức cung cấp vé', //Phương thức cung cấp vé
+                    'key' => 'key28'
+                ],
+                [
+                    'title' => 'Vé k0 sử dụng có hoàn tiền 100% k0', //Vé k0 sử dụng có hoàn tiền 100% k0
+                    'key' => 'key29'
+                ],
+                [
+                    'title' => 'Setting hủy', //Setting hủy
+                    'key' => 'key30'
+                ],
+                [
+                    'title' => 'Có tiếp nhận hủy theo ngày làm việc k0', //Có tiếp nhận hủy theo ngày làm việc k0
+                    'key' => 'key31'
+                ],
+                [
+                    'title' => 'Hướng dẫn đặt vé', //Hướng dẫn đặt vé
+                    'key' => 'key32'
+                ],
+                [
+                    'title' => 'Nội dung chi tiết sản phẩm', //Nội dung chi tiết sản phẩm
+                    'key' => 'key33'
+                ],
+                [
+                    'title' => 'Keyword khu vực', //Keyword khu vực
+                    'key' => 'key34'
+                ],
+                [
+                    'title' => 'Tag tìm kiếm', //Tag tìm kiếm
+                    'key' => 'key35'
+                ],
+                [
+                    'title' => 'Hình', //Hình ảnh
+                    'key' => 'key36'
+                ],
+                [
+                    'title' => 'Quyết toán', //settlement
+                    'key' => 'key37'
+                ],
+                [
+                    'title' => 'Email', //email
+                    'key' => 'key38'
+                ],
+                [
+                    'title' => 'Fax', //fax
+                    'key' => 'key39'
+                ],
+                [
+                    'title' => 'SL mua tối đa 1 lần', //fax
+                    'key' => 'key40'
+                ],
+                [
+                    'title' => 'SL mua tối đa 1 người', //fax
+                    'key' => 'key41'
+                ]
+                
+                
+            ];
+            //wmp
+            $columns2 = [
+                [
+                    'title' => 'NO', //NO
+                    'key' => 'key1'
+                ],
+                [
+                    'title' => 'Tên đối tác', //Tên đối tác
+                    'key' => 'key2'
+                ],
+                [
+                    'title' => 'MD phụ trách', //MD phụ trách
+                    'key' => 'key3'
+                ],
+                [
+                    'title' => 'Setting phí', //Setting phí
+                    'key' => 'key4'
+                ],
+                [
+                    'title' => 'Tên NCC', //Tên NCC
+                    'key' => 'key5'
+                ],
+                [
+                    'title' => 'Địa chỉ', //Địa chỉ
+                    'key' => 'key6'
+                ],
+                [
+                    'title' => 'Số điện thoại', //Số điện thoại
+                    'key' => 'key7'
+                ],
+                [
+                    'title' => 'Website', //Website
+                    'key' => 'key8'
+                ],
+                [
+                    'title' => 'Type sản phẩm', //Type sản phẩm
+                    'key' => 'key9'
+                ],
+                [
+                    'title' => 'Type khu vực', //Type khu vực
+                    'key' => 'key10'
+                ],
+                [
+                    'title' => 'Tên sản phẩm', //Tên sản phẩm
+                    'key' => 'key11'
+                ],
+                [
+                    'title' => 'Chi tiết sản phẩm', //Chi tiết sản phẩm
+                    'key' => 'key12'
+                ],
+                [
+                    'title' => 'Thời gian bán', //Thời gian bán
+                    'key' => 'key13'
+                ],                
+                [
+                    'title' => 'Hình sản phẩm', //Hình sản phẩm
+                    'key' => 'key14'
+                ],
+                [
+                    'title' => 'Hình listing', //Hình listing
+                    'key' => 'key15'
+                ],
+                [
+                    'title' => 'Giá bình thường', //Giá bình thường
+                    'key' => 'key16'
+                ],
+                [
+                    'title' => 'Giá bán', //Giá bán
+                    'key' => 'key17'
+                ],
+                [
+                    'title' => 'Tồn kho của từng option', //Tồn kho của từng option
+                    'key' => 'key18'
+                ],
+                [
+                    'title' => 'Hiển thị hay k0', //Hiển thị hay k0
+                    'key' => 'key19'
+                ],
+                [
+                    'title' => 'Thông tin giá chuẩn', //Thông tin giá chuẩn
+                    'key' => 'key20'
+                ],
+                [
+                    'title' => 'Người phát hành', //Người phát hành
+                    'key' => 'key21'
+                ],
+                [
+                    'title' => 'Thời gian hiệu lực', //Thời gian hiệu lực
+                    'key' => 'key22'
+                ],
+                [
+                    'title' => 'Thời gian hiệu lực', //Điều kiện sử dụng
+                    'key' => 'key23'
+                ],
+                [
+                    'title' => 'Nơi có thể sử dụng', //Nơi có thể sử dụng
+                    'key' => 'key24'
+                ],
+                [
+                    'title' => 'Hoàn tiền', // hoàn tiền 100%
+                    'key' => 'key25'
+                ],
+                [
+                    'title' => 'Nội dung hủy/hoàn tiền',
+                    'key' => 'key26'
+                ],
+                [
+                    'title' => 'Số điện thoại tư vấn khách hàng',
+                    'key' => 'key27'
+                ],
+                [
+                    'title' => 'Số điện thoại hủy hoàn tiền',
+                    'key' => 'key28'
+                ],
+                [
+                    'title' => 'Loại hình bán sản phẩm',
+                    'key' => 'key29'
+                ],
+                [
+                    'title' => 'Email',
+                    'key' => 'key30'
+                ],
+                [
+                    'title' => 'Fax',
+                    'key' => 'key31'
+                ],
+                [
+                    'title' => 'Tên option',
+                    'key' => 'key32'
+                ]
+            ];
+            //gmk
+            $columns3 = [
+                [
+                    'title' => 'NO', //NO
+                    'key' => 'key1'
+                ],
+                [
+                    'title' => 'Tên sản phẩm', //Tên sản phẩm
+                    'key' => 'key2'
+                ],
+                [
+                    'title' => 'Type', //Type
+                    'key' => 'key3'
+                ],
+                [
+                    'title' => 'Thời gian bán', //Thời gian bán
+                    'key' => 'key4'
+                ],
+                [
+                    'title' => 'Giá bán', //Giá bán
+                    'key' => 'key5'
+                ],
+                [
+                    'title' => 'Option đặt vé', //Option đặt vé
+                    'key' => 'key6'
+                ],
+                [
+                    'title' => 'Thành phần thêm', //Thành phần thêm
+                    'key' => 'key7'
+                ],
+                [
+                    'title' => 'Số lượng tồn kho', //Số lượng tồn kho
+                    'key' => 'key8'
+                ],
+                [
+                    'title' => 'Hình sản phẩm', //Hình sản phẩm
+                    'key' => 'key9'
+                ],
+                [
+                    'title' => 'Trường nhập thông tin sản phẩm', //Trường nhập thông tin sản phẩm
+                    'key' => 'key10'
+                ],
+                [
+                    'title' => 'Trường nhập thông tin sản phẩm thành phần thêm', //Trường nhập thông tin sản phẩm thành phần thêm
+                    'key' => 'key11'
+                ],
+                [
+                    'title' => 'Trường nhập thông tin quảng cáo/quảng bá', //Trường nhập thông tin quảng cáo/quảng bá
+                    'key' => 'key12'
+                ],
+                [
+                    'title' => 'Chính sách giao vé', //Chính sách giao vé
+                    'key' => 'key13'
+                ],
+                [
+                    'title' => 'Phương thức gửi', //Phương thức gửi
+                    'key' => 'key14'
+                ],
+                [
+                    'title' => 'Setting phí gửi', //Setting phí gửi
+                    'key' => 'key15'
+                ],
+                [
+                    'title' => 'Setting thông tin trả vé', //Setting thông tin trả vé
+                    'key' => 'key16'
+                ],
+                [
+                    'title' => 'Thông báo', //Thông báo
+                    'key' => 'key17'
+                ]
+            ];
+            //naver
+            $columns4 = [
+                [
+                    'title' => 'NO', //NO
+                    'key' => 'key1'
+                ],
+                [
+                    'title' => 'Tên sản phẩm', //Tên sản phẩm
+                    'key' => 'key2'
+                ],
+                [
+                    'title' => 'Giới thiệu sản phẩm', //Giới thiệu sản phẩm
+                    'key' => 'key3'
+                ],
+                [
+                    'title' => 'Hình đại diện', //Hình đại diện
+                    'key' => 'key4'
+                ],
+                [
+                    'title' => 'Hình sản phẩm', //Hình sản phẩm
+                    'key' => 'key5'
+                ],
+                [
+                    'title' => 'Giới thiệu chi tiết', //Giới thiệu chi tiết
+                    'key' => 'key6'
+                ],
+                [
+                    'title' => 'Độ tuổi có thể sử dụng', //Độ tuổi có thể sử dụng
+                    'key' => 'key7'
+                ],
+                [
+                    'title' => 'Thời gian có thể sử dụng', //Thời gian có thể sử dụng
+                    'key' => 'key8'
+                ],
+                [
+                    'title' => 'Hạn chế số lượng 1 ID có thể mua', //Hạn chế số lượng 1 ID có thể mua
+                    'key' => 'key9'
+                ],
+                [
+                    'title' => 'Số lượng đặt', //Số lượng đặt
+                    'key' => 'key10'
+                ],
+                [
+                    'title' => 'Số lượng đặt tối đa', //Số lượng đặt tối đa
+                    'key' => 'key11'
+                ],
+                [
+                    'title' => 'Địa chỉ', //Địa chỉ
+                    'key' => 'key12'
+                ],
+                [
+                    'title' => 'Vị trí chi tiết', //Vị trí chi tiết
+                    'key' => 'key13'
+                ],
+                [
+                    'title' => 'Số điện thoại', //Số điện thoại
+                    'key' => 'key14'
+                ],
+                [
+                    'title' => 'Giá cơ bản', //Giá cơ bản
+                    'key' => 'key15'
+                ],
+                [
+                    'title' => 'Số lượng tồn kho', //Số lượng tồn kho
+                    'key' => 'key16'
+                ]
+            ];
+            $dataExcel = $office->readProductCounpang($_FILES['fileupload']['tmp_name'], $columns);
+            $dataExcelWMP = $office->readProductWMP($_FILES['fileupload']['tmp_name'], $columns2);
+            $dataExcelGMK = $office->readProductGMK($_FILES['fileupload']['tmp_name'], $columns3);
+            $dataExcelNaver = $office->readProductNaver($_FILES['fileupload']['tmp_name'], $columns4);
+            if ($dataExcel['success'] == true) {
+                $result['flag'] = $dataExcel['success'];
+                $result['datafile'] = $this->uploadFileExcelProduct_insertdata($dataExcel['data']);
+            }
+            if ($dataExcelWMP['success'] == true) {
+                $result['flag_wmp'] = $dataExcelWMP['success'];
+                $result['datafile_wmp'] = $this->uploadFileExcelProduct_wmp_insertdata($dataExcelWMP['data']);
+            }
+            if ($dataExcelGMK['success'] == true) {
+                $result['flag_gmk'] = $dataExcelGMK['success'];
+                $result['datafile_gmk'] = $this->uploadFileExcelProductview($dataExcelGMK['data']);
+            }
+            if ($dataExcelNaver['success'] == true) {
+                $result['flag_naver'] = $dataExcelNaver['success'];
+                $result['datafile_naver'] = $this->uploadFileExcelProductview($dataExcelNaver['data']);
+            }
+        }
+        echo json_encode($result);
+    }
+
+    // Them nhieu nha cung cap vao Database va hien thi ket qua ra view
+    public function uploadFileExcelProductview($data) {
+        $str = '';
+        $count_array= count($data);
+        if($count_array>0){            
+            for($i=0;$i<$count_array;$i++){
+                $str.="<p>";
+                foreach ($data[$i] as $key=>$value){
+                    $str.=$value.",";
+                }
+                $str.="</p>";
+            }
+        }
+        return $str;
+    }
+    //uploadFileExcelProduct_wmp_insertdata WMP
+    public function uploadFileExcelProduct_wmp_insertdata($data) {
+        $str = '';$account = $_SESSION['accountshopping'];
+        $count_array= count($data);
+        if($count_array>0){            
+            for($i=0;$i<$count_array;$i++){                
+                foreach ($data[$i] as $key=>$value){
+                    $str.=$key.":".$value."<br/>";  
+                    if($key==0){$no=$value;}//NO
+                    if($key==1){$tendoitac=$value;}//Tên đối tác
+                    if($key==2){$mdphutrach=$value;}//MD phụ trách
+                    if($key==3){$settingphi=$value;}//Setting phí
+                    if($key==4){$tenncc=$value;}//Tên NCC
+                    if($key==5){$diachi=$value;}//Địa chỉ
+                    if($key==6){$sodienthoai=$value;}//Số điện thoại
+                    if($key==7){$website=$value;}//Website
+                    if($key==8){
+                        $typesanpham=$value;
+                        $ex_type= explode(" > ", $typesanpham);
+                        $type_depth1=$ex_type[0];
+                        $type_depth2=$ex_type[1];
+                        $type_depth3=$ex_type[2];
+                        $type_depth4=$ex_type[3];
+                        $channeltypes=$this->_model->loadRecord('channeltypes', ['type_depth1'=>$type_depth1,'type_depth2'=>$type_depth2,'type_depth3'=>$type_depth3,'type_depth4'=>$type_depth4]);
+                        
+                        $type_id=$channeltypes['type_id'];
+                        $channelid=$channeltypes['channelid'];
+                        $type_rate=$channeltypes['type_rate'];
+                        $matchtype=$this->_model->loadRecord('matchtype', ['channelId'=>$channelid,'channeltypeId'=>$type_id]);                        
+                        $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$matchtype['typeId']]);
+                        $type_parentid=$producttypes['type_parentid'];
+                        if($type_parentid!=0){
+                            $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                            $type_parentid=$producttypes['type_parentid'];
+                            if($type_parentid==1){
+                                $idType02=$producttypes['type_code'];
+                                $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                $idType01=$producttypes['type_code'];
+                            }else{
+                                $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                $type_parentid=$producttypes['type_parentid'];
+                                if($type_parentid==1){
+                                    $idType02=$producttypes['type_code'];
+                                    $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                    $idType01=$producttypes['type_code'];
+                                }else{
+                                    $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                    $type_parentid=$producttypes['type_parentid'];
+                                    if($type_parentid==1){
+                                        $idType02=$producttypes['type_code'];
+                                        $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                        $idType01=$producttypes['type_code'];
+                                    }
+                                }
+                            }
+                        }                        
+                    }//Type sản phẩm
+                    if($key==9){$typekhuvuc=$value;}//Type khu vực
+                    if($key==10){$tensanpham=$value;}//Tên sản phẩm
+                    if($key==11){$chitietsanpham=$value;}// Chi tiết sản phẩm
+                    if($key==12){$thoigianban=$value;}//thời gian bán
+                    if($key==13){$hinhsanpham=$value;}//Hình sản phẩm
+                    if($key==14){$hinhlisting=$value;}//Hình listing
+                    if($key==15){$giabinhthuong=$value;}//Giá bình thường
+                    if($key==16){$giaban=$value;}//Giá bán
+                    if($key==17){$tonkhocuatungoption=$value;} // Tồn kho của từng option /số lượng trong option
+                    if($key==18){$hienthihayko=$value;}//Hiển thị hay k0
+                    if($key==19){$thongtingiachuan=$value;}//Thông tin giá chuẩn
+                    if($key==20){$nguoiphathanh=$value;}//Người phát hành
+                    if($key==21){$thoigianhieuluc=$value;}//Thời gian hiệu lực
+                    if($key==22){$dieukiensudung=$value;}//Điều kiện sử dụng
+                    if($key==23){$noicothesudung=$value;}//Nơi có thể sử dụng
+                    if($key==24){$hoantien=$value;}//Hoàn tiền 100%
+                    if($key==25){$noidunghuyhoantien=$value;}//Nôi dung hủy/hoàn tiền
+                    if($key==26){$sodienthoaituvan=$value;}//Số điện thoại tư vấn khách hàng
+                    if($key==27){$sodienthoaihuy=$value;}//Số điện thoại Hủy/Hoàn tiền
+                    if($key==28){$loaihinhbansanpham=$value;}//Loại hình bán sản phẩm
+                    if($key==29){$email=$value;}//Email
+                    if($key==30){$fax=$value;}//Fax
+                    if($key==31){$tenoption=$value;}//Tên option
+                }
+                $str.=$idType01.":".$idType02.$loaihinhbansanpham.$noidunghuyhoantien."<br/>";  
+                //insert data 
+                    $sellerProductId = microtime(true) * 10000;
+                    $contactId = microtime(true) * 10000;
+                    $sellerTravelItemId = microtime(true) * 10000;
+                    $cancelPolicyId = microtime(true) * 10000;
+                    $locationsId = microtime(true) * 10000;
+                    $contentId = microtime(true) * 10000;
+                    $imageId = microtime(true) * 10000;
+                    $data_product=[
+                        'sellerProductId'=>$sellerProductId,
+                        'name'=>$tensanpham,
+                        'idType1'=>$idType01,
+                        'idType2'=>$idType02,
+                        'saleStartedAt'=>$thoigianban,
+                        'saleEndedAt'=>"9999-12-31 23:59:59",
+                        'useStartedAt'=>$thoigianhieuluc,
+                        'useEndedAt'=>"9999-12-31 23:59:59",
+                        'inventoryType'=>$loaihinhbansanpham,
+                        'settlement'=>0,
+                        'travelTypeId' => 1,
+                        'productDetailTypeId' => 1,
+                        'wardId' => 214,
+                        'maxPurchaseTime' => 10,//so luong mua toi da 1 lan
+                        'maxPurchaseQuantity' => 10,//so luong mua toi da 1 nguoi
+                        'supplier'=>$account['idx'],
+                        'user_idx'=>$account['idx'],
+                        'creator'=>$account['ID']
+                    ];
+                    $this->_model->insertRecord('sellerproduct',$data_product);
+                    //tag search mặc định lấy tên sản phẩm
+                    $data_tag=[
+                        'sellerProductId'=>$sellerProductId,
+                        'searchTags'=>$tensanpham
+                    ];
+                    $this->_model->insertRecord('searchtags',$data_tag);
+                    //end tag search
+                    //salechannel
+                    $data_salechannel=[
+                        'sellerProductId'=>$sellerProductId,
+                        'channelId'=>$channelid,
+                        'channelTypeId'=>$type_id,
+                        'type_rate'=>$type_rate,
+                        'useStartedAt'=>$thoigianhieuluc,
+                        'useEndedAt'=>"9999-12-31 23:59:59",
+                        'status'=>1,
+                        'isDelete'=>0,
+                        'statusedit'=>0
+                    ];
+                    $this->_model->insertRecord('salechannel',$data_salechannel);
+                    //end salechannel
+                    //contacts1
+                    $data_contacts1=[
+                        'sellerProductId'=>$sellerProductId,
+                        'roadNameAddress'=>$diachi,
+                        'landNumberAddress'=>"서울특별시 중랑구 면목동 1190-3 seoul소다헌",
+                        'zipCode'=>"02197",
+                        'province'=>"면목동",
+                        'city'=>"서울특별시",
+                        'district'=>"중랑구",
+                        'phonetable'=>$sodienthoai,
+                        'phoneadvisory'=>$sodienthoaituvan,
+                        'phonecancel'=>$sodienthoaihuy,
+                        'hotline'=>$sodienthoaituvan,
+                        'website'=>$website,
+                        'email'=>$email,
+                        'fax'=>$fax
+                    ];
+                    $this->_model->insertRecord('contacts1',$data_contacts1); 
+                    //end contacts1
+                    //contact
+                    $data_contacts_aphonetable=[
+                        'sellerProductId'=>$sellerProductId,
+                        'contactId'=>$contactId,
+                        'contactType'=>"PHONE",
+                        'contactUseType'=>"REPRESENTATIVE",
+                        'contact'=>$sodienthoai                     
+                    ];                    
+                    $this->_model->insertRecord('contacts',$data_contacts_aphonetable);
+                    $data_contacts_aphoneadvisory=[
+                        'sellerProductId'=>$sellerProductId,
+                        'contactId'=>$contactId,
+                        'contactType'=>"PHONE",
+                        'contactUseType'=>"BOOKING_INQUIRY",
+                        'contact'=>$sodienthoaituvan
+                    ];                    
+                    $this->_model->insertRecord('contacts',$data_contacts_aphoneadvisory);
+                    $data_contacts_aphonecancel=[
+                        'sellerProductId'=>$sellerProductId,
+                        'contactId'=>$contactId,
+                        'contactType'=>"PHONE",
+                        'contactUseType'=>"CANCEL_INQUIRY",
+                        'contact'=>$sodienthoaihuy
+                    ];                    
+                    $this->_model->insertRecord('contacts',$data_contacts_aphonecancel);
+                    $data_contacts_ahotline=[
+                        'sellerProductId'=>$sellerProductId,
+                        'contactId'=>$contactId,
+                        'contactType'=>"PHONE",
+                        'contactUseType'=>"EMERGENCY",
+                        'contact'=>$sodienthoaituvan
+                    ];                    
+                    $this->_model->insertRecord('contacts',$data_contacts_ahotline);
+                    $data_contacts_website=[
+                        'sellerProductId'=>$sellerProductId,
+                        'contactId'=>$contactId,
+                        'contactType'=>"WEBSITE",
+                        'contactUseType'=>"REPRESENTATIVE",
+                        'contact'=>$website
+                    ];                    
+                    $this->_model->insertRecord('contacts',$data_contacts_website);
+                    $data_contacts_email=[
+                        'sellerProductId'=>$sellerProductId,
+                        'contactId'=>$contactId,
+                        'contactType'=>"EMAIL",
+                        'contactUseType'=>"REPRESENTATIVE",
+                        'contact'=>$email
+                    ];                    
+                    $this->_model->insertRecord('contacts',$data_contacts_email);
+                    $data_contacts_fax=[
+                        'sellerProductId'=>$sellerProductId,
+                        'contactId'=>$contactId,
+                        'contactType'=>"FAX",
+                        'contactUseType'=>"REPRESENTATIVE",
+                        'contact'=>$fax
+                    ];                    
+                    $this->_model->insertRecord('contacts',$data_contacts_fax);
+                    //end contact
+                    //contents
+                    $data_contents=[   
+                        'sellerProductId'=>$sellerProductId,
+                        'contentId'=>$contentId,                    
+                        'type'=>'Product-Content',
+                        'content'=>$chitietsanpham,
+                        'format'=>"TEXT",
+                        'sellerUrlMethod'=>"GET",
+                        'seq'=>1
+                    ];
+                    $this->_model->insertRecord('contents',$data_contents);
+                    //end contents
+                    //option
+                    $data_travelitems=[
+                        'sellerProductId'=>$sellerProductId,
+                        'sellerTravelItemId'=>$sellerTravelItemId,
+                        'name'=>$tenoption,
+                        'onSale'=>1,
+                        'taxType'=>"TAX",
+                        'seq'=>0,
+                        'representative'=>1,
+                        'isDelete'=>0
+                    ];
+                    $this->_model->insertRecord('travelitems',$data_travelitems);
+                    //end option
+                    //rates                
+                    $data_rates=[
+                        'sellerTravelItemId'=>$sellerTravelItemId,
+                        'rateType'=>"BASIC",
+                        'priceType'=>"COUPANG_PRICE",
+                        'price'=>$giabinhthuong,
+                        'pricesale'=>$giaban,
+                        'amount'=>1,
+                        'representative'=>1,
+                        'saleStartedAt'=>$thoigianban,
+                        'saleEndedAt'=>"9999-12-31 23:59:59",
+                        'maxPurchaseQtyPerPerson'=>1,
+                        'maxPurchaseQtyPeriod'=>1,
+                        'seq'=>1
+                    ];
+                    $this->_model->insertRecord('rates',$data_rates);                
+                    //end rates
+                    //useperiod
+                    $data_useperiod=[
+                        'sellerTravelItemId'=>$sellerTravelItemId,
+                        'useStartedAt'=>$thoigianhieuluc,
+                        'useEndedAt'=>"9999-12-31 23:59:59"
+                    ];
+                    $this->_model->insertRecord('useperiod',$data_useperiod);
+                    //end useperiod
+                    //informationuse
+                    $data_informationuse_in=[
+                        'sellerProductId'=>$sellerProductId,
+                        'type'=>'introduction',
+                        'title'=>'Giới thiệu sản phẩm',
+                        'content'=>$chitietsanpham
+                    ];
+                    $this->_model->insertRecord('informationuse',$data_informationuse_in);
+                    $data_informationuse_cs=[
+                        'sellerProductId'=>$sellerProductId,
+                        'type'=>'csContactInfo',
+                        'title'=>'Hướng dẫn đặt phòng',
+                        'content'=>$dieukiensudung
+                    ];
+                    $this->_model->insertRecord('informationuse',$data_informationuse_cs);
+                    //end informationuse
+                    //cancelpolicy
+                    if($hoantien=="아니요"){//ko hoàn tiền 100%
+                        $data_cancelpolicy=[
+                            'sellerProductId'=>$sellerProductId,
+                            'cancelPolicyId'=>$cancelPolicyId,
+                            'notice'=>$noidunghuyhoantien,
+                            'cancelType'=>'AUTO',
+                            'cancelPeriodType'=>'BEFORE_USE',
+                            'cancelPeriodType1'=>'DATEUSE',
+                            'cancelPeriodType2'=>1,
+                            'cancelMarkType'=>'UNUSE_REFUND_ALL_BEFORE_ONE_DAY',
+                            'refundOnBusinessDay'=>0,
+                            'refundUnusedTicket'=>0,
+                        ];
+                        $this->_model->insertRecord('informationuse',$data_cancelpolicy);
+                    }else{
+                        $data_cancelpolicy=[
+                            'sellerProductId'=>$sellerProductId,
+                            'cancelPolicyId'=>$cancelPolicyId,
+                            'notice'=>$noidunghuyhoantien,
+                            'cancelType'=>'AUTO',
+                            'cancelPeriodType'=>'BEFORE_USE',
+                            'cancelPeriodType1'=>'DATEUSE',
+                            'cancelPeriodType2'=>1,
+                            'cancelMarkType'=>'UNUSE_REFUND_ALL',
+                            'refundOnBusinessDay'=>0,
+                            'refundUnusedTicket'=>1,
+                        ];
+                        $this->_model->insertRecord('informationuse',$data_cancelpolicy);
+                    } 
+                    //end cancelpolicy
+                    //locations                
+                    $data_locations=[
+                        'sellerProductId'=>$sellerProductId,
+                        'locationsId'=>$locationsId,
+                        'latitude'=>"",
+                        'longitude'=>"",
+                        'roadNameAddress'=>$diachi,
+                        'landNumberAddress'=>"서울특별시 중랑구 면목동 1190-3 seoul소다헌",
+                        'nation'=>"대한민국",
+                        'province'=>"면목동",
+                        'city'=>"서울특별시",
+                        'district'=>"중랑구",
+                        'zipCode'=>"02197"
+                    ];
+                    $this->_model->insertRecord('locations',$data_locations);                 
+                    //end locations
+                    //images   hinh san pham 
+                    if($hinhsanpham!=""){
+                        $hinhsanpham= explode(",", $hinhsanpham);
+                        if(count($hinhsanpham)>0){
+                            for($k=0;$k<count($hinhsanpham);$k++){
+                                if($k==0){$representative=1;}else{$representative=0;}
+                                $data_images=[
+                                    'sellerProductId'=>$sellerProductId,
+                                    'imageId'=>$imageId,
+                                    'sellerUrl'=>$hinhsanpham[$k],
+                                    'sellerUrlMethod'=>"GET",
+                                    'representative'=>$representative,
+                                    'sellerImageCategory'=>1234,
+                                    'imageGroup'=>"BASIC",
+                                    'description'=>"",
+                                    'seq'=>$k,
+                                    'type'=>1
+                                ];
+                                $this->_model->insertRecord('images',$data_images);
+                            }
+                        }
+                    }
+                    if($hinhlisting!=""){
+                        $hinhlisting= explode(",", $hinhlisting);
+                        if(count($hinhlisting)>0){
+                            for($k=0;$k<count($hinhlisting);$k++){
+                                $data_images=[
+                                    'sellerProductId'=>$sellerProductId,
+                                    'imageId'=>$imageId,
+                                    'sellerUrl'=>$hinhlisting[$k],
+                                    'sellerUrlMethod'=>"GET",
+                                    'representative'=>0,
+                                    'sellerImageCategory'=>1234,
+                                    'imageGroup'=>"BASIC",
+                                    'description'=>"",
+                                    'seq'=>$k,
+                                    'type'=>2
+                                ];
+                                $this->_model->insertRecord('images',$data_images);
+                            }
+                        }
+                    }                
+                    //end images
+                //end insert data 
+            }
+        }
+        return $str;
+    }    
+    //end uploadFileExcelProduct_wmp_insertdata WMP
+    
+    //uploadFileExcelProduct_insertdata
+    public function uploadFileExcelProduct_insertdata($data) {
+        $account = $_SESSION['accountshopping'];
+        $str = '';
+        $count_array= count($data);
+        if($count_array>0){            
+            for($i=0;$i<$count_array;$i++){
+                foreach ($data[$i] as $key=>$value){
+                    $str.=$key.":".$value."<br/>";                    
+                    if($key==0){$no=$value;}
+                    if($key==1){$tensanpham=$value;}
+                    if($key==2){//loaihinhsanpham                        
+                        $channeltypes=$this->_model->loadRecord('channeltypes', ['type_apivalue2'=>$value]);
+                        if($channeltypes){
+                            $type_id=$channeltypes['type_id'];
+                            $channelid=$channeltypes['channelid'];
+                            $type_rate=$channeltypes['type_rate'];
+                        }else{
+                            $channeltypes=$this->_model->loadRecord('channeltypes', ['type_apivalue2'=>'THEME_PARK']);
+                            $type_id=$channeltypes['type_id'];
+                            $channelid=$channeltypes['channelid'];
+                            $type_rate=$channeltypes['type_rate'];
+                        }
+                        $matchtype=$this->_model->loadRecord('matchtype', ['channelId'=>$channelid,'channeltypeId'=>$type_id]);
+                        $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$matchtype['tbridgetypeId']]);
+                        $type_parentid=$producttypes['type_parentid'];
+                        if($type_parentid!=0){
+                            $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                            $type_parentid=$producttypes['type_parentid'];
+                            if($type_parentid==1){
+                                $idType02=$producttypes['type_code'];
+                                $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                $idType01=$producttypes['type_code'];
+                            }else{
+                                $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                $type_parentid=$producttypes['type_parentid'];
+                                if($type_parentid==1){
+                                    $idType02=$producttypes['type_code'];
+                                    $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                    $idType01=$producttypes['type_code'];
+                                }else{
+                                    $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                    $type_parentid=$producttypes['type_parentid'];
+                                    if($type_parentid==1){
+                                        $idType02=$producttypes['type_code'];
+                                        $producttypes=$this->_model->loadRecord('producttypes', ['type_id'=>$type_parentid]);
+                                        $idType01=$producttypes['type_code'];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if($key==3){$loaihinhbansanpham=$value;}
+                    if($key==4){$tenoption=$value;}
+                    if($key==5){$option1=$value;}
+                    if($key==6){$option2=$value;}
+                    if($key==7){$loainguoithamdu=$value;}
+                    if($key==8){$ngaybatdauban=$value;}
+                    if($key==9){$ngayketthucban=$value;}
+                    if($key==10){$ngaybatdausudung=$value;}
+                    if($key==11){$ngayketthucsudung=$value;}
+                    if($key==12){$loaihinhgiabinhthuong=$value;}
+                    if($key==13){$giabinhthuong=$value;}
+                    if($key==14){$loaithue=$value;}
+                    if($key==15){$gioithieusanpham=$value;}
+                    if($key==16){$thongbao=$value;}
+                    if($key==17){$uudaithuong=$value;}
+                    if($key==18){$diachi=$value;}
+                    if($key==19){$website=$value;}
+                    if($key==20){$sodienthoaidaidien=$value;}
+                    if($key==21){$sodienthoaituvanmuahang=$value;}
+                    if($key==22){$sodienthoaituvanhuy=$value;}
+                    if($key==23){$thoigiantuvancuattkh=$value;}
+                    if($key==24){$typekhuvuc=$value;}
+                    if($key==25){$cosudungngayko=$value;}
+                    if($key==26){$duoi19=$value;}
+                    if($key==27){$ptccv=$value;}
+                    if($key==28){$hoantien=$value;}
+                    if($key==29){$sethuy=$value;}
+                    if($key==30){$cotiepnhanhuytheongaylamviecko=$value;}
+                    if($key==31){$huongdandatve=$value;}
+                    if($key==32){$noidungchitietsanpham=$value;}
+                    if($key==33){$keywordkhuvuc=$value;}
+                    if($key==34){$tag=$value;}
+                    if($key==35){$hinh=$value;}  
+                    if($key==36){
+                        if($value=="판매가 기준정산"){
+                            $settlement=0;
+                        }else{
+                            $settlement=1;
+                        }
+                    }
+                    if($key==37){$email=$value;}
+                    if($key==38){$fax=$value;}
+                    if($key==39){$slmuatoida1lan=$value;}
+                    if($key==40){$slmuatoida1nguoi=$value;}
+                }//end foreach $data[$i]
+                $str.="idType01: ".$idType01." idType02:".$idType02;
+                
+                //insert data
+                $sellerProductId = microtime(true) * 10000;
+                $contactId = microtime(true) * 10000;
+                $sellerTravelItemId = microtime(true) * 10000;
+                $cancelPolicyId = microtime(true) * 10000;
+                $locationsId = microtime(true) * 10000;
+                $contentId = microtime(true) * 10000;
+                $imageId = microtime(true) * 10000;
+                $data_product=[
+                    'sellerProductId'=>$sellerProductId,
+                    'name'=>$tensanpham,
+                    'idType1'=>$idType01,
+                    'idType2'=>$idType02,
+                    'saleStartedAt'=>$ngaybatdauban,
+                    'saleEndedAt'=>$ngayketthucban,
+                    'useStartedAt'=>$ngaybatdausudung,
+                    'useEndedAt'=>$ngayketthucsudung,
+                    'inventoryType'=>$loaihinhbansanpham,
+                    'settlement'=>$settlement,
+                    'travelTypeId' => 1,
+                    'productDetailTypeId' => 1,
+                    'wardId' => 214,
+                    'maxPurchaseTime' => $slmuatoida1lan,
+                    'maxPurchaseQuantity' => $slmuatoida1nguoi,
+                    'supplier'=>$account['idx'],
+                    'user_idx'=>$account['idx'],
+                    'creator'=>$account['ID']
+                ];
+                $this->_model->insertRecord('sellerproduct',$data_product);
+                //tag search
+                if($tag!=""){
+                    $tag= explode(",", $tag);
+                    $counttag=count($tag);
+                    if($counttag>0){
+                        for($i=0;$i<$counttag;$i++){
+                            $data_tag=[
+                                'sellerProductId'=>$sellerProductId,
+                                'searchTags'=>$tag[$i]
+                            ];
+                            $this->_model->insertRecord('searchtags',$data_tag);
+                        }
+                    }
+                }                    
+                //end tag search                    
+                //salechannel
+                $data_salechannel=[
+                    'sellerProductId'=>$sellerProductId,
+                    'channelId'=>$channelid,
+                    'channelTypeId'=>$type_id,
+                    'type_rate'=>$type_rate,
+                    'useStartedAt'=>$ngaybatdausudung,
+                    'useEndedAt'=>$ngayketthucsudung,
+                    'status'=>1,
+                    'isDelete'=>0,
+                    'statusedit'=>0
+                ];
+                $this->_model->insertRecord('salechannel',$data_salechannel);
+                //end salechannel
+                //contacts1
+                $data_contacts1=[
+                    'sellerProductId'=>$sellerProductId,
+                    'roadNameAddress'=>$diachi,
+                    'landNumberAddress'=>"서울특별시 중랑구 면목동 1190-3 seoul소다헌",
+                    'zipCode'=>"02197",
+                    'province'=>"면목동",
+                    'city'=>"서울특별시",
+                    'district'=>"중랑구",
+                    'phonetable'=>$sodienthoaidaidien,
+                    'phoneadvisory'=>$sodienthoaituvanmuahang,
+                    'phonecancel'=>$sodienthoaituvanhuy,
+                    'hotline'=>$sodienthoaituvanmuahang,
+                    'website'=>$website,
+                    'email'=>$email,
+                    'fax'=>$fax
+                ];
+                $this->_model->insertRecord('contacts1',$data_contacts1); 
+                //end contacts1
+                //contact
+                $data_contacts_aphonetable=[
+                    'sellerProductId'=>$sellerProductId,
+                    'contactId'=>$contactId,
+                    'contactType'=>"PHONE",
+                    'contactUseType'=>"REPRESENTATIVE",
+                    'contact'=>$sodienthoaidaidien                     
+                ];                    
+                $this->_model->insertRecord('contacts',$data_contacts_aphonetable);
+                $data_contacts_aphoneadvisory=[
+                    'sellerProductId'=>$sellerProductId,
+                    'contactId'=>$contactId,
+                    'contactType'=>"PHONE",
+                    'contactUseType'=>"BOOKING_INQUIRY",
+                    'contact'=>$sodienthoaituvanmuahang
+                ];                    
+                $this->_model->insertRecord('contacts',$data_contacts_aphoneadvisory);
+                $data_contacts_aphonecancel=[
+                    'sellerProductId'=>$sellerProductId,
+                    'contactId'=>$contactId,
+                    'contactType'=>"PHONE",
+                    'contactUseType'=>"CANCEL_INQUIRY",
+                    'contact'=>$sodienthoaituvanhuy
+                ];                    
+                $this->_model->insertRecord('contacts',$data_contacts_aphonecancel);
+                $data_contacts_ahotline=[
+                    'sellerProductId'=>$sellerProductId,
+                    'contactId'=>$contactId,
+                    'contactType'=>"PHONE",
+                    'contactUseType'=>"EMERGENCY",
+                    'contact'=>$sodienthoaituvanmuahang
+                ];                    
+                $this->_model->insertRecord('contacts',$data_contacts_ahotline);
+                $data_contacts_website=[
+                    'sellerProductId'=>$sellerProductId,
+                    'contactId'=>$contactId,
+                    'contactType'=>"WEBSITE",
+                    'contactUseType'=>"REPRESENTATIVE",
+                    'contact'=>$website
+                ];                    
+                $this->_model->insertRecord('contacts',$data_contacts_website);
+                $data_contacts_email=[
+                    'sellerProductId'=>$sellerProductId,
+                    'contactId'=>$contactId,
+                    'contactType'=>"EMAIL",
+                    'contactUseType'=>"REPRESENTATIVE",
+                    'contact'=>$email
+                ];                    
+                $this->_model->insertRecord('contacts',$data_contacts_email);
+                $data_contacts_fax=[
+                    'sellerProductId'=>$sellerProductId,
+                    'contactId'=>$contactId,
+                    'contactType'=>"FAX",
+                    'contactUseType'=>"REPRESENTATIVE",
+                    'contact'=>$fax
+                ];                    
+                $this->_model->insertRecord('contacts',$data_contacts_fax);
+                //end contact
+                //contents
+                $data_contents=[   
+                    'sellerProductId'=>$sellerProductId,
+                    'contentId'=>$contentId,                    
+                    'type'=>'Product-Content',
+                    'content'=>$noidungchitietsanpham,
+                    'format'=>"TEXT",
+                    'sellerUrlMethod'=>"GET",
+                    'seq'=>1
+                ];
+                $this->_model->insertRecord('contents',$data_contents);
+                //end contents
+                //option
+                $data_travelitems=[
+                    'sellerProductId'=>$sellerProductId,
+                    'sellerTravelItemId'=>$sellerTravelItemId,
+                    'name'=>$tenoption."-".$option1."-".$option2,
+                    'onSale'=>1,
+                    'taxType'=>$loaithue,
+                    'seq'=>0,
+                    'representative'=>1,
+                    'isDelete'=>0
+                ];
+                $this->_model->insertRecord('travelitems',$data_travelitems);
+                //end option
+                //rates                
+                $data_rates=[
+                    'sellerTravelItemId'=>$sellerTravelItemId,
+                    'rateType'=>"BASIC",
+                    'priceType'=>"COUPANG_PRICE",
+                    'price'=>$giabinhthuong,
+                    'amount'=>1,
+                    'representative'=>1,
+                    'saleStartedAt'=>$ngaybatdauban,
+                    'saleEndedAt'=>$ngayketthucban,
+                    'maxPurchaseQtyPerPerson'=>1,
+                    'maxPurchaseQtyPeriod'=>1,
+                    'seq'=>1
+                ];
+                $this->_model->insertRecord('rates',$data_rates);                
+                //end rates
+                //useperiod
+                $data_useperiod=[
+                    'sellerTravelItemId'=>$sellerTravelItemId,
+                    'useStartedAt'=>$ngaybatdausudung,
+                    'useEndedAt'=>$ngayketthucsudung
+                ];
+                $this->_model->insertRecord('useperiod',$data_useperiod);
+                //end useperiod
+                //informationuse
+                $data_informationuse_in=[
+                    'sellerProductId'=>$sellerProductId,
+                    'type'=>'introduction',
+                    'title'=>'Giới thiệu sản phẩm',
+                    'content'=>$gioithieusanpham
+                ];
+                $this->_model->insertRecord('informationuse',$data_informationuse_in);
+                $data_informationuse_cs=[
+                    'sellerProductId'=>$sellerProductId,
+                    'type'=>'csContactInfo',
+                    'title'=>'Hướng dẫn đặt phòng',
+                    'content'=>$huongdandatve
+                ];
+                $this->_model->insertRecord('informationuse',$data_informationuse_cs);
+                //end informationuse
+                //cancelpolicy
+                if($hoantien=="아니요"){
+                    //ko hoàn tiền 100%
+                    $data_cancelpolicy=[
+                        'sellerProductId'=>$sellerProductId,
+                        'cancelPolicyId'=>$cancelPolicyId,
+                        //'notice'=>'notice',
+                        'cancelType'=>'AUTO',
+                        'cancelPeriodType'=>'BEFORE_USE',
+                        'cancelPeriodType1'=>'DATEUSE',
+                        'cancelPeriodType2'=>1,
+                        'cancelMarkType'=>'UNUSE_REFUND_ALL_BEFORE_ONE_DAY',
+                        'refundOnBusinessDay'=>0,
+                        'refundUnusedTicket'=>0,
+                        //'usageNotice'=>'usageNotice',
+                        //'smsNotice'=>'smsNotice',
+                        //'emailNotice'=>'emailNotice'
+                    ];
+                    $this->_model->insertRecord('informationuse',$data_cancelpolicy);
+                }else{
+                    //예  có hoàn tiền 100%
+                    $data_cancelpolicy=[
+                        'sellerProductId'=>$sellerProductId,
+                        'cancelPolicyId'=>$cancelPolicyId,
+                        //'notice'=>'notice',
+                        'cancelType'=>'AUTO',
+                        'cancelPeriodType'=>'BEFORE_USE',
+                        'cancelPeriodType1'=>'DATEUSE',
+                        'cancelPeriodType2'=>1,
+                        'cancelMarkType'=>'UNUSE_REFUND_ALL',
+                        'refundOnBusinessDay'=>0,
+                        'refundUnusedTicket'=>1,
+                        //'usageNotice'=>'usageNotice',
+                        //'smsNotice'=>'smsNotice',
+                        //'emailNotice'=>'emailNotice'
+                    ];
+                    $this->_model->insertRecord('informationuse',$data_cancelpolicy);
+                } 
+                //end cancelpolicy
+                //locations                
+                $data_locations=[
+                    'sellerProductId'=>$sellerProductId,
+                    'locationsId'=>$locationsId,
+                    'latitude'=>"",
+                    'longitude'=>"",
+                    'roadNameAddress'=>$diachi,
+                    'landNumberAddress'=>"서울특별시 중랑구 면목동 1190-3 seoul소다헌",
+                    'nation'=>"대한민국",
+                    'province'=>"면목동",
+                    'city'=>"서울특별시",
+                    'district'=>"중랑구",
+                    'zipCode'=>"02197"
+                ];
+                $this->_model->insertRecord('locations',$data_locations);                 
+                //end locations
+                //images 
+                if($hinh!=""){
+                    $hinh= explode(",", $hinh);
+                    if(count($hinh)>0){
+                        for($k=0;$k<count($hinh);$k++){
+                            if($k==0){$representative=1;}else{$representative=0;}
+                            $data_images=[
+                                'sellerProductId'=>$sellerProductId,
+                                'imageId'=>$imageId,
+                                'sellerUrl'=>$hinh[$k],
+                                'sellerUrlMethod'=>"GET",
+                                'representative'=>$representative,
+                                'sellerImageCategory'=>1234,
+                                'imageGroup'=>"BASIC",
+                                'description'=>"",
+                                'seq'=>$k,
+                                'type'=>1
+                            ];
+                            $this->_model->insertRecord('images',$data_images);
+                        }
+                    }
+                }
+                //end images
+                //end insert data
+            }
+        }
+        return $str;
+    }
+}
+?>

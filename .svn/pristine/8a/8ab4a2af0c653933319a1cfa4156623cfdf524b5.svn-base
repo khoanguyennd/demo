@@ -1,0 +1,152 @@
+<?php 
+
+$route = new Route();
+
+// Trang xử lý ajax ajax.html/{controller}/{action}
+$route->get('ajax', '/ajax.html', null);
+
+// trang chủ
+$route->get('home', '/', 'dashboard@home');
+
+// trang chủ
+$route->get('dashboard', '/dashboard.html', 'dashboard@index');
+
+// Trang đăng nhập
+$route->get('login', '/login.html', 'user@login');
+
+// Trang logout
+$route->get('logout', '/logout.html', 'user@logout');
+
+// Trang acount
+$route->get('account', '/account.html/{page?}/{length?}', 'user@account')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+
+// Trang tìm ID
+$route->get('findid', '/findid.html', 'user@findid');
+	
+// Trang tìm PW
+$route->get('findpw', '/findpw.html', 'user@findpw');
+
+// Trang đăng ký
+$route->get('signupStep1', '/signup-step1.html', 'user@signupStep1'); 
+$route->get('signupStep2', '/signup-step2.html', 'user@signupStep2');
+
+// Trang tìm Ticket
+$route->get('addticket', '/addticket.html', 'ticket1@addticket');
+$route->get('editticket1', '/editticket1.html/{sellerProductId}', 'ticket1@editticket1'); 
+
+$route->get('editticket2', '/editticket2.html/{sellerProductId}', 'ticket2@editticket2');
+
+$route->get('editticket3', '/editticket3.html/{sellerProductId}', 'ticket3@editticket3');
+
+$route->get('editticket4', '/editticket4.html/{sellerProductId}', 'ticket4@editticket4');
+
+$route->get('editticket5', '/editticket5.html/{sellerProductId}', 'ticket5@editticket5');
+
+$route->get('listproduct', '/manage-product-{method}.html/{page?}/{length?}', 'listproduct@listproduct')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+
+// Trang phân loại T-Gridge
+$route->get('channeltbridge', '/channel-tbridge.html', 'channel@tbridge');
+
+// Trang phân loại kênh bán
+$route->get('channelsale', '/channel-sale.html', 'channel@sale');
+
+// Trang quản lý hỏi đáp
+$route->get('question', '/manage-question-{method}.html/{page?}/{length?}', 'question@index')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+
+// Trang quản lý hỏi đáp theo kênh
+$route->get('questionchannel', '/question-channel.html/{channelname}{page?}/{length?}', 'question@channel')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+
+// Trang thông báo
+$route->get('notification', '/notification.html/{page?}/{length?}', 'notification@index')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+
+$route->get('supplier', '/supplier.html/{idx?}', 'user@supplier'); 
+
+
+$route->get('member', '/member.html/{page?}/{length?}', 'user@member')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+$route->get('edituser', '/edituser.html/{idx}', 'user@edituser');
+$route->get('adduser', '/adduser.html', 'user@adduser');
+// $route->get('my-name', '/duong-dan-url/{id1?}/{id2?}', 'controller@action')->where(['id1'=>'[0-9]+']);
+
+// Trang quản lý đơn hàng
+$route->get('order', '/manage-order-{method}.html/{page?}/{length?}', 'order@index')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+// Trang quản lý đơn hàng theo statusTicket
+//$route->get('orderstatus', '/order-status.html/{statusTicket}{page?}/{length?}', 'order@statusticket')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+
+// Trang quản lý doanh thu
+$route->get('revenuedetail', '/manage-revenue-{method}.html/{page?}/{length?}', 'revenue@detail')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+$route->get('revenuesettlement', '/manage-revenue-settlement.html/{page?}/{length?}', 'revenue@settlement')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+$route->get('revenuestatus', '/manage-revenue-settlement-status.html/{page?}/{length?}', 'revenue@status')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+$route->get('revenuestatusdetail', '/manage-revenue-settlement-detail.html/{act}/{sid}', 'revenue@statusDetail')->where(['sid'=>'[0-9]+']);
+// Phương thức tạo quyết toán tự động
+$route->get('settlementauto', '/create-settlement-auto.html', 'revenue@createSettlementAuto');
+
+// Phương thức connect API COUPANG
+$route->get('registerproduct', '/registerproduct.html/{cid?}/{sellerProductId?}', 'connectAPI@registerproduct');
+$route->get('deleteproduct', '/deleteproduct.html/{cid?}/{travelProductId?}', 'connectAPI@deleteproduct');
+$route->get('singlelookup', '/singlelookup.html/{cid?}/{travelProductId?}', 'connectAPI@singlelookup');
+// Auto update
+$route->get('autoUpdateApi', '/auto-update.html', 'connectAPI@autoUpdate');
+$route->get('autoUpdateProductApi', '/auto-updateProduct.html', 'connectAPI@autoUpdateProduct');
+$route->get('autoUpdateTicketApi', '/auto-update_ticket.html', 'connectAPI@autoUpdateTicket');
+// logs
+$route->get('logApi', '/log-api.html/{page?}/{length?}', 'connectAPI@log')->where(['page'=>'[0-9]+', 'length'=>'[0-9]+']);
+$route->get('logsingeApi', '/single-log-api-{lgid}.html', 'connectAPI@logsinge')->where(['lgid'=>'[0-9]+']);
+//get data Coupang
+$route->get('getdatacoupangquestion', '/get-data-coupang-question.html', 'coupang@index');
+// Test
+$route->get('connectAPI', '/testing-api.html/{method?}/{apiid1?}/{apiid2?}', 'connectAPI@testing')->where(['apiid1'=>'[a-zA-Z0-9-]+', 'apiid2'=>'[a-zA-Z0-9-]+']);
+// Trang đăng nhập
+$route->get('test', '/test.html', 'user@test');
+
+//get data Tmon
+$route->get('getdatatmonbuy', '/get-data-tmon-buy.html', 'tmon@index');
+$route->get('getdatatmoncancel', '/get-data-tmon-cancel.html', 'tmon@cancel');
+$route->get('getdatatmonrefund', '/get-data-tmon-refund.html', 'tmon@refund');
+//$route->get('getdatatmonmulti', '/get-data-tmon-multi.html', 'tmon@multi');
+$route->get('getquestiontmon', '/get-question-tmon.html', 'tmon@question');
+$route->get('getsettlementtmon', '/get-settlement-tmon.html', 'tmon@settlement');
+
+//get data WMP
+$route->get('getdataWMP', '/getdataWMP.html', 'wemakeprice@index');
+$route->get('getdataWMPquestion', '/getdataWMP-question.html', 'wemakeprice@question');
+
+$route->get('WMPaddproduct', '/WMPaddproduct.html', 'wemakeprice@addProduct');
+$route->get('WMPupdatemyproduct', '/WMPupdatemyproduct.html', 'wemakeprice@updateMyProduct');
+$route->get('WMPupdateproduct', '/WMPupdateproduct.html/{goodIds?}/{step?}', 'wemakeprice@updateProduct')->where(['goodIds'=>'[a-zA-Z0-9]+' , 'step'=>'[0-9]+']);
+
+$route->get('autoupdateProductWMP', '/autoupdateProductWMP.html', 'wemakeprice@autoupdateProductWMP');
+
+//get data Naver
+$route->get('getdataNaver', '/getdataNaver.html', 'naver@index');
+
+$route->get('getdataGmarket', '/getdataGmarket.html', 'Gmarket@index');
+$route->get('getquestionGmarket', '/getquestionGmarket.html/{channel?}', 'Gmarket@question')->where(['channel'=>'[a-zA-Z0-9]+']);
+
+$route->get('getdata11st', '/getdata11st.html', 'St11st@index');
+$route->get('getdataQuestion11st', '/getDataQuestion11st.html', 'St11st@question');
+
+
+$route->get('restfulApi', '/restfulApi.html', 'restfulApi@index');
+
+$route->get('sendrestfulApi', '/sendrestfulApi.html', 'restfulApi@send');
+$route->get('logDVC', '/logDVC.html', 'restfulApi@logDVC');
+
+// api app tbridge
+$route->get('loginApi', '/loginApi.html', 'restfulApi@loginApi');
+$route->get('loginApi', '/logintestApi.html', 'restfulApi@logintestApi');
+$route->get('loginApi22', '/testcallApi.html', 'restfulApi@testApi');
+$route->get('dashboardApi', '/dashboardApi.html', 'restfulApi@dashboardApi');
+$route->get('questionApi', '/questionApi.html', 'restfulApi@questionApi');
+$route->get('questionchannelApi', '/questionchannelApi.html', 'restfulApi@questionchannelApi');
+$route->get('orderApi', '/orderApi.html', 'restfulApi@orderApi');
+$route->get('sendmailApi', '/sendmailApi.html', 'restfulApi@sendmailApi');
+///
+$route->get('testApi', '/testApi.html', 'testApi@index');
+// $route->groups('admin1', function($route){
+// 	$route->get('name1', '/test1', 'user@login');
+// 	$route->get('name2', '/test2', 'user@login');
+// });
+
+//     echo $route->getUrl('my-name', ['id1'=>890, 'id2?'=>'gdsfgf']);
+
+?>

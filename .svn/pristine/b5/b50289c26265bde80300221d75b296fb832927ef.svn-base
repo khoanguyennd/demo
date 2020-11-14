@@ -1,0 +1,39 @@
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+
+class NaverController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    public function register_stream_wrapper($projectId)
+    {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+    
+    // Phương thức index
+    public function indexAction() {
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        
+        $crawler = $client->request('POST', 'https://nid.naver.com/nidlogin.login');
+        $form = $crawler->filter('#frmNIDLogin')->form();
+        $crawler = $client->submit($form, array(
+                                    'id' => '0604057',
+                                    'pw' => 'yakeun87!@'));
+        $crawler = $client->request('GET', 'https://partner.booking.naver.com/booking-list-view');
+        echo '<pre>';
+        print_r($crawler);
+        echo '</pre>';
+    }
+}
+
+?>

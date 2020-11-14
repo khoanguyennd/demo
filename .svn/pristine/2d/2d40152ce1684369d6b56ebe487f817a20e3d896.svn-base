@@ -1,0 +1,166 @@
+<?php
+
+class RestfulApiModel extends Model{
+    
+    // Phương thức khới tạo
+    public function __construct(){
+        parent::__construct();
+    }
+    // Phương thức load product
+	public function loadProduct($account_idx,$account_ID,$account_role){
+		$sql  = 'SELECT sc.`status`, DATE_FORMAT(sc.`useEndedAt`,"%Y-%m-%d") as useEndedAt 
+                 FROM tb_sellerproduct sp, tb_salechannel sc 
+                 WHERE sp.sellerProductId=sc.sellerProductId ';
+		$sql .= ' AND sc.isDelete=0 AND sc.`status` IN("2","3")';
+		
+		if($account_role==0){
+		    //$sql.= " ";
+		}else{
+		    $sql .= ' AND (sp.creator="'.$account_ID.'" OR sp.creator IN (SELECT u2.ID
+                                                                         FROM tb_user u1 ,tb_user u2
+		                                                         WHERE u1.ID = "'.$account_ID.'" AND u2.idx_parent=u1.idx) ) ';
+		}
+		$this->setQuery($sql);
+		return $this->readAll();
+	}
+	
+	// Phương thức count ticket
+	public function countTicketsToday($account_idx,$account_ID,$account_role,$created){
+		$sql  = ' SELECT COUNT(tp.ticketNumber) amount 
+                  FROM tb_ticket t,tb_ticketPurchasers tp 
+                                LEFT JOIN tb_salechannel sc ON tp.dealId=sc.vendorItemPackageId 
+                                LEFT JOIN tb_sellerproduct sp ON sc.sellerProductId=sp.sellerProductId ';
+        $sql  .=' WHERE t.ticketNumber=tp.ticketNumber AND DATE_FORMAT(t.purchasedAt,"%Y-%m-%d")="'.$created.'" AND ( t.`statusTicket`=1 OR t.`statusTicket`=2) ';
+        
+		if($account_role==0){
+		}else{
+		    $sql .= ' AND (sp.creator="'.$account_ID.'" OR sp.creator IN (SELECT u2.ID
+                                                                         FROM tb_user u1 ,tb_user u2
+		                                                                 WHERE u1.ID = "'.$account_ID.'" AND u2.idx_parent=u1.idx) ) ';
+		}
+		$this->setQuery($sql);
+		return $this->read();
+	}
+	
+	// Phương thức count Ticket
+	public function countTicketsUnuse($account_idx,$account_ID,$account_role){
+	    $sql  = ' SELECT COUNT(tp.ticketNumber) amount
+                  FROM tb_ticket t,tb_ticketPurchasers tp 
+                                LEFT JOIN tb_salechannel sc ON tp.dealId=sc.vendorItemPackageId 
+                                LEFT JOIN tb_sellerproduct sp ON sc.sellerProductId=sp.sellerProductId  ';
+        $sql  .= ' WHERE t.ticketNumber=tp.ticketNumber AND t.statusTicket=1 ';        
+        if($account_role==0){
+        }else{
+            $sql .= ' AND (sp.creator="'.$account_ID.'" OR sp.creator IN (SELECT u2.ID
+                                                                         FROM tb_user u1 ,tb_user u2
+		                                                                 WHERE u1.ID = "'.$account_ID.'" AND u2.idx_parent=u1.idx) ) ';
+        }
+		$this->setQuery($sql);
+		return $this->read();
+	}
+	
+	// Phương thức load question
+	public function countQuestion(){
+		$sql  = 'SELECT COUNT(question_id) amount 
+                FROM tb_question 
+                WHERE `question_status`=1';
+		$this->setQuery($sql);
+		return $this->read();
+	}
+	//
+	public function countRevenue($account_idx,$account_ID,$account_role){
+	    $m_start = date('Y-m-d', strtotime('-7 day'));
+	    $m_end = date("Y-m-d");
+		$sql = 'SELECT COUNT(sp.id) as amount 
+                FROM tb_sellerproduct sp,tb_salechannel sc
+                WHERE sp.sellerProductId=sc.sellerProductId 
+                			AND sc.vendorItemPackageId NOT IN( SELECT tp.dealId 
+															   FROM tb_ticketPurchasers tp,tb_ticket t
+														       WHERE tp.ticketNumber = t.ticketNumber  
+                                                                    AND ( tp.purchaseDateTime >="'.$m_start.' 00:00:00" AND tp.purchaseDateTime <="'.$m_end.' 23:59:59" ) )
+                			AND sc.`status`=3 ';		
+		if($account_role==0){
+		}else{
+		    $sql .= ' AND (sp.creator="'.$account_ID.'" OR sp.creator IN (SELECT u2.ID
+                                                                         FROM tb_user u1 ,tb_user u2
+		        WHERE u1.ID = "'.$account_ID.'" AND u2.idx_parent=u1.idx) ) ';
+		}
+		
+		
+		$this->setQuery($sql);
+		return $this->read();
+	}
+        public function loadOrder( $sql, $sql1 , $length, $begin = 0, $fetch = true){
+	    
+	    $sql .= $this->createOptions([
+	        'sort'=>[
+	            'column'=>'tp.purchaseDateTime',
+	            'order'=>'DESC'
+	        ],
+	        'limit'=>[
+	            'position'=>$begin,
+	            'length'=>$length
+	        ]
+	    ]);	   
+	    //echo $sql;
+	    // count
+	    $this->setQuery($sql1);
+	    $count = $this->read($fetch);
+	    $data = [];
+	    if($count){
+	        // data
+	        $this->setQuery($sql);
+	        $data= $this->readAll($fetch);
+	    }
+	    return [
+	        'count'=>($count['record'])?$count['record']:0,
+	        'data'=>$data
+	    ];	    
+	}
+        // Phương thức lấy ra danh sách câu hỏi
+	public function loadQuestions($sql,$sql1, $length, $begin=0, $fetch = true){
+            $sql .= $this->createOptions([
+	        'sort'=>[
+	            'column'=>'q.question_created',
+                    'order'=>'DESC'
+	        ],
+	        'limit'=>[
+	            'position'=>$begin,
+	            'length'=>$length
+	        ]
+	    ]);	
+	    $this->setQuery($sql1);
+	    $count = $this->read($fetch);
+	    $data = [];
+	    if($count){
+	        // data
+	        $this->setQuery($sql);
+	        $data= $this->readAll($fetch);
+	    }
+	    return [
+	        'count'=>($count['record'])?$count['record']:0,
+	        'data'=>$data
+	    ];               
+                
+	}
+        // Phương thức lấy ra danh sách nhà cung cấp
+	public function loadSupplier($usid,$account_role, $fetch = true){	    
+	    $sql = 'SELECT idx, company FROM `'.$this->setTable('user').'`';
+	    if($account_role > 0){
+	        $sql .= ' WHERE idx="'.$usid.'" OR idx_parent="'.$usid.'"';
+	    }	   
+	    $this->setQuery($sql);
+	    return $this->readAll($fetch);
+	}
+        // Phương thức thai đổi trạng thái tickets
+	public function changeStatusTicket($id, $status, $restore = 0){
+	    return $this->updateRecord('ticket', [
+	        'statusTicket'=>$status,
+	        'restoreTicket'=>$restore,
+	        'editStatus'=> 1,
+	        'modifiedTicket'=>date('Y-m-d H:i:s', time())
+	    ], ['ticketNumber'=>$id]);
+	}
+}
+
+?>

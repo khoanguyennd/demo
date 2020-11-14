@@ -1,0 +1,178 @@
+function completeCallback(response) {
+    //var n = parseInt(document.getElementById('nr').innerHTML) + 1;
+	//document.getElementById('nr').innerHTML = n;
+	$('#attachloading').html('');
+	$('#uploadresult').append(response);
+	$("#myfile").val("");
+	//$('#formattach input:not(#sizes)').remove();
+	$('#formattach input.fileInput').remove();
+	$('#iframeattach').remove();
+}
+
+function completeCallback1(response) {
+	$('#attachloading1').html('');
+	$('#uploadresult1').append(response);
+	$("#myfile1").val("");
+	$('#formattach1 input:not(#sizes1)').remove();
+	$('#iframeattach').remove();
+}
+function unescapeHtml(safe) {
+    return safe.replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#039;/g, "'");
+}
+function completeCallback10(response) {
+	var arrResponse = response.split('count_image_option_m');
+
+	$('#attachloading10').html('');
+	$('#feedback').append(unescapeHtml(response));
+	$("#myfile10").val("");
+	$('#formattach10 input:not(#countImageOption)').remove();
+	$('#iframeattach').remove();
+
+	if (arrResponse[arrResponse.length - 1]) $('#countImageOption').val(arrResponse[arrResponse.length - 1]);
+}
+function completeCallback2(response) {
+	$('#attachloading'+contentId1).html('');
+	$('#uploadresult'+contentId1).html(response);
+	$("#myfile"+contentId1).val("");
+	$('#formattach2 input:not(#sizes2)').remove();
+	$('#iframeattach').remove();
+}
+
+function changeBrowsers(ele,title){
+	localStorage.setItem("flagChange", "1");
+	var dd = document.createElement('input');
+	$(dd).attr('id','myfile');
+	$(dd).attr('type','file');
+	$(dd).attr('class','fileInput');
+	$(dd).attr('title',title);
+	$(dd).attr('name','file[]');
+	$(dd).attr('accept','image/*');
+	$(dd).attr('multiple','multiple');
+	$(ele).attr('id','');	
+	$(dd).change(function(){
+		changeBrowsers(this,title);
+	});	
+	$('#formattach input#sizes').val($('#uploadresult input#flagattach').size());
+	
+	var seq=parseInt($('#formattach input#seq').val());
+	$('#formattach input#seq').val(seq+1);
+	$('#formattach').append(ele);
+	$('#appendbrowser').append(dd);
+	$('#formattach').submit();
+}
+
+function changeBrowsers1(ele,title){
+	localStorage.setItem("flagChange", "1");
+	var dd = document.createElement('input');
+	$(dd).attr('id','myfile1');
+	$(dd).attr('type','file');
+	$(dd).attr('class','fileInput');
+	$(dd).attr('title',title);
+	$(dd).attr('name','file1[]');
+	$(dd).attr('accept','image/*');
+	$(dd).attr('multiple','multiple');
+	$(ele).attr('id','');
+	$(dd).change(function(){
+		changeBrowsers1(this,title);
+	});
+	$('#formattach1 input#sizes1').val($('#uploadresult1 input#flagattach1').size());
+	$('#formattach1').append(ele);
+	$('#appendbrowser1').append(dd);
+	$('#formattach1').submit();
+}
+function changeBrowsers10(ele,title){
+	localStorage.setItem("flagChange", "1");
+	var dd = document.createElement('input');
+	$(dd).attr('id','myfile10');
+	$(dd).attr('type','file');
+	$(dd).attr('class','fileInput');
+	$(dd).attr('title',title);
+	$(dd).attr('name','file10[]');
+	$(dd).attr('accept','image/*');
+	$(dd).attr('multiple','multiple');
+	$(ele).attr('id','');
+	$(dd).change(function(){
+		changeBrowsers10(this,title);
+	});
+	//$('#formattach10 input#sizes10').val($('#uploadresult10 input#flagattach10').size());
+	$('#formattach10').append(ele);
+	$('#appendbrowser10').append(dd);
+	$('#formattach10').submit();
+}
+var contentId1=0;
+function changeBrowsers2(ele,title,contentId){
+	localStorage.setItem("flagChange", "1");
+	var dd = document.createElement('input');
+	$(dd).attr('id','myfile'+contentId);
+	$(dd).attr('type','file');
+	$(dd).attr('class','fileInput');
+	$(dd).attr('title',title);
+	$(dd).attr('name','ppic_detail');
+	$(dd).attr('accept','image/*');
+	$(ele).attr('id','');
+	contentId1=contentId;
+	$(dd).change(function(){
+		changeBrowsers2(this,title,contentId);
+	});
+	$('#formattach2 input#sizes2').val($('#uploadresult'+contentId+' input#flagattach1').size());
+	$('#formattach2').append(ele);
+	$('#appendbrowser'+contentId).append(dd);
+	$('#formattach2').submit();
+}
+
+function resetattach(){
+	$('#uploadresult').html("");
+}
+
+function deletemyattach(){
+	$('#uploadresult input:checkbox:not(:checked)').each(function(){
+		var myparent = $(this).parent();
+		var flagattach = $(myparent).find('#flagattach');
+		$.ajax({url:"attach/deletefile.php",data : {filepath : $(this).attr('filepath') },success:function(){
+			$(myparent).hide();
+			$(flagattach).val('false');
+		}});
+	});
+}
+
+function changemyattach(){
+	$('#uploadresult input:checkbox:not(:checked)').each(function(){
+		$(this).parent().hide();
+		$(this).parent().find('#flagattach').val('false');
+	});
+	return true;
+}
+
+function checkAttach(ele){
+	localStorage.setItem("flagChange", "1");
+	$('#uploadresult input:radio').each(function(){
+		//$(this).parent().hide();
+		$(this).parent().find('#flagattach').val('false');
+	});
+	$(ele).parent().find('#flagattach').val('true');
+	
+	/*if($(ele).is(':checked')){
+		$(ele).parent().find('#flagattach').val('true');
+	}else{
+		$(ele).parent().find('#flagattach').val('false');
+	}*/
+}
+
+function checkAttach1(ele){
+	localStorage.setItem("flagChange", "1");
+	$('#uploadresult1 input:radio').each(function(){
+		//$(this).parent().hide();
+		$(this).parent().find('#flagattach1').val('false');
+	});
+	$(ele).parent().find('#flagattach1').val('true');
+	
+	/*if($(ele).is(':checked')){
+		$(ele).parent().find('#flagattach').val('true');
+	}else{
+		$(ele).parent().find('#flagattach').val('false');
+	}*/
+}

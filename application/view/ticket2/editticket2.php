@@ -1,0 +1,1006 @@
+<?php
+$sellerProductId = $this->getData ( 'sellerProductId' );
+$_SESSION['sellerProductId'] = $sellerProductId;
+$noedit = $this->getData('noedit');
+$inventoryType="PERIOD";
+$pricebasic = 0;
+$pricerepresentative = 0;
+$list_sellerProduct  = $this->getData('list_sellerProduct');
+foreach ($list_sellerProduct as $value => $giatri) {
+    $inventoryType       = $giatri['inventoryType'];
+    $pricebasic          = $giatri['pricebasic'];
+    $pricerepresentative = $giatri['pricerepresentative'];
+    $saleStartedAt = $giatri ['saleStartedAt1'];
+    $saleEndedAt = $giatri ['saleEndedAt1'];
+    $useStartedAt = $giatri ['useStartedAt1'];
+    $useEndedAt = $giatri ['useEndedAt1'];
+    
+}
+if($inventoryType=="PERIOD"){
+    $display="display : table-cell;";
+}else{
+    $display="display : none;";
+}
+
+$list_periodrates = array();
+$list_periodrates = $this->getData('list_periodrates');
+
+$list_travelitems     = array();
+$list_travelitemstemp = $this->getData('list_travelitems');
+foreach ($list_travelitemstemp as $value => $giatri) {
+    $list_travelitems[] = array(
+        $giatri['sellerTravelItemId'],
+        $giatri['name'],
+        $giatri['onSale'],
+        $giatri['description'],
+        $giatri['taxType'],
+        $giatri['seq'],
+        $giatri['representative']
+    );
+}
+
+
+?>
+<link rel="stylesheet" type="text/css"
+	href="<?=URL_PUBLIC?>css/jsDatePick_ltr.min.css" /> 
+<script type="text/javascript"
+	src="<?=URL_PUBLIC?>js/jsDatePick.min.1.3.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){		
+		// Thực hiện tại xuất file excel
+	$('#downloadExcel').on('click', function(result){
+        if($('#isset').length) { // Kiểm tra xem có product nào không. Nếu không thì không cho download file excel
+            //
+        }else{
+        	window.open(jsData.urlAjax + 'downloadExcel');
+        }		
+	});
+
+	$('#saveTemp').on('click', function(){	
+		var ff = document.nf;
+		var step = $(this).attr('data-step');
+		document.getElementById("step").value=step;
+		
+		if( !$.trim( $('#feedback').html() ).length ) {
+            $.fn_alert(true, true, "<?= $this->language('l_warnproduct1') ?>");
+            return false;
+        }
+        var co=0;
+		$('#feedback').find('textarea[name^="name"]').each(function(){            
+             if( !$.trim( $(this).val() ).length ) {
+            	$.fn_alert(true, true, "옵션명을 입력하세요. " +$(this).attr('name').slice(4));
+             	co=1;
+             }
+         });  
+        if(co==1)
+			return false;
+        var radioValue = $("input[name='representative']:checked").val();
+        if(radioValue==undefined){
+            $.fn_alert(true, true, "<?= $this->language('l_warnproduct2') ?>");
+            return false;
+        }
+
+        ff.submit();
+	});
+	// Tiếp tục | Trở lại
+	$('#continuelink, #backlink').on('click', function(){
+		var step = $(this).attr('data-step');
+		if(step){
+			$('#step').val(step);	
+			$.fn_ticketcontinue(step);	
+		}
+	});
+	// Tiếp tục | Trở lại
+	$($.elt_popup).on('click', '.ticketconfirm .continue', function(){		
+		$.fn_ticketconfirm(false);
+		
+		if( !$.trim( $('#feedback').html() ).length ) {
+            $.fn_alert(true, true, "<?= $this->language('l_warnproduct1') ?>");
+            return false;
+        }
+        
+        var radioValue = $("input[name='representative']:checked").val();
+        if(radioValue==undefined){
+            $.fn_alert(true, true, "<?= $this->language('l_warnproduct2') ?>");
+            return false;
+        }	
+        $('#nf').submit();	        
+	});
+
+	 $('.inventoryType').on('click', function(){
+	        var radioValue = $("input[name='inventoryType']:checked").val();
+	        if(radioValue=="PERIOD"){
+	            $(".tdusePeriod").css({display: 'table-cell'});
+	        }
+	        if(radioValue=="DAILY"){
+	            $(".tdusePeriod").css({display: 'none'});
+	        }
+	    });
+
+	    $('#addTravelItem1').on('click', function(){
+	        var formdata = [];        
+	        var i = dem= 0;
+	        var co=1;
+	        var element1 = $('#feedback1 tr input[name="nameOption1"]');
+	        $(element1).each(function(index1, value1){
+	            dem++;
+	            var element2 = $(value1).closest('tr');
+	            var name1 = $(element2).find('input[name="nameOption1"]').val();
+	            if(!name1){
+	                 alert("<?= $this->language('l_addticket2') ?> " + index1);    
+	                 co=0;
+	            }
+	            
+	            if($(element2).find('input[name="nameOption2"]').length>0){
+	                var name2 = $(element2).find('input[name="nameOption2"]').val();
+	                if(!name2){
+	                     alert("<?= $this->language('l_addticket2') ?> " + index1);    
+	                     co=0;
+	                }    
+	            }        
+	        });
+	        if(co==1 && dem >0){
+	            $(element1).each(function(index1, value1){
+	                var element2 = $(value1).closest('tr');
+	                var name1 = $(element2).find('input[name="nameOption1"]').val();                
+	                var name2 = $(element2).find('input[name="nameOption2"]').val();                    
+	                var name = $.fn_split(name1, (name2?name2:''));            
+	                $.each(name, function(index2, value2){                
+	                    formdata[i] = $.fn_addTravelItem1(value2, element2);
+	                    i++;
+	                });
+	            });
+	            console.log(formdata);
+	            $.fn_ajax('addTravelItem1', {'formdata': formdata}, function(result){
+	                if(result.flag = true){
+	                    $('#feedback').append(result.data);
+	                    $('#feedback1 tr input[name="idOption"]').each(function(){    
+	                        document.multiselect('#rateType'+$(this).val()).destroy();
+	                    });
+	                    $('#feedback1 tr').remove();
+	                    
+	                    document.getElementById('numberDepth').disabled = false;    
+	                    onloadJsDatePickTravelItem();
+	                }
+	            },true);
+	        }
+	        
+	        return false;
+	    });
+	    $.fn_split = function(name1, name2){
+	        var i=0;
+	        var name = [];        
+	        name1 = name1.split(",");
+	        name2 = name2.split(",");        
+	        $.each(name1, function(index1, value1){                        
+	            var flag = true;
+	            $.each(name2, function(index2, value2){                
+	                if(value2){
+	                    flag = false;
+	                    name[i] = value1+'-'+value2;
+	                    i++;
+	                }                    
+	            });
+	            if(flag == true){
+	                name[i] = value1;
+	                i++;
+	            }
+	        });
+	        return name;    
+	    }    
+	    $.fn_addTravelItem1 = function(name, element){    
+	        var rateType=["BASIC"];
+	        if($(element).find('select[name="rateType"] option[selected="selected"]').length>0){
+	            rateType=[];
+	            $(element).find('select[name="rateType"] option[selected="selected"]').each(function(){            
+	                rateType.push($(this).val());
+	            });    
+	        }
+	        return {
+	                'nameOption':name,
+	                'idOption': $(element).find('input[name="idOption"]').val(),                
+	                'price': $(element).find('input[name="price"]').val(),
+	                'pricesale': $(element).find('input[name="pricesale"]').val(),
+	                'rateType': rateType,
+	                'useStartedAt': "<?=$useStartedAt?>",
+	                'useEndedAt': "<?=$useEndedAt?>",
+	                'saleStartedAt': "<?=$saleStartedAt?>",
+	                'saleEndedAt': "<?=$saleEndedAt?>",
+	            }
+	    }
+	    //
+	    $('#addTravelItem2').on('click', function(){
+	        var formdata = [];        
+	        var i = dem= 0;
+	        var co=1;
+	        var element1 = $('#feedback2 tr input[name="nameOption"]');
+	        $(element1).each(function(index1, value1){
+	            dem++;
+	            var element2 = $(value1).closest('tr');
+	            var name1 = $(element2).find('input[name="nameOption"]').val();
+	            if(!name1){
+	                 alert("<?= $this->language('l_addticket2') ?> " + index1);    
+	                 co=0;
+	            }
+	        });
+	        if(co==1 && dem >0){
+	            $(element1).each(function(index1, value1){
+	                var element2 = $(value1).closest('tr');
+	                var name = $(element2).find('input[name="nameOption"]').val();        
+	                name = name.split(",");                    
+	                $.each(name, function(index2, value2){                
+	                    formdata[i] = $.fn_addTravelItem2(value2, element2);
+	                    i++;
+	                });
+	            });
+	            console.log(formdata);
+	            $.fn_ajax('addTravelItem2', {'formdata': formdata}, function(result){
+	                if(result.flag = true){
+	                    $('#feedback').append(result.data);
+	                    $('#feedback2 tr').remove();
+	                    onloadJsDatePickTravelItem();
+	                }
+	            },true);
+	        }
+	        
+	        return false;
+	    });
+
+	    $.fn_addTravelItem2 = function(name, element){    
+	        var weekendType  = $(element).find('select[name="weekendType"] option:selected').val();
+	        var priceweekend = pricesaleweekend= 0;
+	        if(weekendType==0){
+	            priceweekend=$(element).find('input[name="price"]').val();
+	            pricesaleweekend=$(element).find('input[name="pricesale"]').val();
+	        }
+	        if(weekendType==1){
+	            priceweekend=$(element).find('input[name="priceweekend"]').val();
+	            pricesaleweekend=$(element).find('input[name="pricesaleweekend"]').val();
+	        }    
+	        return {
+	                'nameOption':name,
+	                'idOption': $(element).find('input[name="idOption"]').val(),
+	                'saleStartedAt': $(element).find('input[name="saleStartedAt"]').val(),
+	                'saleEndedAt': $(element).find('input[name="saleEndedAt"]').val(),
+	                'weekendType': weekendType,                
+	                'price': $(element).find('input[name="price"]').val(),
+	                'pricesale': $(element).find('input[name="pricesale"]').val(),
+	                'priceweekend': priceweekend,
+	                'pricesaleweekend':pricesaleweekend,
+	                'amount': $(element).find('input[name="amount"]').val(),
+	                'rateType': "BASIC"
+	            }
+	    }
+
+	    $('#editTime').on('click', function(){
+	    	localStorage.setItem("flagChange", "1");
+	    	if( !$.trim( $('#feedback').html() ).length ) {
+	            $.fn_alert(true, true, "<?= $this->language('l_warnproduct1') ?>");
+	            return false;
+	        }
+			$.fn_popup(true, 'editTimeTicket');
+			
+		    new JsDatePick({
+		        useMode:2,
+		        target: "m_useStartedAt",
+		        dateFormat:"%Y-%m-%d"
+		    });
+		    new JsDatePick({
+		        useMode:2,
+		        target: "m_useEndedAt",
+		        dateFormat:"%Y-%m-%d"
+		    });
+		    new JsDatePick({
+		        useMode:2,
+		        target: "m_saleStartedAt",
+		        dateFormat:"%Y-%m-%d"
+		    });
+		    new JsDatePick({
+		        useMode:2,
+		        target: "m_saleEndedAt",
+		        dateFormat:"%Y-%m-%d"
+		    });
+		    var radioValue = $("input[name='inventoryType']:checked").val(); 
+		    if(radioValue=="PERIOD"){
+		    	$("#divsaleStartedAt").css({display: 'block'});
+		    	$("#divsaleEndedAt").css({display: 'block'});
+		    	
+		    }else{
+		    	$("#divsaleStartedAt").css({display: 'none'});
+		    	$("#divsaleEndedAt").css({display: 'none'});
+		    }
+			    
+		});
+	    $('#editPrice').on('click', function(){
+	    	localStorage.setItem("flagChange", "1");
+	    	if( !$.trim( $('#feedback').html() ).length ) {
+	            $.fn_alert(true, true, "<?= $this->language('l_warnproduct1') ?>");
+	            return false;
+	        }
+			$.fn_popup(true, 'editPriceTicket');
+		});
+	    $('#editAmount').on('click', function(){
+	    	localStorage.setItem("flagChange", "1");
+	    	if( !$.trim( $('#feedback').html() ).length ) {
+	            $.fn_alert(true, true, "<?= $this->language('l_warnproduct1') ?>");
+	            return false;
+	        }
+			$.fn_popup(true, 'editAmountTicket');
+		});
+	    $('#deleteOption').on('click', function(){
+		    localStorage.setItem("flagChange", "1");
+	    	var ids1=document.getElementsByName("checkbox[]");
+			var dem=0;
+			var co=1;
+			var checkbox = [];
+			for (var j = 0; j< ids1.length; j++) {
+				if(ids1[j].checked){
+					checkbox.push(ids1[j].value);
+					dem++;
+				}
+			}
+			if(dem==0){
+				$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+				return;
+			}
+			for (var j = 0; j< checkbox.length; j++) {
+				document.getElementById("tbTravelItem"+checkbox[j]).remove();
+			}
+			$.fn_loadseq();
+		});
+
+	    $('#upOption').on('click', function(){	
+	    	var ids1=document.getElementsByName("checkbox[]");
+			var dem=0;
+			var co=1;
+			var checkbox = [];
+			for (var j = 0; j< ids1.length; j++) {
+				if(ids1[j].checked){
+					checkbox.push(ids1[j].value);
+					dem++;
+				}
+			}
+			if(dem==0){
+				$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+				return;
+			}
+			var tr=[];
+			$('#feedback tr').each(function(index){
+				tr[parseInt(index)]='<tr id="'+$(this).attr('id')+'">'+$(this).html()+'</tr>';
+	 		});
+			for (var j =0 ; j<checkbox.length ; j++) {
+				var seq = parseInt($('input[name = "seq'+checkbox[j]+'" ]').val())-1;
+				var newseq=parseInt(seq-1);
+				if(newseq>=j){
+    				var temp=tr[seq];
+    				tr[seq]=tr[newseq];
+    				tr[newseq]=temp;
+				}
+			}
+			$('#feedback').html('');
+			for (var j = 0; j< tr.length; j++) {
+				$('#feedback').append(tr[j]);
+			}
+// 			console.log(tr);
+			$.fn_loadseq();
+		});
+
+	    $('#doubleupOption').on('click', function(){	
+	    	var ids1=document.getElementsByName("checkbox[]");
+			var dem=0;
+			var co=1;
+			var checkbox = [];
+			for (var j = 0; j< ids1.length; j++) {
+				if(ids1[j].checked){
+					checkbox.push(ids1[j].value);
+					dem++;
+				}
+			}
+			if(dem==0){
+				$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+				return;
+			}
+			var tr=[];
+			$('#feedback tr').each(function(index){
+				tr[parseInt(index)]='<tr id="'+$(this).attr('id')+'">'+$(this).html()+'</tr>';
+	 		});
+	 		var k=0;
+			for (var j = checkbox.length-1; j>=0 ; j--) {
+				var seq = parseInt($('input[name = "seq'+checkbox[j]+'" ]').val())-1 +k;
+				var temp=tr[seq];
+				for (var i = seq; i>0 ; i--) {
+					tr[i]=tr[i-1];
+				}		
+				tr[0]=temp;	
+				k++;
+			}
+			$('#feedback').html('');
+			
+			console.log(tr);
+			$.each( tr, function( index, value ) {
+				 console.log(index);
+				  $('#feedback').append(value);
+			});
+			$.fn_loadseq();
+		});
+ 		$('#downOption').on('click', function(){	
+	    	var ids1=document.getElementsByName("checkbox[]");
+			var dem=0;
+			var co=1;
+			var checkbox = [];
+			for (var j = 0; j< ids1.length; j++) {
+				if(ids1[j].checked){
+					checkbox.push(ids1[j].value);
+					dem++;
+				}
+			}
+			if(dem==0){
+				$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+				return;
+			}
+			var tr=[];
+			$('#feedback tr').each(function(index){
+				tr[parseInt(index)]='<tr id="'+$(this).attr('id')+'">'+$(this).html()+'</tr>';
+	 		});
+
+			for (var j = checkbox.length-1; j>=0 ; j--) {
+				var seq = parseInt($('input[name = "seq'+checkbox[j]+'" ]').val())-1;
+				var newseq=seq+1;
+				var temp=tr[seq];
+				tr[seq]=tr[newseq];
+				tr[newseq]=temp;
+			}
+			$('#feedback').html('');
+			$.each( tr, function( index, value ) {
+				  $('#feedback').append(value);
+			});
+// 			console.log(tr);
+			$.fn_loadseq();
+		});
+ 		$('#doubledownOption').on('click', function(){	
+	    	var ids1=document.getElementsByName("checkbox[]");
+			var dem=0;
+			var co=1;
+			var checkbox = [];
+			for (var j = 0; j< ids1.length; j++) {
+				if(ids1[j].checked){
+					checkbox.push(ids1[j].value);
+					dem++;
+				}
+			}
+			if(dem==0){
+				$.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+				return;
+			}
+			var tr=[];
+			$('#feedback tr').each(function(index){
+				tr[parseInt(index)]='<tr id="'+$(this).attr('id')+'">'+$(this).html()+'</tr>';
+	 		});
+			console.log(tr);
+			for (var j =0 ; j<checkbox.length ; j++) {
+				var seq = parseInt($('input[name = "seq'+checkbox[j]+'" ]').val())-1;
+				var newseq=tr.length+j+1;
+				//alert(checkbox[j]+"----"+seq+"----"+newseq);
+				var temp=tr[seq];
+				tr[seq]=tr[newseq];
+				tr[newseq]=temp;
+				delete  tr[seq];
+			}
+
+			
+			$('#feedback').html('');
+			$.each( tr, function( index, value ) {
+				  $('#feedback').append(value);
+			});
+// 			console.log(tr);
+			$.fn_loadseq();
+		});
+		
+ 		$('.checkboxOption').change(function() {
+ 			flagChanges();
+ 	        if($(this).is(":checked")) {
+ 	            $(this).attr("checked",'checked');
+ 	        }else{
+ 	        	 $(this).removeAttr("checked");
+ 	        }
+ 	    });
+  	    
+	    $.fn_loadseq = function(){    
+	    	 $('#feedback tr').each(function(index){
+	 			$(this).find('td:first p').html(index+1);
+	 			$(this).find('td:first input').val(index+1);
+	 		});
+	    	$('.checkboxOption').change(function() {
+	  	        if($(this).is(":checked")) {
+	  	            $(this).attr("checked",'checked');
+	  	        }else{
+	  	        	 $(this).removeAttr("checked");
+	  	        }
+	  	    });	
+	    }	
+	   
+	    $('#addTravelItem').on('click', function(){
+	    	localStorage.setItem("flagChange", "1");
+		    var seq=0;
+		    if (typeof $('#feedback tr:last td:first input').val() === "undefined") {
+		    }else{
+		    	seq=$('#feedback tr:last td:first input').val();
+		    }
+	    	var radioValue = $("input[name='inventoryType']:checked").val();
+	    	
+            
+            $.fn_ajax('addTravelItem', {'useStartedAt': "<?=$useStartedAt?>", 'useEndedAt': "<?=$useEndedAt?>", 'saleStartedAt': "<?=$saleStartedAt?>", 'saleEndedAt': "<?=$saleEndedAt?>",'inventoryType': radioValue,'seq': seq}, function(result)
+            {
+                if(result.flag = true){
+                    $('#feedback').append(result.data);
+                    onloadJsDatePickTravelItem();
+                }
+            },true);
+	    });
+		
+	    $('#btneditTime').on('click', function(){
+
+	    	var onSale= $("input[name='m_onSale']:checked").val();
+	    	$('#feedback .selectonSale').val(onSale);
+	    	
+			var useStartedAt=document.getElementById("m_useStartedAt").value;
+			var useEndedAt=document.getElementById("m_useEndedAt").value;
+			var saleStartedAt=document.getElementById("m_saleStartedAt").value;
+			var saleEndedAt=document.getElementById("m_saleEndedAt").value;
+			
+			$('#feedback .useStartedAt').val(useStartedAt);
+			$('#feedback .useEndedAt').val(useEndedAt);
+			$('#feedback .saleStartedAt').val(saleStartedAt);
+			$('#feedback .saleEndedAt').val(saleEndedAt);
+			$($.elt_popup).hide().find('.absolute').hide();
+		});
+	    $('#btneditPrice').on('click', function(){
+			var price=document.getElementById("m_price").value;
+			//var pricesale=document.getElementById("m_pricesale").value; 
+			$('#feedback .price').val(price);
+			//$('#feedback .pricesale').val(pricesale);
+			$($.elt_popup).hide().find('.absolute').hide();
+		});
+	    $('#btneditAmount').on('click', function(){
+			var amount=document.getElementById("m_amount").value;
+			$('#feedback .amount').val(amount);
+			$($.elt_popup).hide().find('.absolute').hide();
+		});
+
+        $('.form_item').on('click', function(){
+            var ids1=document.getElementsByName("inventoryType");
+            for (var j = 0; j< ids1.length; j++) {
+                if (ids1[j].checked) {
+                    $('#inventoryTypeHiden').attr('value', ids1[j].value);
+
+                    if (ids1[j].value == "PERIOD") {
+                        $('.iventHidden').attr("style", "");
+                    }else {
+                        $('.iventHidden').attr("style", "display:none;");
+                    }
+                }
+            }
+        });
+
+
+	    $( ".useStartedAt" ).bind("change paste keyup", function() {
+        	flagChanges();
+        });
+        $( ".useEndedAt" ).bind("change paste keyup", function() {
+        	flagChanges();
+        });
+        $( ".saleStartedAt" ).bind("change paste keyup", function() {
+        	flagChanges();
+        });
+        $( ".saleEndedAt" ).bind("change paste keyup", function() {
+        	flagChanges();
+		});
+});
+
+function flagChanges(){
+       localStorage.setItem("flagChange", "1");
+}
+
+function notlimit(source,id){
+    document.getElementById("saleEndedAt"+id).disabled = source.checked;
+}
+
+function addOption1(){
+    var depth = document.getElementById("numberDepth").value;
+    document.getElementById("thnameoption").setAttribute("colspan", depth);
+    runAjax('addOption1', {"depth":depth}, function(result1){
+        var result = JSON.parse(result1);
+        $('#feedback1').append(result.data);
+        document.getElementById('numberDepth').disabled = true;    
+        document.multiselect('#rateType'+result.optionId);
+        document.multiselect('#rateType'+result.optionId).deselectAll();
+        
+    });    
+}
+
+function delOption1(id){
+    document.multiselect('#rateType'+id).destroy();
+    document.getElementById("tbOption1"+id).remove();
+    if( !$.trim( $('#feedback1').html() ).length ) {
+        document.getElementById('numberDepth').disabled = false;    
+    }
+}
+
+function onloadJsDatePickOption(id){
+    var  saleStartedAt=  "saleStartedAt"+id;
+    var  saleEndedAt=  "saleEndedAt"+id;    
+    new JsDatePick({
+        useMode:2,
+        target: saleStartedAt,
+        dateFormat:"%Y-%m-%d"
+    });
+    new JsDatePick({
+        useMode:2,
+        target: saleEndedAt,
+        dateFormat:"%Y-%m-%d"
+    });
+}
+function addOption2(){
+    runAjax('addOption2', {}, function(result1){
+        var result = JSON.parse(result1);
+        $('#feedback2').append(result.data);
+        onloadJsDatePickOption(result.optionId);
+    });    
+}
+function changeweekendType(sel,id){
+    if(sel.value==0){
+        document.getElementById("tdpriceweekend"+id).innerHTML = "주중가격표기";
+        document.getElementById("tdpricesaleweekend"+id).innerHTML = "주중가격표기";
+    }
+    if(sel.value==1){
+        document.getElementById("tdpriceweekend"+id).innerHTML = '<input name="priceweekend" type="text" value="0" onkeypress="validate(event)" class="v-numericprice" style="width: 70px;"/>';
+        document.getElementById("tdpricesaleweekend"+id).innerHTML = '<input name="pricesaleweekend" type="text" value="0" onkeypress="validate(event)" class="v-numericprice" style="width: 70px;"/>';
+    }
+}
+function delOption2(id){
+    document.getElementById("tbOption2"+id).remove();
+}
+
+window.onload = function(e){ 
+    onloadJsDatePickTravelItem();
+}
+
+function onloadJsDatePickTravelItem(){
+    var ids=document.getElementsByName("sellerTravelItemId[]");
+    for (var i = 0; i < ids.length; i++) {
+        var  id= ids[i].value;
+        var  useStartedAt=  "useStartedAt"+id;
+        var  useEndedAt=  "useEndedAt"+id;
+        var  saleStartedAt=  "saleStartedAt"+id;
+        var  saleEndedAt=  "saleEndedAt"+id;
+          new JsDatePick({
+                useMode:2,
+                target: useStartedAt,
+                dateFormat:"%Y-%m-%d"
+           });
+          
+          new JsDatePick({
+                useMode:2,
+                target: useEndedAt,
+                dateFormat:"%Y-%m-%d"
+           });
+    
+          new JsDatePick({
+                useMode:2,
+                target: saleStartedAt,
+                dateFormat:"%Y-%m-%d"
+           });
+          
+          new JsDatePick({
+                useMode:2,
+                target: saleEndedAt,
+                dateFormat:"%Y-%m-%d"
+           });
+    }
+}
+
+function addTravelItem2(){
+    var x = document.getElementById("feedback2").rows.length;
+    if(x>0){
+        
+        var idOption = document.getElementsByName('idOption2[]');
+        var saleStartedAt = document.getElementsByName('saleStartedAt[]');
+        var saleEndedAt = document.getElementsByName('saleEndedAt[]');
+        var pricenormal = document.getElementsByName('pricenormal[]');
+        var priceweekend = document.getElementsByName('priceweekend[]');
+        runAjax('addTravelItem2',{"saleStartedAt":saleStartedAt[0].value , "saleEndedAt":saleEndedAt[0].value , "pricenormal":pricenormal[0].value , "priceweekend":priceweekend[0].value  }, 
+            function(result){
+            $('#feedback').append(result);    
+            delOption2(idOption[0].value);
+            onloadJsDatePickTravelItem();
+            addTravelItem2();
+        });    
+    }
+}
+function delTravelItem(id){
+    document.getElementById("tbTravelItem"+id).remove();
+}
+function formatNumber(num) {
+    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+  }
+function handleClick(myRadio) {
+	flagChanges();
+    var price= parseFloat((document.getElementById("price"+myRadio.value).value).replace(",", ""));
+    var pricesale= parseFloat((document.getElementById("pricesale"+myRadio.value).value).replace(",", ""));
+    document.getElementById("pricebasic").value=price;
+    document.getElementById("pricerepresentative").value=pricesale;
+}
+
+// Chuyển hướng khi lưu thành công
+setTimeout(function(){
+	var urlstep = $('#locationurlstep').attr('data-urlstep');
+	if(urlstep){
+		$.fn_alert(true, true, "임시저장 되었습니다.");
+	}  
+},500);
+
+</script>
+<style>
+<!--
+.multiselect-wrapper .multiselect-input {
+    width: 180px;
+}
+
+.multiselect-wrapper .multiselect-list.active {
+    text-align: left;
+}
+
+.multiselect-wrapper ul {
+    width: 170px;
+}
+
+.multiselect-input-div input {
+    margin: 3px 0 6px 0;
+}
+-->
+</style>
+<div class="ct_head" id="locationurlstep" data-urlstep="<?=$this->getData('urlstep')?>" data-step="2">
+	<?php require PATH_INCLUDES . 'top.php';?>
+</div>
+<div class="ct_content">
+	<div class="forminput">
+		<form name="nf" method="POST" action="<?=$this->route('editticket2')?>/<?=$sellerProductId?>" id="nf">
+			<input type="hidden" name="sellerProductId" id="sellerProductId" value="<?= $sellerProductId ?>"> 
+			<input name="btnSumit" id="btnSumit" type="hidden" value="editticket2" />
+			<input name="pricebasic" id="pricebasic" type="hidden" value="<?=$pricebasic?>" />
+			<input name="pricerepresentative" id="pricerepresentative" type="hidden" value="<?=$pricerepresentative?>" />
+			
+			<div class="form_group clearfix frrow">
+				 <div class="row rmclass" data-action="viewperson" data-perid="14">
+    				<div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><span class="spanred">*</span><?= $this->language('l_typesale') ?></h3>
+                        </div>
+                         <div class="form_item col-xs-2" style="margin-top: 8px;text-align: left;">
+                            <input name="inventoryType" onchange="flagChanges();" type="radio" id="inventoryType2" 
+                            		class="inventoryType" <?php if ($inventoryType == 'PERIOD') echo 'checked="checked"'; elseif($noedit==1) echo 'disabled="disabled"';?> value="PERIOD" /> 
+                            <label for="inventoryType2"><?= $this->language('l_typesale1') ?></label>
+                        </div>
+                        <div class="form_item col-xs-2" style="margin-top: 8px;text-align: left;">
+                            <input name="inventoryType" onchange="flagChanges();" type="radio" id="inventoryType1" 
+                            		class="inventoryType" <?php if ($inventoryType == 'DAILY') echo 'checked="checked"'; elseif($noedit==1) echo 'disabled="disabled"';?> value="DAILY" />  
+                            <label for="inventoryType1"><?= $this->language('l_typesale2') ?></label>
+                            <input type="hidden" name="inventoryTypeHiden" id="inventoryTypeHiden" value="">
+                        </div>
+                        <div class="form_item col-xs-4 align-left"></div>
+                    </div>
+                </div>
+			</div>
+			
+			<div class="form_group clearfix frrow">
+    			<p style="line-height: 25px;">옵션등록</p>
+                <ul>
+                	<li style="line-height: 25px;">&nbsp;&nbsp;&nbsp;- 옵션은 최소 1개이상 등록되어야 합니다.</li>
+                	<li style="line-height: 25px;">&nbsp;&nbsp;&nbsp;- 추가 : 최하단에 옵션이 1개 추가됩니다.</li>
+                	<li style="line-height: 25px;">&nbsp;&nbsp;&nbsp;- 여러개의 옵션 일괄 등록 : 엑셀다운로드 후 상세 옵션정보를 작성해서 엑셀업로드 &nbsp;해주세요.</li>
+                </ul>
+			</div>
+			<br>
+			<div class="form_group clearfix frrow">
+                <div class="table_head bgwhite">
+                	<div class="ctrl_head clearfix" style="width: 1000px">
+        				<div class="form_item col-xs-5 align-left form-upload-ticket1">
+    						<div class="btn-group">
+								<a class="btn btn-default" id="addTravelItem"  style="margin-right: 5px;">+ <?= $this->language('l_add') ?></a>
+								<a class="btn btn-default" id="deleteOption" style="margin-right: 5px;">- <?= $this->language('l_delete') ?></a>
+								<a class="btn btn-default " id="downloadExcel" style="margin-right: 5px;">엑셀다운로드</a>
+								<a class="btn btn-default" id="uploadfile" >엑셀업로드</a>
+								<div style="display: none">
+                                    <input type="file"  id="change_files_excel" name="fileupload" value="" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                                </div>
+        					</div>
+        				</div>
+        				<script>
+        					$('#uploadfile').on('click', function(){
+		 						$('#change_files_excel').trigger('click'); 
+		 					});
+							$('#change_files_excel').on('change', function() {
+							    var formdata = new FormData();
+                                var inventoryType = $('#inventoryTypeHiden').val();
+
+                                formdata.append("inventoryTypeHiden", inventoryType);
+							    var fileupload = $(this)[0].files[0];
+							    formdata.append("fileupload", fileupload); 
+							    $.fn_ajax_upload_file('uploadFileExcel1', formdata, function(result){
+								    //console.log(result);
+							        if(result.flag == true){
+							            $('#feedback').append(result.datafile);
+							            $.fn_loadseq();
+							            onloadJsDatePickTravelItem();
+							        }
+							    }, true);
+							           
+							});
+        				</script>
+        				<div class="form_item col-xs-7 align-right">
+							일괄수정 :
+							<div class="btn-group">
+								<a class="btn btn-default"  id="editTime"  style="margin-right: 5px;">판매상태/기간</a>
+								<a class="btn btn-default"  id="editPrice" style="margin-right: 5px;">판매가</a>
+								<a class="btn btn-default"  id="editAmount" >수량</a>
+    						</div>
+							순서이동 :
+							<div class="btn-group">
+								<a class="btn btn-default" id="doubledownOption"  style="margin-right: 5px;"><i class="fa fa-angle-double-down" title="double-down"></i></a>
+								<a class="btn btn-default" id="downOption"  style="margin-right: 5px;"><i class="fa fa-angle-down" title="down"></i></a>
+                                <a class="btn btn-default" id="upOption"  style="margin-right: 5px;"><i class="fa fa-angle-up" title="up"></i></a>
+                                <a class="btn btn-default" id="doubleupOption"  ><i class="fa fa-angle-double-up" title="double-up"></i></a>
+                            </div>
+        				</div>
+    				</div>
+				</div>
+                <div class="table_content">
+                    <table class="table" style="width: 1000px;">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 40px;width: 40px;"><?= $this->language('l_no') ?></th>
+                                <th style="min-width: 40px;width: 40px;"></th>
+                                <th style="min-width: 40px;width: 40px;"><?= $this->language('l_addticket18') ?></th>
+                                <th><?= $this->language('l_travelItemId') ?></th>
+                                <th><?= $this->language('l_nameoption') ?></th>
+                                <th style=" min-width: 80px;;width: 80px;"><?= $this->language('l_addticket10') ?></th>
+                                <th style=" min-width: 80px;;width: 80px;">기준가격근거</th>
+                                <th style=" min-width: 80px;;width: 80px;">과세</th>
+                                <th><?= $this->language('l_addticket20') ?></th>
+                                <th><?= $this->language('l_addticket21') ?></th>
+                                <th>판매상태</th> 
+                                <th><?= $this->language('l_listproduct3') ?></th>
+                                <th><?= $this->language('l_listproduct4') ?></th>
+                                <th class="tdusePeriod" style="<?=$display?>"><?= $this->language('l_addticket22') ?></th>
+                                <th class="tdusePeriod" style="<?=$display?>"><?= $this->language('l_addticket23') ?></th>
+                                <th style="min-width: 80px;width: 80px;"><?= $this->language('l_addticket24') ?></th>
+                                <!-- <th></th> -->
+
+                            </tr>
+                        </thead>
+                        <tbody id="feedback">
+                        <?php
+						if(empty($list_travelitems)){
+							echo '<input type="hidden" id="isset"/>';
+						}  
+                        foreach ($list_travelitems as $value => $giatri) {
+                            $list_useperiod = $list_periodrates[$giatri[0]][0]; 
+							$list_rates     = $list_periodrates[$giatri[0]][1];
+                        ?>
+                           <tr id="tbTravelItem<?= $giatri[0] ?>">
+                           		 <td><p><?= $giatri[5] ?></p>
+                           		 	<input type="hidden" name="seq<?= $giatri[0] ?>" value="<?=$giatri[5] ?>"/>
+                           		 </td>
+                                <td>
+                                    <input type="checkbox" name="checkbox[]" value="<?= $giatri[0] ?>" class="checkboxOption"/>
+                                </td>
+                                <td>
+                                    <input type="radio" name="representative" value="<?= $giatri[0] ?>" onclick="handleClick(this)" <?php if ($giatri[6] == 1) echo 'checked="checked"'; ?> />
+                                </td>
+                                <td><p><?= $giatri[0] ?></p>
+                                    <input type="hidden" name="sellerTravelItemId[]" value="<?= $giatri[0] ?>" />
+                                </td>
+                                <td>
+                                    <textarea name="name<?= $giatri[0] ?>" onchange="flagChanges();" rows="3" style="width: 100px;resize: none"><?= $giatri[1] ?></textarea>
+                                </td>
+                                <td>
+                                    <select name="rateType<?= $giatri[0] ?>" onchange="flagChanges();" style="min-width: 75px;width: 75px;padding: 3px 0px 5px 0px;" class="select">
+                                        <option <?php if ($list_rates[0][1] == "BASIC")  echo 'selected="selected"';?> value="BASIC">해당없음</option>
+                                        <option <?php if ($list_rates[0][1] == "ADULT_DAEIN_AND_CHILD_SOIN") echo 'selected="selected"';?> value="ADULT_DAEIN_AND_CHILD_SOIN">대인/소인동일</option>
+                                        <option <?php if ($list_rates[0][1] == "ADULT") echo 'selected="selected"';?> value="ADULT">성인</option>
+                                        <option <?php if ($list_rates[0][1] == "ADULT_DAEIN") echo 'selected="selected"';?> value="ADULT_DAEIN">대인</option>
+                                        <option <?php if ($list_rates[0][1] == "UNIVERSITY_STUDENT") echo 'selected="selected"'; ?> value="UNIVERSITY_STUDENT">대학생</option>
+                                        <option <?php if ($list_rates[0][1] == "HIGH_SCHOOL_STUDENT") echo 'selected="selected"'; ?> value="HIGH_SCHOOL_STUDENT">고등학생</option>
+                                        <option <?php if ($list_rates[0][1] == "MIDDLE_SCHOOL_STUDENT") echo 'selected="selected"'; ?> value="MIDDLE_SCHOOL_STUDENT">중학생</option>
+                                        <option <?php if ($list_rates[0][1] == "SCHOOL_CHILD") echo 'selected="selected"'; ?> value="SCHOOL_CHILD">초등학생</option>
+                                        <option <?php if ($list_rates[0][1] == "HIGH_AND_MIDDLE_SCHOOL_STUDENT")  echo 'selected="selected"'; ?> value="HIGH_AND_MIDDLE_SCHOOL_STUDENT">중고생</option>
+                                        <option <?php if ($list_rates[0][1] == "ELEMENTARY_MIDDLE_AND_HIGH_SCHOOL_STUDENT") echo 'selected="selected"'; ?> value="ELEMENTARY_MIDDLE_AND_HIGH_SCHOOL_STUDENT">초중고생</option>
+                                        <option <?php if ($list_rates[0][1] == "TEENS") echo 'selected="selected"'; ?> value="TEENS">청소년</option>
+                                        <option <?php if ($list_rates[0][1] == "STUDENT") echo 'selected="selected"'; ?> value="STUDENT">학생</option>
+                                        <option <?php if ($list_rates[0][1] == "PRESCHOOL_CHILD") echo 'selected="selected"'; ?> value="PRESCHOOL_CHILD">미취학아동</option>
+                                        <option <?php if ($list_rates[0][1] == "CHILD") echo 'selected="selected"'; ?> value="CHILD">아동</option>
+                                        <option <?php if ($list_rates[0][1] == "CHILD_SOIN") echo 'selected="selected"'; ?> value="CHILD_SOIN">소인</option>
+                                        <option <?php if ($list_rates[0][1] == "TODDLER") echo 'selected="selected"'; ?> value="TODDLER">유아</option>
+                                        <option <?php if ($list_rates[0][1] == "INFANT") echo 'selected="selected"'; ?> value="INFANT">영아</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="priceType<?= $giatri[0] ?>" onchange="flagChanges();" style="min-width: 75px;width: 75px;padding: 3px 0px 5px 0px;" class="select">
+                                        <option <?php if ($list_rates[0][2] == "COUPANG_PRICE")  echo 'selected="selected"';?> value="COUPANG_PRICE">쿠팡 가격</option>
+                                        <option <?php if ($list_rates[0][2] == "TOTAL_PRODUCT_PRICE")  echo 'selected="selected"';?> value="TOTAL_PRODUCT_PRICE">총 상품 가격</option>
+                                        <option <?php if ($list_rates[0][2] == "OWN_COMPANY_PRICE")  echo 'selected="selected"';?> value="OWN_COMPANY_PRICE">자사 홈페이지가</option>
+                                        <option <?php if ($list_rates[0][2] == "OWN_COMPANY_MALL_SALE_PRICE")  echo 'selected="selected"';?> value="OWN_COMPANY_MALL_SALE_PRICE">자사몰 판매가</option>
+                                        <option <?php if ($list_rates[0][2] == "ONLINE_SALE_PRICE")  echo 'selected="selected"';?> value="ONLINE_SALE_PRICE">온라인 판매가</option>
+                                        <option <?php if ($list_rates[0][2] == "TRAVEL_AGENCY_SPECIAL_PRICE")  echo 'selected="selected"';?> value="TRAVEL_AGENCY_SPECIAL_PRICE">여행사 특가</option>
+                                        <option <?php if ($list_rates[0][2] == "RESERVATION_SALE_PRICE")  echo 'selected="selected"';?> value="RESERVATION_SALE_PRICE">예매처 판매가</option>
+                                        <option <?php if ($list_rates[0][2] == "HOMEPAGE_SALE_PRICE")  echo 'selected="selected"';?> value="HOMEPAGE_SALE_PRICE">홈페이지 판매가</option>
+                                        <option <?php if ($list_rates[0][2] == "SITE_SALE_PRICE")  echo 'selected="selected"';?> value="SITE_SALE_PRICE">현장 판매가</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="taxType<?= $giatri[0] ?>" onchange="flagChanges();" style="min-width: 75px;width: 75px;padding: 3px 0px 5px 0px;" class="select">
+									<p><?php echo "<pre>";print_r($list_rates) ?></p>
+										<option <?php if ($giatri[4] == "TAX")  echo 'selected="selected"';?> value="TAX">과세 (기본값)</option>
+                                        <option <?php if ($giatri[4] == "FREE")  echo 'selected="selected"';?> value="FREE">면세</option>
+                                        <option <?php if ($giatri[4] == "ZERO")  echo 'selected="selected"';?> value="ZERO">영세</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" onchange="flagChanges();" name="price<?= $giatri[0] ?>" id="price<?= $giatri[0] ?>" value="<?= number_format($list_rates[0][3]) ?>" onkeypress='validate(event)' class="price v-numericprice" style="width: 60px;" />
+                                    <input type="hidden" name="pricesale<?= $giatri[0] ?>" id="pricesale<?= $giatri[0] ?>" value="<?= number_format($list_rates[0][4]) ?>" onkeypress='validate(event)' class="pricesale v-numericprice" style="width: 60px;" />
+                                </td>
+                                <td>
+                                    <input type="text" onchange="flagChanges();" name="amount<?= $giatri[0] ?>" value="<?= $list_rates[0][5] ?>" onkeypress='validate(event)' class="amount v-numericprice" style="width: 40px;" />
+                                </td>
+                                <td>
+                                    <select name="onSale<?= $giatri[0] ?>" onchange="flagChanges();" style="min-width: 75px;width: 75px;padding: 3px 0px 5px 0px;" class="selectonSale">
+                                        <option <?php if ($giatri[2] == "1")  echo 'selected="selected"';?> value="1"><?= $this->language('l_status3') ?></option>
+                                        <option <?php if ($giatri[2] == "0")  echo 'selected="selected"';?> value="0"><?= $this->language('l_status_1') ?></option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" name="useStartedAt<?= $giatri[0] ?>"  id="useStartedAt<?= $giatri[0] ?>" value="<?= $list_useperiod[0][2] ?>" class="useStartedAt" readonly="readonly" style="width: 70px;" />
+                                </td>
+                                <td>
+                                    <input type="text" name="useEndedAt<?= $giatri[0] ?>"  id="useEndedAt<?= $giatri[0] ?>" value="<?= $list_useperiod[0][3] ?>" class="useEndedAt" readonly="readonly" style="width: 70px;" />
+                                </td>
+                                <td class="tdusePeriod" style="<?=$display?>">
+                                    <input type="text" name="saleStartedAt<?= $giatri[0] ?>"  id="saleStartedAt<?= $giatri[0] ?>" value="<?= $list_rates[0][7] ?>" class="saleStartedAt" readonly="readonly" style="width: 70px;" />
+                                </td>
+                                <td class="tdusePeriod" style="<?=$display?>">
+                                    <input type="text" name="saleEndedAt<?= $giatri[0] ?>" id="saleEndedAt<?= $giatri[0] ?>" value="<?= $list_rates[0][8] ?>"  class="saleEndedAt" readonly="readonly" style="width: 70px;" />
+                                </td>
+                                <td> <p><?= $this->language('l_addticket25') ?></p> </td>
+                                <!-- <td><a onclick="delTravelItem('<?= $giatri[0] ?>');" class="btn hover small"> X </a></td> -->
+                            </tr>
+                        <?php
+                        }
+                        ?>
+                   		</tbody>
+                    </table>
+                </div>
+                
+				<div class="table_content">
+					<table class="table" style="float: right;">
+						<tr>
+							<td colspan="8">
+								<input type="hidden" name="step" id="step" value="2">
+								<div class="btnupload">										
+                            			<button type="button" style="width: 100px; float: right;" class="btn hover "  id="continuelink" 
+                            					data-step="3" ><?=$this->language( 'l_continue')?></button>
+                            			<button type="button" style="width: 100px; float: right;margin-right: 5px" class="btn hover "  id="saveTemp" 
+                            					data-step="2"><?=$this->language( 'l_savedraft')?></button>
+                            			<button type="button" style="width: 100px; float: right;margin-right: 5px" class="btn hover "  id="backlink" 
+                            					data-step="1"><?=$this->language( 'l_back')?></button>
+                            	</div>
+                            </td>
+						</tr>
+					</table>
+				</div>
+				
+			</div>
+		</form>
+	</div>
+
+</div>

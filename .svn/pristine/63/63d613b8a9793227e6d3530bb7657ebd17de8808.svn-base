@@ -1,0 +1,1125 @@
+<?php
+
+require PATH_ROOT . '/vendor1/autoload.php';
+
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+require PATH_ROOT . '/vendor/autoload.php';
+
+use Google\Cloud\Storage\StorageClient;
+
+class TmonController extends Controller {
+
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+
+    public function register_stream_wrapper($projectId) {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+
+    // Phương thức index
+    public function indexAction() {
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $crawler = $client->request('POST', 'https://ps.tmon.co.kr');
+
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'secureLogin' => false,
+            'install_nos' => 'Y',
+            'login_id' => '티브리지',
+            'passwd' => 'coupang135!'));
+        $crawler = $client->click($crawler->selectLink('다음에 변경하기')->link());
+        $crawler = $client->click($crawler->selectLink('사용∙처리내역')->link());
+        $crawler_buylist = $client->click($crawler->selectLink('구매내역')->link());
+
+        $start_date = (date("Y") - 1) . "." . date("m.d");
+        $end_date = date("Y.m.d");
+        $crawler = $client->request('GET', 'https://ps.tmon.co.kr/daily/buylist?excel=Y&main_deal_srl=1957699002%2C1850249946&deal_srl=&branch_srl=&status_type=AV&page=1&ticket_status_type=ALL&mbiz_yn=N&simple_search=N&deal_start_date=&dealType=AV&use_date=%EC%82%AC%EC%9A%A9%EC%9D%BC&start_date=' . $start_date . '&end_date=' . $end_date . '&searchKey=phone_number&searchVal=');
+        //https://ps.tmon.co.kr/daily/buylist?excel=Y&main_deal_srl=3458517230%2C3453097426%2C3419164362%2C2748997650%2C2763873162%2C2743756794%2C2742079898%2C2736868354%2C2661681598%2C2573836258%2C2572876002%2C2545678134%2C2389016678%2C2362594582%2C2362504322%2C2005358110%2C1957699002%2C1917435262%2C1880009050%2C1879575974%2C1850249946%2C1834866614&deal_srl=&branch_srl=&status_type=ALL&page=1&ticket_status_type=ALL&mbiz_yn=N&simple_search=N&deal_start_date=&dealType=AV&use_date=%EC%82%AC%EC%9A%A9%EC%9D%BC&start_date=2019.07.06&end_date=2020.07.06&searchKey=phone_number&searchVal=
+        // header('Content-Type: application/json');
+        $response = $client->getResponse();
+        $content = $response->getContent();
+        //file_put_contents('gs://klkim-project.appspot.com/buylist.xlsx', $content);
+        //$this->register_stream_wrapper("klkim-project");
+        //$fp = fopen("gs://klkim-project.appspot.com/buylist.xlsx", 'w');
+        //fwrite($fp, $content);
+        //fclose($fp);
+        require_once PATH_PLUGINS . 'PHPExcel/PHPExcel/IOFactory.php';
+        require_once PATH_PLUGINS . 'PHPExcel/PHPExcel.php';
+
+        //$url = "https://klkim-project.appspot.com.storage.googleapis.com/buylist.xls";
+        $filecontent = $content; //file_get_contents($url);
+        $tmpfname = tempnam(sys_get_temp_dir(), "tmpxls");
+        file_put_contents($tmpfname, $filecontent);
+
+        $excelReader = PHPExcel_IOFactory::createReaderForFile($tmpfname);
+        $objPHPExcel = $excelReader->load($tmpfname);
+
+        $sheet = $objPHPExcel->getSheet(0);
+        $Totalrow = $sheet->getHighestRow();
+        $data = [];
+        for ($i = 4; $i <= $Totalrow; $i++) {
+            $data[$i - 4]["1"] = $sheet->getCell('A' . $i)->getValue()->getPlainText();  // mã đơn hàng
+            $data[$i - 4]["2"] = $sheet->getCell('B' . $i)->getValue()->getPlainText();  // mã vé
+            $data[$i - 4]["3"] = $sheet->getCell('C' . $i)->getValue()->getPlainText();  // Tên người đặt
+            $data[$i - 4]["4"] = $sheet->getCell('D' . $i)->getValue()->getPlainText();  // Số điện thoại người đặt
+            $data[$i - 4]["5"] = $sheet->getCell('E' . $i)->getValue()->getPlainText();  // Email người đặt
+            $data[$i - 4]["6"] = $sheet->getCell('F' . $i)->getValue()->getPlainText();  // Tên người nhận (null)
+            $data[$i - 4]["7"] = $sheet->getCell('G' . $i)->getValue()->getPlainText();  // Số điện thoại người nhận (null)
+            $data[$i - 4]["8"] = $sheet->getCell('H' . $i)->getValue()->getPlainText();  // Email người nhận (null)
+            $data[$i - 4]["9"] = $sheet->getCell('I' . $i)->getValue()->getPlainText();  // Mã deal
+            $data[$i - 4]["10"] = $sheet->getCell('J' . $i)->getValue()->getPlainText(); // Tên deal
+            $data[$i - 4]["11"] = $sheet->getCell('K' . $i)->getValue()->getPlainText(); // Tên option
+            $data[$i - 4]["12"] = $sheet->getCell('L' . $i)->getValue()->getPlainText(); // số tiền mua
+            $data[$i - 4]["13"] = $sheet->getCell('M' . $i)->getValue()->getPlainText(); // số tiền giảm
+            $data[$i - 4]["14"] = $sheet->getCell('N' . $i)->getValue()->getPlainText(); // giá cung cấp
+            $data[$i - 4]["15"] = $sheet->getCell('O' . $i)->getValue();                 // tỷ lệ phí
+            $data[$i - 4]["16"] = $sheet->getCell('P' . $i)->getValue()->getPlainText(); // Trạng thái vé
+            $data[$i - 4]["17"] = $sheet->getCell('Q' . $i)->getValue()->getPlainText(); // Trạng thái đặt
+            $data[$i - 4]["18"] = $sheet->getCell('R' . $i)->getValue()->getPlainText(); // Thời gian mua
+            if ($sheet->getCell('S' . $i)->getValue())
+                $data[$i - 4]["19"] = $sheet->getCell('S' . $i)->getValue()->getPlainText();
+            else
+                $data[$i - 4]["19"] = $sheet->getCell('S' . $i)->getValue();            // Thời gian sử dụng
+            $data[$i - 4]["20"] = $sheet->getCell('T' . $i)->getValue()->getPlainText(); // Ghi chú
+            $data[$i - 4]["21"] = $sheet->getCell('U' . $i)->getValue()->getPlainText(); // Tên option 1
+            $data[$i - 4]["22"] = $sheet->getCell('V' . $i)->getValue()->getPlainText(); // Tên option 2
+            $data[$i - 4]["23"] = $sheet->getCell('W' . $i)->getValue()->getPlainText(); // Tên option 3
+            $data[$i - 4]["24"] = $sheet->getCell('X' . $i)->getValue()->getPlainText(); // Tên option 4
+            $data[$i - 4]["25"] = $sheet->getCell('Y' . $i)->getValue()->getPlainText(); // Tên option 5
+        }
+        foreach ($data as $key => $value) {
+            $statusTicket = 1;
+            //사용가능 có sẵn  사용완료 hoàn thành 입금대기 chờ gởi tiền
+            if ($value[16] == '사용가능')
+                $statusTicket = 1;
+            if ($value[16] == '사용완료')
+                $statusTicket = 2;
+            if ($value[16] == '입금대기')
+                $statusTicket = 1;
+            $ticket = [
+                'useAmount' => 0,
+                'totalAmount' => 1,
+                'ticketNumber' => $value[2],
+                'statusType' => $value[16],
+                'price' => $value[12],
+                'optionId' => 0,
+                'dealId' => $value[9],
+                'purchasedAt' => $value[18],
+                'restoreTicket' => 1,
+                'statusTicket' => $statusTicket
+            ];
+            //'canceledAt' => $value[18],
+            $result1 = $this->_model->loadRecord('ticket', ['ticketNumber' => $value[2]]);
+            if ($result1) {
+                $this->_model->updateRecord('ticket', $ticket, ['ticketNumber' => $value[2]]);
+            } else {
+                $this->_model->insertRecord('ticket', $ticket);
+            }
+            $ticketPurchasers = [
+                'orderNumber' => $value[1],
+                'ticketNumber' => $value[2],
+                'userName' => $value[3],
+                'phoneNumber' => $value[4],
+                'email' => $value[5],
+                'dealId' => $value[9],
+                'dealName' => $value[10],
+                'optionId' => 0,
+                'optionName' => $value[11],
+                'price' => $value[12],
+                'purchaseDateTime' => $value[18],
+                'status' => $value[17]
+            ];
+            //'canceledDateTime' => $value[9],
+            $result2 = $this->_model->loadRecord('ticketPurchasers', ['ticketNumber' => $value[2]]);
+            if ($result2) {
+                if($result2['settlementStatus']==0) // chưa quyết toán
+                    $this->_model->updateRecord('ticketPurchasers', $ticketPurchasers, ['ticketNumber' => $value[2]]);
+            } else {
+                $this->_model->insertRecord('ticketPurchasers', $ticketPurchasers);
+            }
+        }
+    }
+
+    // Phương thức cancel
+    public function cancelAction() {
+        set_time_limit(1500);
+        $client = new Client(HttpClient::create(['timeout' => 600]));
+        $crawler = $client->request('POST', 'https://ps.tmon.co.kr');
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'secureLogin' => false,
+            'install_nos' => 'Y',
+            'login_id' => '티브리지',
+            'passwd' => 'coupang135!'));
+        $crawler = $client->click($crawler->selectLink('다음에 변경하기')->link());
+        $crawler = $client->click($crawler->selectLink('사용∙처리내역')->link());
+        $start_date = (date("Y") - 1) . "." . date("m.d");
+        $end_date = date("Y.m.d");
+
+        $sqlheader = "SELECT sc.travelProductId,sc.channelId";
+        $sql = ' FROM  `tb_salechannel` sc,tb_channels cn';
+        $sql .= ' WHERE sc.channelId=cn.channel_id  AND cn.channel_id=3 AND sc.travelProductId!=""';
+        $list_product = $this->_model->setQuery($sqlheader . $sql);
+        $list_product = $this->_model->readAll();
+        foreach ($list_product as $rows_pro) {
+            $dealID = $rows_pro['travelProductId'];
+            $crawler = $client->request('GET', 'https://ps.tmon.co.kr/daily/cancelTicketList?main_deal_srl=' . $dealID . '%2C1850249946&deal_srl=&branch_srl=&status_type=AV&page=1&ticket_status_type=ALL&mbiz_yn=N&simple_search=N&deal_start_date=&dealType=AV&use_date=%EC%82%AC%EC%9A%A9%EC%9D%BC&start_date=' . $start_date . '&end_date=' . $end_date . '&searchKey=phone_number&searchVal=&_=1593571258362');
+            // $html_string = $crawler->outerHtml();
+            //$pieces_mang = explode('<input type="hidden" id="totalCount" value="', $html_string);
+            $totalCount = $crawler->filter('#totalCount')->each(function (Crawler $node, $i) {
+                return $node->attr('value');
+            });
+            $data = $crawler->filter('tr')->each(function (Crawler $node, $i) {
+                $data[] = $node->filter('input')->each(function (Crawler $node1, $j) {
+                    return $node1->attr('value');
+                });
+                $data[] = $node->filter('label')->each(function (Crawler $node1, $j) {
+                    $html = $node1->html();
+                    $html = str_replace(' ', '', $html);
+                    $html = str_replace('-', '', $html);
+                    $html = str_replace('<em>', '', $html);
+                    $html = str_replace('</em>', '', $html);
+                    $html = str_replace('<strong>', '', $html); //$html = str_replace('</strong>', '', $html);
+                    $html = str_replace('<span>', '', $html);
+                    $html = str_replace('</span>', '', $html);
+                    return trim($html);
+                });
+                $data[] = $node->filter('td')->each(function (Crawler $node1, $j) {
+                    $html = $node1->html();
+                    $html = str_replace(',', '', $html);
+                    $html = str_replace('<em>', '', $html);
+                    $html = str_replace('</em>', '', $html);
+                    $html = str_replace('<strong>', '', $html); //$html = str_replace('</strong>', '', $html);
+                    $html = str_replace('<span>', '', $html);
+                    $html = str_replace('</span>', '', $html);
+                    return trim($html);
+                });
+                return $data;
+            });
+            array_pop($data);
+            $page = ceil((int) $totalCount[0] / 10);
+            if ($page > 1) {
+                for ($k = 2; $k <= $page; $k++) {
+                    $crawler = $client->request('GET', 'https://ps.tmon.co.kr/daily/cancelTicketList?main_deal_srl=' . $dealID . '%2C1850249946&deal_srl=&branch_srl=&status_type=AV&page=' . $k . '&ticket_status_type=ALL&mbiz_yn=N&simple_search=N&deal_start_date=&dealType=AV&use_date=%EC%82%AC%EC%9A%A9%EC%9D%BC&start_date=' . $start_date . '&end_date=' . $end_date . '&searchKey=phone_number&searchVal=&_=1593571258362');
+                    $data1 = $crawler->filter('tr')->each(function (Crawler $node, $i) {
+                        $data[] = $node->filter('input')->each(function (Crawler $node1, $j) {
+                            return $node1->attr('value');
+                        });
+                        $data[] = $node->filter('label')->each(function (Crawler $node1, $j) {
+                            $html = $node1->html();
+                            $html = str_replace(' ', '', $html);
+                            $html = str_replace('-', '', $html);
+                            $html = str_replace('<em>', '', $html);
+                            $html = str_replace('</em>', '', $html);
+                            $html = str_replace('<strong>', '', $html); //$html = str_replace('</strong>', '', $html);
+                            $html = str_replace('<span>', '', $html);
+                            $html = str_replace('</span>', '', $html);
+                            return trim($html);
+                        });
+                        $data[] = $node->filter('td')->each(function (Crawler $node1, $j) {
+                            $html = $node1->html();
+                            $html = str_replace(',', '', $html);
+                            $html = str_replace('<em>', '', $html);
+                            $html = str_replace('</em>', '', $html);
+                            $html = str_replace('<strong>', '', $html); //$html = str_replace('</strong>', '', $html);
+                            $html = str_replace('<span>', '', $html);
+                            $html = str_replace('</span>', '', $html);
+                            return trim($html);
+                        });
+                        return $data;
+                    });
+                    array_pop($data1);
+                    $data = array_merge($data, $data1);
+                    sleep(10);
+                }
+            }
+            for ($i = 0; $i < $totalCount[0]; $i++) {
+                $statusTicket = 3;
+                $purchasedAt = str_replace('.', '-', $data[$i][2][5]);
+                $purchasedAt = str_replace('(', '', $purchasedAt);
+                $purchasedAt = str_replace(')', '', $purchasedAt);
+
+                $canceledAt = str_replace('.', '-', $data[$i][2][6]);
+                $canceledAt = str_replace('(', '', $canceledAt);
+                $canceledAt = str_replace(')', '', $canceledAt);
+
+                $ticketNumber = $data[$i][1][0];
+                $price = (int) $data[$i][2][3];
+                if ($ticketNumber != NULL) {
+                    $ticket = [
+                        'useAmount' => 0,
+                        'totalAmount' => 1,
+                        'ticketNumber' => $ticketNumber,
+                        'price' => $price,
+                        'purchasedAt' => $purchasedAt,
+                        'canceledAt' => $canceledAt,
+                        'statusTicket' => $statusTicket,
+                        'optionId' => 0,
+                        'dealId' => $dealID
+                    ];
+                    //'statusType' => $value[16],
+                    //'optionId' => 0,
+                    //'dealId' => $value[9],
+                    //'restoreTicket' => 1,
+                    //'canceledAt' => $value[18],
+                    $result1 = $this->_model->loadRecord('ticket', ['ticketNumber' => $ticketNumber]);
+                    if ($result1) {
+                        $this->_model->updateRecord('ticket', $ticket, ['ticketNumber' => $ticketNumber]);
+                    } else {
+                        $this->_model->insertRecord('ticket', $ticket);
+                    }
+                    $pieces = explode('</strong>', $data[$i][2][2]);
+                    //if(isset($pieces[1]))
+                    //    $pieces[1] = "";
+                    $ticketPurchasers = [
+                        'ticketNumber' => $data[$i][1][0],
+                        'userName' => $data[$i][2][0],
+                        'phoneNumber' => $data[$i][2][1],
+                        'dealName' => trim($pieces[0]),
+                        'optionId' => 0,
+                        'optionName' => trim($pieces[1]),
+                        'price' => $data[$i][2][3],
+                        'purchaseDateTime' => $purchasedAt,
+                        'canceledDateTime' => $canceledAt,
+                        'status' => 'CANCEL_COMPLETE',
+                        'dealId' => $dealID
+                    ];
+                    //'orderNumber' => $value[1],
+                    //'email' => $value[5],
+                    //'dealId' => $value[9],
+                    //'optionId' => 0,
+                    //'canceledDateTime' => $value[9],
+                    $result2 = $this->_model->loadRecord('ticketPurchasers', ['ticketNumber' => $data[$i][1][0]]);
+                    if ($result2) {
+                        if($result2['settlementStatus']==0) // chưa quyết toán
+                            $this->_model->updateRecord('ticketPurchasers', $ticketPurchasers, ['ticketNumber' => $data[$i][1][0]]);
+                    } else {
+                        $this->_model->insertRecord('ticketPurchasers', $ticketPurchasers);
+                    }
+                }// end $ticketNumber ! null
+            }
+        }// end foreach list product
+    }
+
+    // Phương thức cancel
+    public function refundAction() {
+        set_time_limit(500);
+        $client = new Client(HttpClient::create(['timeout' => 600]));
+        $browser = new HttpBrowser(HttpClient::create());
+        $crawler = $client->request('POST', 'https://ps.tmon.co.kr');
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'secureLogin' => false,
+            'install_nos' => 'Y',
+            'login_id' => '티브리지',
+            'passwd' => 'coupang135!'));
+
+        $crawler = $client->click($crawler->selectLink('다음에 변경하기')->link());
+        $crawler = $client->click($crawler->selectLink('사용∙처리내역')->link());
+
+        $start_date = (date("Y") - 1) . "." . date("m.d");
+        $end_date = date("Y.m.d");
+        $crawler = $client->request('GET', 'https://ps.tmon.co.kr/daily/refundTicketList?main_deal_srl=1957699002%2C1850249946&deal_srl=&branch_srl=&status_type=AV&page=1&ticket_status_type=ALL&mbiz_yn=N&simple_search=N&deal_start_date=&dealType=AV&use_date=%EC%82%AC%EC%9A%A9%EC%9D%BC&start_date=' . $start_date . '&end_date=' . $end_date . '&searchKey=phone_number&searchVal=&_=1593571258362');
+        $html_string = $crawler->outerHtml();
+
+        $result = str_replace('<html><body>', '', $html_string);
+        $result = str_replace('<tr class="frst">', '', $result);
+        $result = str_replace('<td>', '', $result);
+        $result = str_replace('</td>', '', $result);
+        $result = str_replace('</tr>', '', $result);
+        $result = str_replace('<tr style="display:none">', '', $result);
+        $result = str_replace('</body></html>', '', $result);
+        $result = str_replace('<br>', '', $result);
+        $pieces_mang = explode('<input type="hidden" id="totalCount" value="', $result);
+        $content = $pieces_mang[0];
+        $totalCount = $pieces_mang[1];
+        $totalCount = str_replace('">', '', $totalCount);
+
+        if ($totalCount != 0) {
+            $pieces = explode('<tr>', $content);
+            for ($i = 0; $i < count($pieces); $i++) {
+                //$rows_mang = explode('style="font-size:12px;">', $pieces[$i]);
+                $result_rows = preg_replace('/\s+/', '', $pieces[$i]);
+                $result_rows = str_replace('<strong>', '', $result_rows);
+                $result_rows = str_replace('</strong>', '', $result_rows);
+                $result_rows = str_replace('</label>', '', $result_rows);
+                $result_rows = str_replace('<tdclass="deal_name">', '', $result_rows);
+                $result_rows = str_replace('</th>', '', $result_rows);
+                $result_rows = str_replace('<span>', '', $result_rows);
+                $result_rows = str_replace('</span>', '', $result_rows);
+                $result_rows = str_replace('<em>', '#!', $result_rows);
+                $result_rows = str_replace('</em>', '#!', $result_rows);
+                $result_rows = str_replace('-#!', '-', $result_rows);
+                $result_rows = str_replace('#!#!', '#!', $result_rows);
+                $result_rows = str_replace('#!#!', '#!', $result_rows);
+                $pieces_1 = explode('#!', $result_rows);
+                for ($j = 0; $j < count($pieces_1); $j++) {
+                    echo $j . "-" . $pieces_1[$j] . "<br/>";
+                }
+            }
+
+            $page = ceil((int) $totalCount / 10);
+            if ($page > 1) {
+                for ($k = 2; $k <= $page; $k++) {
+                    $crawler = $client->request('GET', 'https://ps.tmon.co.kr/daily/refundTicketList?main_deal_srl=1957699002%2C1850249946&deal_srl=&branch_srl=&status_type=AV&page=' . $k . '&ticket_status_type=ALL&mbiz_yn=N&simple_search=N&deal_start_date=&dealType=AV&use_date=%EC%82%AC%EC%9A%A9%EC%9D%BC&start_date=' . $start_date . '&end_date=' . $end_date . '&searchKey=phone_number&searchVal=&_=1593571258362');
+                    $html_string = $crawler->outerHtml();
+                    $result = str_replace('<html><body>', '', $html_string);
+                    $result = str_replace('<tr class="frst">', '', $result);
+                    $result = str_replace('<td>', '', $result);
+                    $result = str_replace('</td>', '', $result);
+                    $result = str_replace('</tr>', '', $result);
+                    $result = str_replace('<tr style="display:none">', '', $result);
+                    $result = str_replace('</body></html>', '', $result);
+                    $result = str_replace('<br>', '', $result);
+
+                    $pieces_mang = explode('<input type="hidden" id="totalCount" value="', $result);
+                    $content = $pieces_mang[0];
+                    $pieces = explode('<tr>', $content);
+                    echo "<span style='color:red'>" . $k . "</span>";
+                    for ($i = 0; $i < count($pieces); $i++) {
+                        $rows_mang = explode('style="font-size:12px;">', $pieces[$i]);
+                        $result_rows = preg_replace('/\s+/', '', $rows_mang[1]);
+                        $result_rows = str_replace('<strong>', '', $result_rows);
+                        $result_rows = str_replace('</strong>', '', $result_rows);
+                        $result_rows = str_replace('</label>', '', $result_rows);
+                        $result_rows = str_replace('<tdclass="deal_name">', '', $result_rows);
+                        $result_rows = str_replace('</th>', '', $result_rows);
+                        $result_rows = str_replace('<span>', '', $result_rows);
+                        $result_rows = str_replace('</span>', '', $result_rows);
+                        $result_rows = str_replace('<em>', '#!', $result_rows);
+                        $result_rows = str_replace('</em>', '#!', $result_rows);
+                        $result_rows = str_replace('-#!', '-', $result_rows);
+                        $result_rows = str_replace('#!#!', '#!', $result_rows);
+                        $result_rows = str_replace('#!#!', '#!', $result_rows);
+                        $pieces_1 = explode('#!', $result_rows);
+                        for ($j = 0; $j < count($pieces_1); $j++) {
+                            echo "<span style='color:red'>" . $k . "_" . $j . "</span>";
+                            echo $j . "-" . $pieces_1[$j] . "<br/>";
+                        }
+                        echo "<hr/>";
+                    }
+                    sleep(10);
+                }
+            }
+        } else {
+            echo "Không có dữ liệu để cập nhật";
+        }
+    }
+
+    // Phương thức multi
+    public function multiAction() {
+        set_time_limit(500);
+        $client = new Client(HttpClient::create(['timeout' => 600]));
+        $browser = new HttpBrowser(HttpClient::create());
+        $crawler = $client->request('POST', 'https://ps.tmon.co.kr');
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'secureLogin' => false,
+            'install_nos' => 'Y',
+            'login_id' => '티브리지',
+            'passwd' => 'coupang135!'));
+        $crawler = $client->click($crawler->selectLink('다음에 변경하기')->link());
+        $crawler = $client->click($crawler->selectLink('사용∙처리내역')->link());
+
+        $start_date = (date("Y") - 1) . "." . date("m.d");
+        $end_date = date("Y.m.d");
+        $crawler = $client->request('GET', 'https://ps.tmon.co.kr/daily/multibizReserveTicketList?dealType=DN&reservationStatus=ALL&searchDateType=BUY_DATE&startDate=' . $start_date . '&endDate=' . $end_date . '&searchType=PHONE_NUMBER&searchKeyword=&mainDealSrl=&page=1&status_type=&ticket_status_type=&_=1593660495832');
+        $html_string = $crawler->outerHtml();
+        $result = str_replace('<html><body>', '', $html_string);
+        $result = str_replace('</body></html>', '', $result);
+        $result = str_replace('<input type="hidden" id="error" value="">', '', $result);
+        $result = str_replace('<span>', '', $result);
+        $result = str_replace('</span>', '', $result);
+        $result = str_replace('<br>', '', $result);
+        $result = str_replace('<em>', '', $result);
+        $result = str_replace('</em>', '', $result);
+        $pieces_mang = explode('<input type="hidden" id="reserveCount" name="reserveCount" value="', $result);
+        $content = $pieces_mang[0];
+        $totalCount = $pieces_mang[1];
+        $totalCount = preg_replace('/\s+/', '', $totalCount);
+        $totalCount = str_replace('"></td></tr>', '', $totalCount);
+        if ($totalCount != 0) {
+            $pieces = explode('<tr class="frst">', $content);
+            for ($i = 1; $i < count($pieces); $i++) {
+                $rows_mang = $pieces[$i];
+                $rows_mang = str_replace('</tr>', '', $rows_mang);
+                $rows_mang = str_replace('<tr style="display:none;">', '', $rows_mang);
+                $rows_mang = preg_replace('/\s+/', '', $rows_mang);
+                $rows_mang = str_replace('<td>', '#!', $rows_mang);
+                $rows_mang = str_replace('</td>', '#!', $rows_mang);
+                $rows_mang = str_replace('#!#!', '#!', $rows_mang);
+                $rows_mang = str_replace('#!#!', '#!', $rows_mang);
+                $rows_mang = explode('</div>', $rows_mang);
+                $first = $rows_mang[0];
+                $second = $rows_mang[1];
+                $first = explode('</label>', $first);
+                $first = $first[0];
+                $first = explode('<labelfor="ch', $first);
+                $first = $first[1];
+                $first = explode('">', $first);
+                $first = $first[1];
+                $mang = $first . $second;
+                $pieces_1 = explode('#!', $mang);
+                for ($j = 0; $j < count($pieces_1) - 1; $j++) {
+                    echo $j . "-" . $pieces_1[$j] . "<br/>";
+                }
+            }
+            $page = ceil((int) $totalCount / 10);
+            if ($page > 1) {
+                for ($k = 2; $k <= $page; $k++) {
+                    $crawler = $client->request('GET', 'https://ps.tmon.co.kr/daily/multibizReserveTicketList?dealType=DN&reservationStatus=ALL&searchDateType=BUY_DATE&startDate=' . $start_date . '&endDate=' . $end_date . '&searchType=PHONE_NUMBER&searchKeyword=&mainDealSrl=&page=' . $k . '&status_type=&ticket_status_type=&_=1593660495832');
+                    $html_string = $crawler->outerHtml();
+                    $result = str_replace('<html><body>', '', $html_string);
+                    $result = str_replace('</body></html>', '', $result);
+                    $result = str_replace('<input type="hidden" id="error" value="">', '', $result);
+                    $result = str_replace('<span>', '', $result);
+                    $result = str_replace('</span>', '', $result);
+                    $result = str_replace('<br>', '', $result);
+                    $result = str_replace('<em>', '', $result);
+                    $result = str_replace('</em>', '', $result);
+                    $pieces_mang = explode('<input type="hidden" id="reserveCount" name="reserveCount" value="', $result);
+                    $content = $pieces_mang[0];
+                    $pieces = explode('<tr class="frst">', $content);
+                    for ($i = 1; $i < count($pieces); $i++) {
+                        $rows_mang = $pieces[$i];
+                        $rows_mang = str_replace('</tr>', '', $rows_mang);
+                        $rows_mang = str_replace('<tr style="display:none;">', '', $rows_mang);
+                        $rows_mang = preg_replace('/\s+/', '', $rows_mang);
+                        $rows_mang = str_replace('<td>', '#!', $rows_mang);
+                        $rows_mang = str_replace('</td>', '#!', $rows_mang);
+                        $rows_mang = str_replace('#!#!', '#!', $rows_mang);
+                        $rows_mang = str_replace('#!#!', '#!', $rows_mang);
+                        $rows_mang = explode('</div>', $rows_mang);
+                        $first = $rows_mang[0];
+                        $second = $rows_mang[1];
+                        $first = explode('</label>', $first);
+                        $first = $first[0];
+                        $first = explode('<labelfor="ch', $first);
+                        $first = $first[1];
+                        $first = explode('">', $first);
+                        $first = $first[1];
+                        $mang = $first . $second;
+                        $pieces_1 = explode('#!', $mang);
+                        for ($j = 0; $j < count($pieces_1) - 1; $j++) {
+                            echo $j . "-" . $pieces_1[$j] . "<br/>";
+                        }
+                    }
+                    sleep(10);
+                }
+            }
+        }
+    }
+
+    public function questionAction() {
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $browser = new HttpBrowser(HttpClient::create());
+        $crawler = $client->request('POST', 'https://ps.tmon.co.kr');
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'secureLogin' => false,
+            'install_nos' => 'Y',
+            'login_id' => '티브리지',
+            'passwd' => 'coupang135!'));
+        $crawler = $client->click($crawler->selectLink('다음에 변경하기')->link());
+        $crawler = $client->click($crawler->selectLink('고객문의 관리')->link());
+        $start_date = (date("Y") - 1) . "-" . date("m-d");
+        $end_date = date("Y-m-d");
+        //$dealID = 1850249946;
+        $sqlheader = "SELECT sc.travelProductId,sc.channelId";
+        $sql = ' FROM  `tb_salechannel` sc,tb_channels cn';
+        $sql .= ' WHERE sc.channelId=cn.channel_id  AND cn.channel_id=3 AND sc.travelProductId!=""';
+        $list_product = $this->_model->setQuery($sqlheader . $sql);
+        $list_product = $this->_model->readAll();
+        foreach ($list_product as $rows_pro) {
+            $dealID = $rows_pro['travelProductId'];
+            $crawler = $client->request('GET', 'https://ps.tmon.co.kr/inquiry/detail?page=1&main_deal_srl=' . $dealID . '&srchCategory=ALL&srchStartDate=' . $start_date . '&srchEndDate=' . $end_date . '&srchKeyword=&_=1594695300901');
+            $html_string = $crawler->outerHtml();
+            $result = str_replace("'", '"', $html_string);
+            $result = str_replace("'", '"', $result);
+            $result = str_replace('<html><body>', '', $result);
+            $result = str_replace('</body></html>', '', $result);
+            $result = explode('<tbody>', $result);
+            $result = $result[1];
+            $result = explode('</tbody>', $result);
+            $page = $result[1];
+            $pieces_page = explode('inquiry?page=', $page);
+            for ($h = 0; $h < count($pieces_page); $h++) {
+                $string_page = $pieces_page[$h];
+            }
+            $number_page = explode('&', $string_page);
+            $number_page = $number_page[0];
+            $result = $result[0];
+            $pieces = explode('<tr>', $result);
+            for ($k = 1; $k < count($pieces); $k++) {
+                $pieces1 = explode('</td>', $pieces[$k]);
+                $cot1 = $pieces1[0];
+                $cot2 = $pieces1[1];
+                $cot3 = $pieces1[2];
+                $cot4 = $pieces1[3];
+                $cot1 = str_replace('<td class="deal">', '', $cot1);
+                $cot2 = explode('</p>', $cot2);
+                $check_anwer = count($cot2);
+                $cot2_anwer = $cot2[1];
+                $cot2_anwer11 = explode('</div>', $cot2_anwer);
+                $tong = count($cot2_anwer11);
+                if ($tong > 2) {
+                    // có câu trả lời    
+                    $cot2_anwer = explode('<strong class="pid">', $cot2_anwer);
+                    $cot2_anwer_inquiryID = $cot2_anwer[0];
+                    $cot2_anwer_inquiryID = explode('insertReply("', $cot2_anwer_inquiryID);
+                    $cot2_anwer_inquiryID = $cot2_anwer_inquiryID[1];
+                    $cot2_anwer_inquiryID = explode('",', $cot2_anwer_inquiryID);
+                    $inquiryId = $cot2_anwer_inquiryID[0];
+                    $cot2_anwer = $cot2_anwer[1];
+                    $cot2_anwer = explode('<div class="options">', $cot2_anwer);
+                    $cot2_anwer_1 = $cot2_anwer[0];
+                    $cot2_anwer_2 = $cot2_anwer[1];
+                    $cot2_anwer_2 = explode('<p>', $cot2_anwer_2);
+                    $cot2_anwer_2 = $cot2_anwer_2[1];
+                    $cot2_anwer = $cot2_anwer_1 . "#!" . $cot2_anwer_2;
+                    $cot2_anwer = str_replace('<span class="date">', '', $cot2_anwer);
+                    $cot2_anwer = str_replace('</strong>', '#!', $cot2_anwer);
+                    $cot2_anwer = str_replace('</span>', '', $cot2_anwer);
+                    $cot2_anwer = preg_replace('/\s+/', ' ', $cot2_anwer);
+                    $pieces_anwer = explode('#!', $cot2_anwer);
+                    for ($m = 0; $m < count($pieces_anwer); $m++) {
+                        if ($m == 0) {
+                            $username_anwer = $pieces_anwer[$m];
+                        }
+                        if ($m == 1) {
+                            $date_anwer = $pieces_anwer[$m];
+                        }
+                        if ($m == 2) {
+                            $content_anwer = $pieces_anwer[$m];
+                        }
+                    }
+                } else {
+                    //ko có cau trả lời
+                    $cot2_anwer = $cot2_anwer11[0];
+                    $cot2_anwer = explode('insertReply("', $cot2_anwer);
+                    $cot2_anwer = $cot2_anwer[1];
+                    $cot2_anwer = explode('",', $cot2_anwer);
+                    $cot2_anwer = $cot2_anwer[0];
+                    $inquiryId = $cot2_anwer;
+                    $username_anwer = "";
+                }
+
+
+                $cot2 = $cot2[0];
+                $cot2 = str_replace('<td class="content">', '', $cot2);
+                $cot2 = str_replace('<strong class="uid">', '', $cot2);
+                $cot2 = str_replace('</strong>', '', $cot2);
+                $cot2 = str_replace('<p>', '', $cot2);
+                $cot2 = str_replace('<span class="date">', '#!', $cot2);
+                $cot2 = str_replace('</span>', '#!', $cot2);
+                $cot3 = explode('">', $cot3);
+                $cot3 = $cot3[1];
+                $cot3 = str_replace('</span>', '', $cot3);
+                $cot4 = str_replace('<td>', '', $cot4);
+                $result_rows = $cot1 . "#!" . $cot2 . "#!" . $cot3 . "#!" . $cot4;
+                $result_rows = preg_replace('/\s+/', ' ', $result_rows);
+                $pieces2 = explode('#!', $result_rows);
+                for ($i = 0; $i < count($pieces2); $i++) {
+                    if ($i == 0) {
+                        $deal_name = $pieces2[$i];
+                    }
+                    if ($i == 1) {
+                        $check_ma = explode('(', $pieces2[$i]);
+                        if (count($check_ma) > 1) {
+                            $username = $check_ma[0];
+                            $ma = str_replace(')', '', $check_ma[1]);
+                            $ma = explode(':', $ma);
+                            $ma = preg_replace('/\s+/', '', $ma[1]);
+                        } else {
+                            $username = $check_ma[0];
+                            $ma = "";
+                        }
+                    }
+                    if ($i == 2) {
+                        $datetime = $pieces2[$i];
+                    }
+                    if ($i == 3) {
+                        $content = $pieces2[$i];
+                    }
+                    if ($i == 4) {
+                        $purchase = $pieces2[$i];
+                    }
+                    if ($i == 5) {
+                        $status = $pieces2[$i];
+                    }
+                }
+                $inquiryId = trim($inquiryId);
+                $result = $this->_model->loadRecord('question', [
+                    'inquiryId' => $inquiryId
+                ]);
+                $data = [
+                    'question_name' => $username,
+                    'question_email' => $username,
+                    'question_content' => $content,
+                    'question_created' => $datetime,
+                    'question_status' => 1,
+                    'orderNumber' => $ma,
+                    'dealName' => $deal_name,
+                    'dealId' => $dealID,
+                    'question_purchase' => $purchase,
+                    'channel_name' => 'TMON',
+                    'inquiryId' => $inquiryId
+                ];
+                if ($username_anwer != "") {
+                    $data['question_status'] = 2;
+                    $data['reply_name'] = $username_anwer;
+                    $data['reply_email'] = $username_anwer;
+                    $data['reply_created'] = $date_anwer;
+                    $data['reply_content'] = $content_anwer;
+                }
+
+                if ($result) {
+                    $this->_model->updateRecord('question', $data, ['inquiryId' => $inquiryId]);
+                } else {
+                    $this->_model->insertRecord('question', $data);
+                }
+            }
+
+            if ($number_page > 1) {
+                for ($p = 2; $p <= $number_page; $p++) {
+                    $crawler = $client->request('GET', 'https://ps.tmon.co.kr/inquiry/detail?page=' . $p . '&main_deal_srl=' . $dealID . '&srchCategory=ALL&srchStartDate=' . $start_date . '&srchEndDate=' . $end_date . '&srchKeyword=&_=1594695300901');
+                    $html_string = $crawler->outerHtml();
+                    $result = str_replace("'", '"', $html_string);
+                    $result = str_replace("'", '"', $result);
+                    $result = str_replace('<html><body>', '', $result);
+                    $result = str_replace('</body></html>', '', $result);
+                    $result = explode('<tbody>', $result);
+                    $result = $result[1];
+                    $result = explode('</tbody>', $result);
+                    $page = $result[1];
+                    $pieces_page = explode('inquiry?page=', $page);
+                    for ($h = 0; $h < count($pieces_page); $h++) {
+                        $string_page = $pieces_page[$h];
+                    }
+                    $number_page = explode('&', $string_page);
+                    $number_page = $number_page[0];
+                    $result = $result[0];
+                    $pieces = explode('<tr>', $result);
+                    for ($k = 1; $k < count($pieces); $k++) {
+                        $pieces1 = explode('</td>', $pieces[$k]);
+                        $cot1 = $pieces1[0];
+                        $cot2 = $pieces1[1];
+                        $cot3 = $pieces1[2];
+                        $cot4 = $pieces1[3];
+                        $cot1 = str_replace('<td class="deal">', '', $cot1);
+                        $cot2 = explode('</p>', $cot2);
+                        $check_anwer = count($cot2);
+                        $cot2_anwer = $cot2[1];
+                        $cot2_anwer11 = explode('</div>', $cot2_anwer);
+                        $tong = count($cot2_anwer11);
+                        if ($tong > 2) {
+                            // có câu trả lời    
+                            $cot2_anwer = explode('<strong class="pid">', $cot2_anwer);
+                            $cot2_anwer_inquiryID = $cot2_anwer[0];
+                            $cot2_anwer_inquiryID = explode('insertReply("', $cot2_anwer_inquiryID);
+                            $cot2_anwer_inquiryID = $cot2_anwer_inquiryID[1];
+                            $cot2_anwer_inquiryID = explode('",', $cot2_anwer_inquiryID);
+                            $inquiryId = $cot2_anwer_inquiryID[0];
+                            $cot2_anwer = $cot2_anwer[1];
+                            $cot2_anwer = explode('<div class="options">', $cot2_anwer);
+                            $cot2_anwer_1 = $cot2_anwer[0];
+                            $cot2_anwer_2 = $cot2_anwer[1];
+                            $cot2_anwer_2 = explode('<p>', $cot2_anwer_2);
+                            $cot2_anwer_2 = $cot2_anwer_2[1];
+                            $cot2_anwer = $cot2_anwer_1 . "#!" . $cot2_anwer_2;
+                            $cot2_anwer = str_replace('<span class="date">', '', $cot2_anwer);
+                            $cot2_anwer = str_replace('</strong>', '#!', $cot2_anwer);
+                            $cot2_anwer = str_replace('</span>', '', $cot2_anwer);
+                            $cot2_anwer = preg_replace('/\s+/', ' ', $cot2_anwer);
+                            $pieces_anwer = explode('#!', $cot2_anwer);
+                            for ($m = 0; $m < count($pieces_anwer); $m++) {
+                                if ($m == 0) {
+                                    $username_anwer = $pieces_anwer[$m];
+                                }
+                                if ($m == 1) {
+                                    $date_anwer = $pieces_anwer[$m];
+                                }
+                                if ($m == 2) {
+                                    $content_anwer = $pieces_anwer[$m];
+                                }
+                            }
+                        } else {
+                            //ko có cau trả lời
+                            $cot2_anwer = $cot2_anwer11[0];
+                            $cot2_anwer = explode('insertReply("', $cot2_anwer);
+                            $cot2_anwer = $cot2_anwer[1];
+                            $cot2_anwer = explode('",', $cot2_anwer);
+                            $cot2_anwer = $cot2_anwer[0];
+                            $inquiryId = $cot2_anwer;
+                            $username_anwer = "";
+                        }
+                        $cot2 = $cot2[0];
+                        $cot2 = str_replace('<td class="content">', '', $cot2);
+                        $cot2 = str_replace('<strong class="uid">', '', $cot2);
+                        $cot2 = str_replace('</strong>', '', $cot2);
+                        $cot2 = str_replace('<p>', '', $cot2);
+                        $cot2 = str_replace('<span class="date">', '#!', $cot2);
+                        $cot2 = str_replace('</span>', '#!', $cot2);
+                        $cot3 = explode('">', $cot3);
+                        $cot3 = $cot3[1];
+                        $cot3 = str_replace('</span>', '', $cot3);
+                        $cot4 = str_replace('<td>', '', $cot4);
+                        $result_rows = $cot1 . "#!" . $cot2 . "#!" . $cot3 . "#!" . $cot4;
+                        $result_rows = preg_replace('/\s+/', ' ', $result_rows);
+                        $pieces2 = explode('#!', $result_rows);
+                        for ($i = 0; $i < count($pieces2); $i++) {
+                            if ($i == 0) {
+                                $deal_name = $pieces2[$i];
+                            }
+                            if ($i == 1) {
+                                $check_ma = explode('(', $pieces2[$i]);
+                                if (count($check_ma) > 1) {
+                                    $username = $check_ma[0];
+                                    $ma = str_replace(')', '', $check_ma[1]);
+                                    $ma = explode(':', $ma);
+                                    $ma = preg_replace('/\s+/', '', $ma[1]);
+                                } else {
+                                    $username = $check_ma[0];
+                                    $ma = "";
+                                }
+                            }
+                            if ($i == 2) {
+                                $datetime = $pieces2[$i];
+                            }
+                            if ($i == 3) {
+                                $content = $pieces2[$i];
+                            }
+                            if ($i == 4) {
+                                $purchase = $pieces2[$i];
+                            }
+                            if ($i == 5) {
+                                $status = $pieces2[$i];
+                            }
+                        }
+               
+                        $inquiryId = trim($inquiryId);
+                        $result = $this->_model->loadRecords('question', ['inquiryId' => $inquiryId]);
+                        $data = ['question_name' => $username,
+                            'question_email' => $username,
+                            'question_content' => $content,
+                            'question_created' => $datetime,
+                            'question_status' => 1,
+                            'orderNumber' => $ma,
+                            'dealId' => $dealID,
+                            'question_purchase' => $purchase,
+                            'channel_name' => 'TMON',
+                            'inquiryId' => $inquiryId];
+                        if ($username_anwer != "") {
+                            $data['question_status'] = 2;
+                            $data['reply_name'] = $username_anwer;
+                            $data['reply_email'] = $username_anwer;
+                            $data['reply_created'] = $date_anwer;
+                            $data['reply_content'] = $content_anwer;
+                        }
+
+                        if ($result) {
+                            $this->_model->updateRecord('question', $data, ['inquiryId' => $inquiryId]);
+                        } else {
+                            $this->_model->insertRecord('question', $data);
+                        }
+                    }
+                }//end for page
+            }
+        }
+    }
+
+    public function settlementAction() {
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $crawler = $client->request('POST', 'https://ps.tmon.co.kr');
+        $form = $crawler->selectButton("로그인")->form();
+        $crawler = $client->submit($form, array(
+            'secureLogin' => false,
+            'install_nos' => 'Y',
+            'login_id' => '티브리지',
+            'passwd' => 'coupang135!'));
+        $crawler = $client->click($crawler->selectLink('다음에 변경하기')->link());
+        $crawler = $client->click($crawler->selectLink('사용∙처리내역')->link());
+        $crawler_buylist = $client->click($crawler->selectLink('구매내역')->link());
+        $start_date = (date("Y") - 2) . "-" . date("m-d");
+        $end_date = date("Y-m-d");
+        $sqlheader = "SELECT sc.productId,sc.channelId,sp.sellerProductId,sp.user_idx,sp.creator ,sp.supplier";
+        $sql = ' FROM  `tb_salechannel` sc,tb_channels cn,tb_sellerproduct sp';
+        $sql .= ' WHERE sp.sellerProductId=sc.sellerProductId AND sc.channelId=cn.channel_id  AND cn.channel_id=3 AND sc.productId IS NOT NULL';
+        $list_product = $this->_model->setQuery($sqlheader . $sql);
+        $list_product = $this->_model->readAll();
+        foreach ($list_product as $rows_pro => $row_val) {
+            $dealID = $row_val['productId'];
+            $crawler = $client->request('GET', 'https://ps.tmon.co.kr/finance/multibizpaydetailexcel/deal?main_deal_srl='.$dealID.'&start_date=' . $start_date . '&end_date=' . $end_date);
+            $response = $client->getResponse();
+            $content = $response->getContent();
+            require_once PATH_PLUGINS . 'PHPExcel/PHPExcel/IOFactory.php';
+            require_once PATH_PLUGINS . 'PHPExcel/PHPExcel.php';
+            $filecontent = $content; //file_get_contents($url);
+            $tmpfname = tempnam(sys_get_temp_dir(), "tmpxls");
+            file_put_contents($tmpfname, $filecontent);
+            $excelReader = PHPExcel_IOFactory::createReaderForFile($tmpfname);
+            $objPHPExcel = $excelReader->load($tmpfname);
+            $sheet = $objPHPExcel->getSheet(0);
+            $Totalrow = $sheet->getHighestRow();
+            $data = [];
+            $settlement=[];
+            $date='';
+            $settlementUserDetail=[];
+            for ($i = 2; $i <= $Totalrow; $i++) {
+                if($date !=  $sheet->getCell('A' . $i)->getValue()){
+                    $date =$sheet->getCell('A' . $i)->getValue();
+                    $settlement[$date]['pricetotal'] =0;
+                    $settlement[$date]['amount'] =0;
+                    $settlement[$date]['feetotal'] =0;
+                    $settlement[$date]['price'] =0;
+                    $settlement[$date]['refund'] =0;
+                }
+                
+                if($sheet->getCell('D' . $i)->getValue() !=0){
+                    $settlement[$date]['pricetotal'] =$settlement[$date]['pricetotal'] + $sheet->getCell('K' . $i)->getValue();
+                    $settlement[$date]['amount'] =$settlement[$date]['amount'] + $sheet->getCell('J' . $i)->getValue();
+                    $settlement[$date]['feetotal'] =$settlement[$date]['feetotal'] + $sheet->getCell('Q' . $i)->getValue();
+                    $settlement[$date]['price'] =$settlement[$date]['price'] + $sheet->getCell('R' . $i)->getValue();
+                    
+                    $settlementUserDetail[$date][$sheet->getCell('G' . $i)->getValue()][]=array($sheet->getCell('I' . $i)->getValue() , $sheet->getCell('J' . $i)->getValue(), $sheet->getCell('Q' . $i)->getValue());
+                    
+                    $data[$i - 2]["1"] = $sheet->getCell('A' . $i)->getValue();  // Ngày thanh toán - chuyển tiền
+                    $data[$i - 2]["2"] = $sheet->getCell('B' . $i)->getValue();  // Ngày giao dịch
+                    $data[$i - 2]["3"] = $sheet->getCell('C' . $i)->getValue();  // 
+                    $data[$i - 2]["4"] = $sheet->getCell('D' . $i)->getValue();  // 
+                    $data[$i - 2]["5"] = $sheet->getCell('E' . $i)->getValue();  // 
+                    $data[$i - 2]["6"] = $sheet->getCell('F' . $i)->getValue();  // 
+                    $data[$i - 2]["7"] = $sheet->getCell('G' . $i)->getValue();  // 
+                    $data[$i - 2]["8"] = $sheet->getCell('H' . $i)->getValue();  // 
+                    $data[$i - 2]["9"] = $sheet->getCell('I' . $i)->getValue();  // 
+                    $data[$i - 2]["10"] = $sheet->getCell('J' . $i)->getValue(); // 
+                    $data[$i - 2]["11"] = $sheet->getCell('K' . $i)->getValue(); // 
+                    $data[$i - 2]["12"] = $sheet->getCell('L' . $i)->getValue(); // 
+                    $data[$i - 2]["13"] = $sheet->getCell('M' . $i)->getValue(); // 
+                    $data[$i - 2]["14"] = $sheet->getCell('N' . $i)->getValue(); // 
+                    $data[$i - 2]["15"] = $sheet->getCell('O' . $i)->getValue(); //
+                    $data[$i - 2]["16"] = $sheet->getCell('P' . $i)->getValue(); //
+                    $data[$i - 2]["17"] = $sheet->getCell('Q' . $i)->getValue(); // fee
+                    $data[$i - 2]["18"] = $sheet->getCell('R' . $i)->getValue(); //
+                    $data[$i - 2]["19"] = $sheet->getCell('S' . $i)->getValue(); //
+                    
+                }else{
+                    $settlement[$date]['refund'] =$settlement[$date]['refund'] + $sheet->getCell('R' . $i)->getValue();
+                }
+            }
+            
+            foreach ($data as $key => $value) {
+                $ticketPurchasers = [
+                    'paymentDateTime' => $value[1],
+                    'settlementStatus' => 1,
+                    'fee' => $value[17],
+                    'status' => $value[5]
+                ];
+                $result = $this->_model->loadRecord('ticketPurchasers', [ 'orderNumber' => $value[4] , 'optionName' => $value[7] ]);
+                if ($result) {
+                    $this->_model->updateRecord('ticketPurchasers', $ticketPurchasers, [ 'orderNumber' => $value[4] , 'optionName' => $value[7] ]);
+                }
+            }
+            
+            foreach ($settlement as $key => $value) {
+                $settlementUserID=0;
+                $result = $this->_model->loadRecord('settlementuser', [ 'userId' => $row_val['creator'] , 'supplierId' => $row_val['supplier'] , 'settlementday' => $key  ]);
+                if ($result) {
+                    $settlementUser= [  'pricetotal' => (int)($result['pricetotal']+$value['pricetotal']),
+                                        'feetotal' =>  (int)($result['feetotal']+$value['feetotal']),
+                                        'settlementtotal' =>  (int)($result['settlementtotal']+$value['price'] + $value['refund'])  ];
+                    $this->_model->updateRecord('settlementuser', $settlementUser, [ 'userId' => $row_val['creator'] , 'supplierId' => $row_val['supplier'] , 'settlementday' => $key  ]);
+                    $settlementUserID=(int)$result['id'];
+//                     $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 1];
+//                     $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+//                     $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 2];
+//                     $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+//                     $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 3];
+//                     $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+//                     $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 4];
+//                     $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+//                     $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 5];
+//                     $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+                }else{
+                    $settlementUser= [  'userId' =>$row_val['creator'],
+                                        'supplierId' =>$row_val['supplier'],
+                                        'settlementday' =>$key,
+                                        'pricetotal' => $value['pricetotal'],
+                                        'feetotal' => $value['feetotal'],
+                                        'settlementtotal' =>  (int)($value['price'] + $value['refund']),
+                                        'status' => 1 ];
+                    $this->_model->insertRecord('settlementuser', $settlementUser);
+                    // tạo bảng tb_settlementuseradjusted
+                    $settlementUserID=$this->_model->getLastId();
+                    
+                    $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 1];
+                    $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+                    $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 2];
+                    $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+                    $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 3];
+                    $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+                    $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 4];
+                    $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+                    $settlementuseradjusted=['settlementUserId' => $settlementUserID, 'amount'=> 0 ,'price' => 0 ,'fee' => 0, 'pos'=> 5];
+                    $this->_model->insertRecord('settlementuseradjusted', $settlementuseradjusted);
+                }
+                
+                foreach ($settlementUserDetail[$key] as $key1 => $value1){
+                    $price=0;
+                    $amount=0;
+                    $fee=0;
+                    foreach ($value1 as $key2 => $value2){
+                        $price=$value2[0];
+                        $amount=$amount+$value2[1];
+                        $fee=$fee+$value2[2];
+                    }
+                    
+                    $settlementUserDetaildata=[
+                        'settlementuserId' => $settlementUserID,
+                        'channelId'=> 3,
+                        'sellerProductId' => $row_val['sellerProductId'] ,
+                        'optionName' => $key1 ,
+                        'price' => $price,
+                        'amount'=> $amount,
+                        'fee'=> $fee,
+                        'pricetotal'=> (int)($price*$amount),
+                        'feetotal'=> (int)($price*$amount-$fee),
+                        'statusnew' => 1
+                    ];
+                    $this->_model->insertRecord('settlementuserdetail', $settlementUserDetaildata);
+                    
+                }
+            }
+            
+            
+        }
+    }
+
+    function callAPI($method, $url, $data) {
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        //echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json, text/plain, */*'
+        ));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            die("Connection Failure");
+        }
+        curl_close($curl);
+        return json_decode($result, true);
+    }
+
+    public function question1Action() {
+        $sql = "SELECT * FROM tb_salechannel sc WHERE sc.productId IS NOT NULL AND sc.channelId =3";
+        $this->_model->setQuery($sql);
+        $results = $this->_model->readAll();
+        foreach ($results as $value => $giatri) {
+
+            $data = $this->callAPI("GET", "https://www.tmon.co.kr/api/detail/direct/v1/detailapi/api/detail/board/qna/list/" . $giatri['productId'] . "?page=0&count=20&useHeader=&partnerNo=957866&_=1594622008276", null);
+            $count = $data ['data']['count'];
+            $userViewCount = $data ['data']['userViewCount'];
+            $totalCount = $data ['data']['totalCount'];
+            $talkList = $data['data']['talkList'];
+            $numberPage = ceil($totalCount / 20);
+            $k = 0;
+            for ($i = 1; $i <= $numberPage; $i++) {
+                $data = $this->callAPI("GET", "https://www.tmon.co.kr/api/detail/direct/v1/detailapi/api/detail/board/qna/list/" . $giatri['productId'] . "?page=" . $i . "&count=20&useHeader=&partnerNo=957866&_=1594622008276", null);
+                $count = $data ['data']['count'];
+                $userViewCount = $data ['data']['userViewCount'];
+                $totalCount = $data ['data']['totalCount'];
+                $talkList = $data['data']['talkList'];
+                echo "<pre>";
+                print_r($talkList);
+                for ($j = 0; $j < $count; $j++) {
+                    $k++;
+                    $aSrl = $talkList[$j]['aSrl']; // id
+                    $bSrl = $talkList[$j]['bSrl'];
+                    $mNo = $talkList[$j]['mNo'];
+                    $dealSrl = $talkList[$j]['dealSrl'];
+                    $apartnerSrl = $talkList[$j]['partnerSrl'];
+                    $title = $talkList[$j]['title']; // null
+                    $content = $talkList[$j]['content'];
+                    $flagView = $talkList[$j]['flagView']; // flagBlind  flagNotice
+                    $readCount = $talkList[$j]['readCount'];
+                    $starGrade = $talkList[$j]['starGrade']; // csRequest 
+                    $tmpBNo = $talkList[$j]['tmpBNo'];
+                    $needConfirm = $talkList[$j]['needConfirm']; // Y N
+                    $answerYn = $talkList[$j]['answerYn']; // Y N
+                    $replyCount = $talkList[$j]['replyCount'];
+                    $mId = $talkList[$j]['mId'];
+                    $flagSecret = $talkList[$j]['flagSecret']; // Y N
+                    $buyUser = $talkList[$j]['flagSecret'];
+                    $buyUserName = "NO";
+                    if ($buyUser == 1)
+                        $buyUserName = "YES";
+                    $createDt = $talkList[$j]['createDt']; //ownArticle 
+                    $iconType = $talkList[$j]['iconType'];
+                    $replies = $talkList[$j]['replies'];
+
+                    $record = [
+                        'inquiryId' => $aSrl,
+                        'question_name' => $mId,
+                        'question_email' => "",
+                        'question_content' => $content,
+                        'question_created' => $createDt . " 00:00:00",
+                        //                'reply_name' => $reply_name,
+                        //                'reply_email' => $reply_email,
+                        //                'reply_content' => $reply_content,
+                        //                'reply_created' => $reply_created,
+                        'question_purchase' => $buyUserName,
+                        'question_status' => 1,
+                        'orderNumber' => "",
+                        'dealId' => $dealSrl, // deal ID
+                        'dealName' => "",
+                        'optionId' => "",
+                        'optionName' => "",
+                        'channel_name' => "TMON"
+                    ];
+                    if ($replyCount > 0) {
+                        $record['question_status'] = 2;
+                        $record['reply_name'] = "";
+                        $record['reply_email'] = "";
+                        $record['reply_content'] = $replies[0]['content'];
+                        $record['reply_created'] = $replies[0]['createDt'] . " 00:00:00";
+                    }
+
+                    $result1 = $this->_model->loadRecord('question', ['inquiryId' => $aSrl]);
+                    if ($result1) {
+                        $this->_model->updateRecord('question', $record, ['inquiryId' => $aSrl]);
+                    } else {
+                        $this->_model->insertRecord('question', $record);
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+?>

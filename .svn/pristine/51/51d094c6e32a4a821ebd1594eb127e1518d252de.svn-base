@@ -1,0 +1,665 @@
+<?php
+
+require PATH_ROOT . '/vendor2/autoload.php';
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpClient\HttpClient;
+
+class RestfulApiController extends Controller {
+
+    protected $method = '';
+    protected $endpoint = '';
+    protected $params = array();
+    protected $file = null;
+
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+
+    // Phương thức index
+    public function indexAction() {
+        $start_date = date("Ymdhis");
+        $request = new Request();
+        $content = "";
+        if ($request->getContent()) {
+            $content = $request->getContent();
+        }
+        $default = [
+            'sort' => [
+                'column' => "id",
+                'order' => "DESC"
+            ],
+            'limit' => [
+                'position' => 0,
+                'length' => 1
+            ]
+        ];
+        $result = $this->_model->loadRecords('apiDVC', [], true, $default);
+        $status = 0;
+        if ($result[0]['status'] == 1) {
+            $datajson = '{"rslt": "FAIL","sndTime": "' . $start_date . '"}';
+            $status = 0;
+        } else {
+            $datajson = '{"rslt": "SUCCESS","sndTime": "' . $start_date . '"}';
+            $status = 1;
+        }
+
+        $data = ['content' => $content, 'response' => $datajson, 'status' => $status];
+        $this->_model->insertRecord('apiDVC', $data);
+
+        header('Content-Type: application/json');
+        echo $datajson;
+    }
+
+    public function logDVCAction() {
+        $default = [
+            'sort' => [
+                'column' => "id",
+                'order' => "DESC"
+            ],
+            'limit' => [
+                'position' => 0,
+                'length' => 50
+            ]
+        ];
+        $result = $this->_model->loadRecords('apiDVC', [], true, $default);
+        foreach ($result as $value => $giatri) {
+            $data = json_decode($giatri['content'], true);
+            echo '<pre>';
+            print_r($data);
+            echo '</pre>';
+
+            $data = json_decode($giatri['response'], true);
+            echo '<pre>';
+            print_r($data);
+            echo '</pre>
+                
+            <hr>';
+        }
+    }
+
+    public function sendAction() {
+        $data = '{	"sndDate":"20180717053933",
+                "dvc": { "dvcId":"T01001002021", "sts":"1"},
+                "cmrList":[
+                    {"cmrId":"C01001002",  "sts":"1" },
+                    {"cmrId":"C00001001","sts":"2"},
+                    {"cmrId":"C01001003","sts":"1"}
+                ]
+        }';
+        $url = "http://localhost:8000/RestfulApi/public/index.php/api/jsonData";
+        $obj = $this->callAPI1("POST", $url, null);
+        //$this -> callAPI("POST", "http://tbridge.lavianspa.com/restfulApi.html");
+    }
+
+    function callAPI1($method, $url, $data) {
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json'
+        ));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            die("Connection Failure");
+        }
+        curl_close($curl);
+        print_r($result);
+    }
+
+    public function callAPI($method, $url) {
+        $httpClient = HttpClient::create();
+
+        $data = [
+            'name' => 'khoa nguyen',
+            'address' => '132 d2 P.25 Binh Thanh',
+        ];
+        if ($method === "POST")
+            $response = $httpClient->request($method, $url, ['body' => $data]);
+        else
+            $response = $httpClient->request($method, $url);
+
+        $statusCode = $response->getStatusCode();
+        //echo $statusCode . "\n";
+        $contentType = $response->getHeaders()['content-type'][0];
+        //echo $contentType . "\n";
+
+        return $response->getContent();
+    }
+
+    public function loginApiAction() {
+        $request = new Request();
+        $content = "";
+        if ($request->getContent()) {
+            $content = $request->getContent();
+        }
+        $data = json_decode($content, true);
+        $output = [
+            'result' => false,
+            'msg' => 'please check data input'
+        ];
+        $output['POST'] = $_POST;
+        $method = $_SERVER['REQUEST_METHOD'];
+
+        if (isset($data['username']) && isset($data['password'])) {
+            $username = $data['username'];
+            $password = $data['password'];
+            $login = $this->_model->loadRecord('user', [
+                'ID' => $username,
+                'password' => md5($password)
+            ]);
+            if ($login) {
+                if ($login['status'] == 0) {
+                    $output['msg'] = $this->_view->getItem('language', 'l_accountunactive');
+                } else {
+                    $output['result'] = true;
+                    $output['msg'] = 'Login Successfully';
+                }
+            }
+        } else {
+            $output['msg'] = 'Missing data input';
+        }
+        $output['params'] = $this->_params;
+
+        $output['data'] = $data;
+        header('Content-Type: application/json');
+        echo json_encode($output);
+    }
+
+    public function dashboardApiAction() {
+        $request = new Request();
+        $content = "";
+        if ($request->getContent()) {
+            $content = $request->getContent();
+        }
+        $data = json_decode($content, true);
+
+        $data = [
+            'account_idx' => 88,
+            'account_ID' => 123456,
+            'account_role' => 0,
+        ];
+        $output = [
+            'result' => false,
+            'msg' => 'please check data input'
+        ];
+        //$output['POST'] = $_POST;
+        //$method = $_SERVER['REQUEST_METHOD'];
+        if (isset($data['account_idx']) && isset($data['account_ID']) && isset($data['account_role'])) {
+            //get data           
+            $items = $this->_model->loadProduct();
+            $dashboard = [
+                'productAmountUnuse' => [
+                    'amount' => 0,
+                    'url' => $this->route('order', ['method' => 'unuse'])
+                ],
+                'charjs' => [
+                    'day' => []
+                ]
+            ];
+            // Đơn hàng            
+            $item = $this->_model->countTicketsUnuse();
+            $dashboard['productAmountUnuse']['amount'] = $item['amount'];
+            // Charjs
+            $timed1 = strtotime("-7 days");
+            $timed2 = strtotime("-14 days");
+            $daytime = 60 * 60 * 24;
+            $data1 = [];
+            $data2 = [];
+            $data3 = [];
+            $data4 = [];
+            for ($i = 1; $i < 8; $i++) {
+                $dashboard['charjs']['day'][] = date('m/d', $timed1 + $daytime * $i);
+                $data1[date('Y-m-d', $timed1 + $daytime * $i)] = 0;
+                $data2[date('Y-m-d', $timed2 + $daytime * $i)] = 0;
+                $data3[date('Y-m-d', $timed1 + $daytime * $i)] = 0;
+                $data4[date('Y-m-d', $timed2 + $daytime * $i)] = 0;
+            }
+            $sql = 'SELECT DATE_FORMAT(t.purchasedAt,"%Y-%m-%d") date, COUNT(tp.ticketNumber) amount
+                  FROM tb_ticketPurchasers tp,tb_ticket t,tb_salechannel sc, tb_sellerproduct sp
+                  WHERE tp.ticketNumber = t.ticketNumber AND tp.dealId=sc.vendorItemPackageId AND sc.sellerProductId = sp.sellerProductId 
+												AND t.statusTicket!=3 
+                  GROUP BY date';
+            if ($data['account_role'] == 0) {
+                
+            } else {
+                $sql .= ' AND (sp.creator="' . $data['account_ID'] . '" OR sp.creator IN (SELECT u2.ID
+                                                                         FROM tb_user u1 ,tb_user u2
+		                                                                 WHERE u1.ID = "' . $data['account_ID'] . '" AND u2.idx_parent=u1.idx) ) ';
+            }
+            $this->_model->setQuery($sql);
+            $result = $this->_model->readAll();
+            foreach ($result as $value => $giatri) {
+                foreach ($data1 as $value1 => $giatri1) {
+                    if ($value1 == $giatri['date'])
+                        $data1[$giatri['date']] = $giatri['amount'];
+                }
+                foreach ($data2 as $value2 => $giatri2) {
+                    if ($value2 == $giatri['date'])
+                        $data2[$giatri['date']] = $giatri['amount'];
+                }
+            }
+            $data11 = [];
+            foreach ($data1 as $value1 => $giatri1) {
+                $data11[] = $giatri1;
+            }
+            $data22 = [];
+            foreach ($data2 as $value2 => $giatri2) {
+                $data22[] = $giatri2;
+            }
+            $sql = 'SELECT DATE_FORMAT(t.modifiedTicket,"%Y-%m-%d") date, COUNT(tp.ticketNumber) amount
+                  FROM tb_ticketPurchasers tp,tb_ticket t,tb_salechannel sc, tb_sellerproduct sp
+                  WHERE tp.ticketNumber = t.ticketNumber AND tp.dealId=sc.vendorItemPackageId AND sc.sellerProductId = sp.sellerProductId
+												AND t.statusTicket=2
+                  GROUP BY date';
+            if ($data['account_role'] == 0) {
+                
+            } else {
+                $sql .= ' AND (sp.creator="' . $data['account_ID'] . '" OR sp.creator IN (SELECT u2.ID
+			                                                                         FROM tb_user u1 ,tb_user u2
+					                                                                 WHERE u1.ID = "' . $data['account_ID'] . '" AND u2.idx_parent=u1.idx) ) ';
+            }
+            $this->_model->setQuery($sql);
+            $result = $this->_model->readAll();
+            foreach ($result as $value => $giatri) {
+                foreach ($data3 as $value1 => $giatri1) {
+                    if ($value1 == $giatri['date'])
+                        $data3[$giatri['date']] = $giatri['amount'];
+                }
+                foreach ($data4 as $value2 => $giatri2) {
+                    if ($value2 == $giatri['date'])
+                        $data4[$giatri['date']] = $giatri['amount'];
+                }
+            }
+            $data33 = [];
+            foreach ($data3 as $value1 => $giatri1) {
+                $data33[] = $giatri1;
+            }
+            $data44 = [];
+            foreach ($data4 as $value2 => $giatri2) {
+                $data44[] = $giatri2;
+            }
+            //tâm add thêm cho mobi
+            $user_info = $this->_model->loadRecord('user', ['idx' => $data['account_idx']]);
+            $default = ['limit' => ['position' => 0, 'length' => 5], 'sort' => ['column' => 'notification_created', 'order' => 'DESC']];
+            $result = $this->_model->loadRecords('notifications', [], true, $default);
+            foreach ($result as $r) {
+                $data_noti[] = $r['notification_title'];
+            }
+            /* $sqlheader = 'SELECT tp.*,tk.statusTicket,tk.restoreTicket,  sc.travelProductId,   sp.sellerProductId,  sp.`name` as productname, c.channel_name, c.channel_id ';
+              $sqlcount = 'SELECT COUNT(tp.id) as record ';
+              $sql = ' FROM  `tb_ticketPurchasers` tp,`tb_ticket` tk, tb_salechannel sc,tb_channeltypes ct, tb_channels c, tb_sellerproduct sp ';
+              $sql .= ' WHERE tp.ticketNumber=tk.ticketNumber AND tp.dealId=sc.vendorItemPackageId
+              AND sc.channelTypeId=ct.type_id AND ct.channelid=c.channel_id
+              AND sc.sellerProductId=sp.sellerProductId '; */
+            $sqlheader = 'SELECT tp.*,tk.statusTicket,tk.restoreTicket,d.*';
+            $sqlcount = 'SELECT COUNT(tp.id) as record ';
+            $sql = '  FROM `tb_ticket` tk,`tb_ticketPurchasers` tp LEFT JOIN (SELECT  sc.travelProductId, sp.sellerProductId, sp.`name` as productname, c.channel_id ,c.channel_name ,sc.vendorItemPackageId,
+                                                                                     sp.creator,sp.`supplier`,sp.`name`
+                                                                                FROM tb_salechannel sc,tb_channeltypes ct, tb_channels c, tb_sellerproduct sp
+                                                                                WHERE sc.channelTypeId=ct.type_id AND ct.channelid=c.channel_id AND sc.sellerProductId=sp.sellerProductId) d 
+                                            ON tp.dealId=d.vendorItemPackageId';
+            $sql .= ' WHERE tp.ticketNumber=tk.ticketNumber';
+
+            if ($data['account_role'] > 0) {
+                $sql .= ' AND sp.userid=' . Structure::getUserId();
+            }
+            if ($data['account_role'] == 0) {
+                
+            } else {
+                $sql .= " AND (sp.creator='" . $data['account_ID'] . "' OR sp.creator IN (SELECT u2.ID FROM tb_user u1 ,tb_user u2 WHERE u1.ID = '" . $data['account_ID'] . "' AND u2.idx_parent=u1.idx) ) ";
+            }
+            $sql_muaxong = "AND tk.statusTicket=1"; // mua xong
+            $sql_sudung = "AND tk.statusTicket=2"; // vé sử dụng
+            //hom qua
+            $get_thoigian = mktime(0, 0, 0, date("m"), date("d") - 1, date("Y"));
+            $m_start = date("Y-m-d", $get_thoigian);
+            $m_end = date("Y-m-d", $get_thoigian);
+            $sql_homqua = ' AND tp.purchaseDateTime BETWEEN "' . $m_start . ' 00:00:00" AND "' . $m_end . ' 23:59:59" ';
+            $homqua_show = date("m.d", $get_thoigian);
+            $items_homqua_muaxong = $this->_model->loadOrder($sqlheader . $sql . $sql_muaxong . $sql_homqua, $sqlcount . $sql . $sql_muaxong . $sql_homqua, DEFAULT_LENGTH);
+            $items_homqua_sudung = $this->_model->loadOrder($sqlheader . $sql . $sql_sudung . $sql_homqua, $sqlcount . $sql . $sql_sudung . $sql_homqua, DEFAULT_LENGTH);
+            $tong_muaxong_homqua = $items_homqua_muaxong['count'];
+            $tong_sudung_homqua = $items_homqua_sudung['count'];
+            //hom nay
+            $get_thoigian = mktime(0, 0, 0, date("m"), date("d"), date("Y"));
+            $m_start = date("Y-m-d", $get_thoigian);
+            $m_end = date("Y-m-d", $get_thoigian);
+            $sql_homnay = ' AND tp.purchaseDateTime BETWEEN "' . $m_start . ' 00:00:00" AND "' . $m_end . ' 23:59:59" ';
+            $homnay_show = date("m.d", $get_thoigian);
+            $items_homnay_muaxong = $this->_model->loadOrder($sqlheader . $sql . $sql_muaxong . $sql_homnay, $sqlcount . $sql . $sql_muaxong . $sql_homnay, DEFAULT_LENGTH);
+            $items_homnay_sudung = $this->_model->loadOrder($sqlheader . $sql . $sql_sudung . $sql_homnay, $sqlcount . $sql . $sql_sudung . $sql_homnay, DEFAULT_LENGTH);
+            $tong_muaxong_homnay = $items_homnay_muaxong['count'];
+            $tong_sudung_homnay = $items_homnay_sudung['count'];
+            //tong cau hoi
+            $sqlheader = "SELECT q.*,sc.travelProductId,sc.sellerProductId,sp.sellerProductId,sp.supplier,sp.name";
+            $sql = ' FROM  `tb_question` q,tb_salechannel sc,tb_sellerproduct sp WHERE q.dealId=sc.productId  AND sc.sellerProductId=sp.sellerProductId AND q.question_status=1';
+            $user_id = $data['account_idx'];
+            if ($data['account_role'] != 0) {
+                if ($data['account_role'] == 1) {
+                    $res = $this->_model->setQuery('SELECT idx,idx_parent FROM `tb_user` WHERE idx=' . $user_id . ' OR idx_parent=' . $user_id);
+                    $userncc = $this->_model->readAll();
+                    $array_ncc = array();
+                    foreach ($userncc as $rows_user) {
+                        $array_ncc[] = $rows_user['idx'];
+                    }
+                    $sql .= " AND sp.supplier IN (" . implode(',', $array_ncc) . ")";
+                } elseif ($data['account_role'] == 2) {
+                    $sql .= " AND sp.supplier=" . $user_id;
+                }
+            }
+            $this->_model->setQuery($sqlheader . $sql);
+            $tongcauhoi = $this->_model->readAll();
+            // end get data
+            $output['result'] = TRUE;
+            $output['company_name'] = $user_info['company'];
+            $output['order_number'] = $dashboard['productAmountUnuse']['amount'];
+            $output['question_number'] = count($tongcauhoi);
+            $output['homqua_show'] = $homqua_show;
+            $output['tong_muaxong_homqua'] = $tong_muaxong_homqua;
+            $output['tong_sudung_homqua'] = $tong_sudung_homqua;
+            $output['homnay_show'] = $homnay_show;
+            $output['tong_muaxong_homnay'] = $tong_muaxong_homnay;
+            $output['tong_sudung_homnay'] = $tong_sudung_homnay;
+            $output['data1'] = $data11;
+            $output['data22'] = $data22;
+            $output['data33'] = $data33;
+            $output['data44'] = $data44;
+            $output['notifications'] = $data_noti;
+        } else {
+            $output['msg'] = 'Missing data input';
+        }
+        header('Content-Type: application/json');
+        echo json_encode($output);
+    }
+    public function orderApiAction() {
+        $request = new Request();
+        $content = "";
+        if ($request->getContent()) {
+            $content = $request->getContent();
+        }
+        $data = json_decode($content, true);
+        $data = [
+            'account_idx' => 88,
+            'account_ID' => 123456,
+            'account_role' => 0,
+            'method' => 'die'
+        ];
+        $output = [
+            'result' => false,
+            'msg' => 'please check data input'
+        ];
+        if (isset($data['account_idx']) && isset($data['account_ID']) && isset($data['account_role']) && isset($data['method'])) {
+            $sqlheader  = 'SELECT tp.*,tk.statusTicket,tk.restoreTicket,d.*';
+            $sqlcount = 'SELECT COUNT(tp.id) as record ';
+            $sql = '  FROM `tb_ticket` tk,`tb_ticketPurchasers` tp LEFT JOIN (SELECT  sc.travelProductId, sp.sellerProductId, sp.`name` as productname, c.channel_id ,sc.vendorItemPackageId,
+                                                                                     sp.creator,sp.`supplier`,sp.`name`
+                                                                                FROM tb_salechannel sc,tb_channeltypes ct, tb_channels c, tb_sellerproduct sp
+                                                                                WHERE sc.channelTypeId=ct.type_id AND ct.channelid=c.channel_id AND sc.sellerProductId=sp.sellerProductId) d 
+                                            ON tp.dealId=d.vendorItemPackageId';
+            $sql .= ' WHERE tp.ticketNumber=tk.ticketNumber';
+            if($data['account_role']==0){
+             
+            }else{
+                $sql.= " AND (d.creator='".$data['account_ID']."' OR d.creator IN (SELECT u2.ID FROM tb_user u1 ,tb_user u2
+    			                                                                WHERE u1.ID = '".$data['account_ID']."' 
+                                                                                 AND u2.idx_parent=u1.idx) ) ";
+            }          
+            if($data['method']=='unuse'){                        
+                $sql .= ' AND tk.`statusTicket`=1';
+            }elseif($data['method']=='done'){
+                $sql .= ' AND tk.`statusTicket`=1';
+            }elseif($data['method']=='use'){
+                $sql .= ' AND tk.`statusTicket`=2';
+            }elseif($data['method']=='returnprice'){
+                $sql .= ' AND tk.`statusTicket`=3';
+            }elseif($data['method']=='die'){
+                $sql .= ' AND tk.`statusTicket`=-1';
+            }elseif($data['method']=='refundmoney'){
+                $sql .= ' AND tk.`statusTicket`=-3';
+            }
+            $this->_model->setQuery($sqlheader.$sql);
+            $result = $this->_model->readAll();            
+            $output['result'] = TRUE;
+            $output['list_order'] = $result;
+        } else {
+            $output['msg'] = 'Missing data input';
+        }
+        header('Content-Type: application/json');
+        echo json_encode($output);
+    }
+    public function QuestionApiAction() {
+        $request = new Request();
+        $content = "";
+        if ($request->getContent()) {
+            $content = $request->getContent();
+        }
+        $data = json_decode($content, true);
+        $data = [
+            'account_idx' => 88,
+            'account_ID' => 123456,
+            'account_role' => 0,
+            'method' => 'unreply'
+        ];
+        $output = [
+            'result' => false,
+            'msg' => 'please check data input'
+        ];
+        if (isset($data['account_idx']) && isset($data['account_ID']) && isset($data['account_role'])) {
+            $sqlheader = "SELECT q.*,d.*";
+            $sqlcount = 'SELECT COUNT(q.`question_id`) as record ';
+            $sql = ' FROM `tb_question` q LEFT JOIN (SELECT sc.travelProductId,sc.sellerProductId,sc.productId,sp.supplier,sp.name
+                                                FROM tb_salechannel sc,tb_sellerproduct sp
+                                                WHERE sc.sellerProductId=sp.sellerProductId ) d
+                                        ON q.dealId=d.productId ';
+            $sql .= ' WHERE 1';
+            $user_id = $data['account_idx'];
+            if ($data['account_role'] != 0) {
+                if ($data['account_role'] == 1) {
+                    //lay ds các ncc  
+                    $sql .= " AND d.supplier IN ( SELECT u.idx FROM `tb_user` u WHERE u.idx=$user_id OR u.idx_parent=$user_id)";
+                } elseif ($data['account_role'] == 2) {
+                    //nhà cung cấp
+                    $sql .= " AND d.supplier=" . $user_id;
+                }
+            }
+            $date = date("Y-m-d");
+            $date = strtotime(date("Y-m-d", strtotime($date)) . "-2 months");
+            $m_start = date("Y-m-d", $date);            
+            $m_end = date("Y-m-d");
+            $m_supplier = 0;
+            $m_status = 1;
+            $m_key = 0;
+            $m_name = "";
+            if ($data['method'] == 'unreply') {
+                $sql .= ' AND q.`question_status`=1 ';
+            } else {
+                $sql .= ' AND q.`question_status`=' . $m_status . ' ';
+            }
+            $this->_model->setQuery($sqlheader.$sql);
+            $result = $this->_model->readAll();
+            //print_r($result);
+            //die();
+            $output['result'] = TRUE;
+            $output['list_question'] = $result;
+        } else {
+            $output['msg'] = 'Missing data input';
+        }
+        header('Content-Type: application/json');
+        echo json_encode($output);
+    }
+    public function QuestionChannelApiAction() {
+        $request = new Request();
+        $content = "";
+        if ($request->getContent()) {
+            $content = $request->getContent();
+        }
+        $data = json_decode($content, true);
+        $data = [
+            'account_idx' => 88,
+            'account_ID' => 123456,
+            'account_role' => 0,
+            'channel_name' => 'WMAKE',
+            'method' => 'unreply'
+        ];
+        $output = [
+            'result' => false,
+            'msg' => 'please check data input'
+        ];
+        if (isset($data['account_idx']) && isset($data['account_ID']) && isset($data['account_role']) && isset($data['channel_name'])) {
+            $sqlheader = "SELECT q.*,d.*";
+            $sqlcount = 'SELECT COUNT(q.`question_id`) as record ';
+            $sql = ' FROM `tb_question` q LEFT JOIN (SELECT sc.travelProductId,sc.sellerProductId,sc.productId,sp.supplier,sp.name
+                                                FROM tb_salechannel sc,tb_sellerproduct sp
+                                                WHERE sc.sellerProductId=sp.sellerProductId ) d
+                                        ON q.dealId=d.productId ';
+            $sql .= ' WHERE 1';
+            $user_id = $data['account_idx'];
+            if ($data['account_role'] != 0) {
+                if ($data['account_role'] == 1) {
+                    //lay ds các ncc  
+                    $sql .= " AND d.supplier IN ( SELECT u.idx FROM `tb_user` u WHERE u.idx=$user_id OR u.idx_parent=$user_id)";
+                } elseif ($data['account_role'] == 2) {
+                    //nhà cung cấp
+                    $sql .= " AND d.supplier=" . $user_id;
+                }
+            }
+            $date = date("Y-m-d");
+            $date = strtotime(date("Y-m-d", strtotime($date)) . "-2 months");
+            $m_start = date("Y-m-d", $date);            
+            $m_end = date("Y-m-d");
+            $m_supplier = 0;
+            $m_status = 1;
+            $m_key = 0;
+            $m_name = "";
+            if ($data['method'] == 'unreply') {
+                $sql .= ' AND q.`question_status`=1 ';
+            } else {
+                $sql .= ' AND q.`question_status`=' . $m_status . ' ';
+            }
+            if ($data['channel_name'] != "") {
+                $sql .= " AND q.`channel_name` LIKE '" . $data['channel_name'] . "' ";
+            }
+            
+            $this->_model->setQuery($sqlheader.$sql);
+            $result = $this->_model->readAll();
+            //print_r($result);
+            //die();
+            $output['result'] = TRUE;
+            $output['list_question'] = $result;
+        } else {
+            $output['msg'] = 'Missing data input';
+        }
+        header('Content-Type: application/json');
+        echo json_encode($output);
+    }
+
+    public function logintestApiAction() {
+        $request = new Request();
+        $content = "";
+        if ($request->getContent()) {
+            $content = $request->getContent();
+        }
+        $data = json_decode($content, true);
+
+        $output = [
+            'result' => false,
+            'msg' => 'please check data input'
+        ];
+
+        $method = $_SERVER['REQUEST_METHOD'];
+
+        if (isset($data['username']) && isset($data['password'])) {
+
+            $login = $this->_model->loadRecord('user', [
+                'ID' => $data['username'],
+                'password' => md5($data['password'])
+            ]);
+            if ($login) {
+                if ($login['status'] == 0) {
+                    $output['msg'] = $this->_view->getItem('language', 'l_accountunactive');
+                } else {
+                    $output['result'] = true;
+                    $output['msg'] = 'Login Successfully';
+                }
+            }
+        } else {
+            $output['msg'] = 'Missing data input';
+        }
+        $output['params'] = $this->_params;
+        $output['data'] = $data;
+        header('Content-Type: application/json');
+        echo json_encode($output);
+    }
+
+    function callAPITest($method, $url, $data) {
+
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        //echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json;charset=UTF-8'
+        ));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            //die("Connection Failure");
+        }
+        curl_close($curl);
+        return json_decode($result, true);
+    }
+
+    public function testApiAction() {
+        $method = 'POST';
+        $url = 'http://localhost/tbridge/logintestApi.html';
+        $data = [
+            'username' => 'orchipro',
+            'password' => '123456@a'
+        ];
+        echo '<pre>';
+        print_r($this->callAPITest($method, $url, json_encode($data)));
+    }
+
+}
+
+?>

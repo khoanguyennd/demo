@@ -1,0 +1,790 @@
+<?php
+class COUPANGApi{
+    private $_accesskey = '687fb6f0-46eb-446a-ac32-89f121551452';
+    private $_secretkey= 'bbc2b44a71ea88560e65652b51a286f7aadb42ac';  
+    private $_url = 'https://api-gateway.coupang.com';    
+    private $_vendorid = 'A00183931'; //
+    private $_curl = '';
+    private $_path;
+    private $_query="";
+    private $_datetime;
+    private $_message;
+    private $_signature;
+    private $_authorization;
+    private $_header;
+    private $_method;
+    private $_model;
+    
+    // Phương thức khởi tạo
+    public function __construct(){
+        $this->setModel();
+    }
+    // Phương thức thiết lập kết nối database
+    public function setModel(){
+        $this->_model = new Model();
+    }
+    // Thiết lập tham số cho Api
+    public function setParamsApi( $method, $path, $mode){
+        // Thiết lập thời gian cho Api
+        date_default_timezone_set("GMT+0");
+        $this->_datetime = date("ymd") . 'T' . date("His") . 'Z';
+        // Thiết lập đường dẫn cho Api
+        $this->_path = $path;
+        echo $path;
+        if($this->_query!="")
+            $this->_curl= $this->_url.$path."?".$this->_query;
+        else
+            $this->_curl= $this->_url.$path;
+        // Thiết lập method
+        $this->_method = $method;
+        // Thiết lập tin nhắn cho Api
+        $this->_message = $this->_datetime.$method.$path.$this->_query;
+        // Thiết lập chữ ký cho Api
+        $this->_signature = hash_hmac('sha256', $this->_message, $this->_secretkey);
+        
+        $this->_authorization = "CEA algorithm=HmacSHA256, access-key=".$this->_accesskey.", signed-date=".$this->_datetime.", signature=".$this->_signature;
+        $this->_header = array("Content-Type:  application/json;charset=UTF-8","Authorization:" . $this->_authorization); 
+        if($method=="GET")
+            array_push($this->_header, "X-EXTENDED-TIMEOUT:90000");
+        if($method=="PUT")
+            array_push($this->_header, "X-EXTENDED-TIMEOUT:60000");
+        if(is_bool($mode) && $mode==true)
+            array_push($this->_header,'Request-Vendor-Id: '.$this->_vendorid);
+                   
+        return $this;
+    }
+    
+    // Thực hiện xử lý Api; $content là mảng array
+    public function connectApi($method,$path,$mode,$content = null){
+        $this->setParamsApi($method, $path, $mode);
+        if($content == [] && $method=='POST')
+            array_push($this->_header, "Content-Length: 0");
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $this->_curl);
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $this->_method);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $this->_header);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        if($content != null){
+            curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($content));
+        }
+        $result = curl_exec($curl);
+        //$httpcode = curl_getinfo($curl);
+        curl_close($curl); 
+        //sleep(1);
+//         echo "<pre>";
+//         print_r($httpcode);
+        return json_decode($result, true);
+    }
+    
+    // Phương thức thêm sản phẩm
+    public function insertProduct($sellerProductId,$channelTypeId,  $onsale = null){
+        $result = [];
+        $method="POST";
+        $content = $this->createProductContent($sellerProductId,$channelTypeId, $onsale); 
+        echo '<pre>';
+        print_r($content);
+        echo '</pre>';
+        if($content){   
+            $path1 = '/v2/providers/travel_connect_api/apis';
+            $path2 = "/v1/marketplace/travel/tickets";
+            //https://api-gateway.coupang.com/v2/providers/travel_connect_api/apis/v1/marketplace/travel/tickets
+            $result=$this->connectApi($method,$path1.$path2,true,$content);
+            $this->saveLogs("INSERT1", "",  $sellerProductId , "", $result);
+            //sleep(1);
+        }
+        
+        return $result;
+    }
+    
+    // Phương thức thêm tùy chọn cho sản phẩm
+    public function insertProductTravelItem($travelProductId){
+        $result = [];
+        if($travelProductId){
+            $sql = 'SELECT t.*, sci.travelItemId, sp.inventoryType, sci.id salechannelitemid,sc.status
+					FROM tb_salechannelitem sci, tb_travelitems t, tb_salechannel sc, tb_sellerproduct sp
+					WHERE sci.sellerTravelItemId=t.sellerTravelItemId AND sci.salechannelId=sc.id AND sci.travelItemId is null
+                          AND sci.sellerProductId=sp.sellerProductId AND sc.travelProductId='.$travelProductId;
+            $this->_model->setQuery($sql);
+            $items = $this->_model->readAll();
+            if($items){
+                //https://api-gateway.coupang.com/v2/providers/travel_connect_api/apis/v1/marketplace/travel/tickets/1234567890/items
+                $path1 = '/v2/providers/travel_connect_api/apis';
+                $path2 = '/v1/marketplace/travel/tickets/'.$travelProductId.'/items';
+                $method="POST";
+                $result = $this->createProductTravelItemContent($items, true);
+                if($result){
+                    $i=1;
+                    foreach ($result['data'] as $key => $value){
+                        $responsive = $this->connectApi($method,$path1.$path2,true,$value);
+                        $this->_model->updateRecord('salechannelitem', [ 'travelItemId'=> $responsive["data"]  ], [ 'sellerTravelItemId'=> $value['sellerTravelItemId'] ]);
+                        $result["responsive"][]=$responsive;
+                        $this->saveLogs("INSERTPRODUCT".$i, "",  $value['sellerTravelItemId'] , $travelProductId, $responsive);
+                        //sleep(1);
+                        $i++;
+                    }
+                }
+            }
+        }
+        return $result;
+    }
+    // Phương thức thêm tùy chọn cho sản phẩm
+    public function insertOption($travelProductId){
+        $result = [];
+        if($travelProductId){
+            $sql = 'SELECT t.*, sci.travelItemId, sp.inventoryType, sci.id salechannelitemid,sc.status
+					FROM tb_salechannelitem sci, tb_travelitems t, tb_salechannel sc, tb_sellerproduct sp
+					WHERE sci.sellerTravelItemId=t.sellerTravelItemId AND sci.salechannelId=sc.id AND sci.travelItemId is null
+                          AND sci.sellerProductId=sp.sellerProductId AND sc.travelProductId='.$travelProductId;
+            $this->_model->setQuery($sql);
+            $items = $this->_model->readAll();
+            if($items){
+                $path1 = '/v2/providers/travel_connect_api/apis';
+                $path2 = '/v1/marketplace/travel/tickets/'.$travelProductId.'/items';
+                $method="POST";
+                $result = $this->createProductTravelItemContent($items, true);
+                if($result){
+                    $i=1;
+                    foreach ($result['data'] as $key => $value){
+                        $responsive = $this->connectApi($method,$path1.$path2,true,$value);
+                        $this->_model->updateRecord('salechannelitem', [ 'travelItemId'=> $responsive["data"]  ], [ 'sellerTravelItemId'=> $value['sellerTravelItemId'] ]);
+                        $result["responsive"][]=$responsive;
+                        $this->saveLogs("INSERTPRODUCT".$i, "",  $value['sellerTravelItemId'] , $travelProductId, $responsive);
+                        //sleep(1);
+                        $i++;
+                    }
+                }
+            }
+        }
+        return $result;
+    }
+    // Phương thức lấy thông tin của một sản phẩm
+    public function getProduct($travelProductId){
+        if($travelProductId){
+            $path1 = '/v2/providers/travel_connect_api/apis';
+            $path2 = '/v1/marketplace/travel/tickets/'.$travelProductId;
+            $method="GET";
+            return $this->connectApi($method,$path1.$path2,true);
+        }
+    }
+    // Phương thức ngưng bán/mở bán lại (stop,start) sản phẩm
+    public function changestatusProduct($travelProductId, $status){
+        $reponsive=[];
+        if ($travelProductId) {
+            $path1 = '/v2/providers/travel_connect_api/apis';
+            $path2 = '/v1/marketplace/travel/tickets/'.$travelProductId.'/'.$status;
+            $method="POST";
+            $reponsive=$this->connectApi($method,$path1.$path2,true,[]);
+            //$this->saveLogs("UPDATE1", "COUPANG", $sellerProductId, $travelProductId, $reponsive);
+            
+        }
+        return $reponsive;
+    }
+    // Phương thức lấy danh sách sản phẩm
+    public function getProductList(){
+        $path1 = '/v2/providers/travel_connect_api/apis';
+        $path2 = '/v1/marketplace/travel/tickets';
+        $method="GET";
+        return $this->connectApi($method,$path1.$path2,true);
+    }
+    
+    // Phương thức sửa sản phẩm
+    public function editProduct($sellerProductId, $travelProductId, $onsale = null){
+        $reponsive=[];
+        if ($sellerProductId && $travelProductId) {
+            $content = $this->createProductContent($sellerProductId, $onsale);
+            if($content){
+                $path1 = '/v2/providers/travel_connect_api/apis';
+                $path2 = '/v1/marketplace/travel/tickets/'.$travelProductId;
+                $method="PUT";
+                $reponsive=$this->connectApi($method,$path1.$path2,true, $content);
+                $this->saveLogs("UPDATE1", "COUPANG", $sellerProductId, $travelProductId, $reponsive);
+                //sleep(1);
+            }
+            
+            $this->insertProductTravelItem($travelProductId);
+            $result = $this->_model->loadRecords('salechannelitem', ['sellerProductId' => $sellerProductId]);
+            if($result){
+                $i=1;
+                foreach ($result as $key => $value){
+                    $responsive=[];
+                    $travelItemId=$value['travelItemId'];
+                    if($travelItemId!=""){
+                        $responsive=$this->editProductTravelItem($travelProductId, $travelItemId);
+                        $this->saveLogs("EDITPRODUCT".$i, "", $travelItemId, $travelProductId, $responsive);
+                        //sleep(1);
+                        $i++;
+                    }
+                }
+            }
+        }
+        return $reponsive;
+    }
+    
+    // Phương thức lưu log sau khi gọi autoUpdateAction
+    public function saveLogs($action, $channelcid, $sellerProductId, $travelProductId, $reponsive){
+        $result = ($reponsive['code']==200)?'SUCCESS':'ERROR';
+        // Insert log
+        $this->_model->insertRecord('apilogs', Structure::apilogs([
+            'channelcid'=>$channelcid,
+            'sellerProductId'=>$sellerProductId,
+            'travelProductId'=>$travelProductId,
+            'log_action'=>$action,
+            'log_result'=>($reponsive['code'])?$reponsive['code']:'ERROR',
+            'log_responsive'=>json_encode($reponsive)
+        ]));
+    }
+    // Phương thức sửa tùy chọn của sản phẩm
+    public function editProductTravelItem($travelProductId, $travelItemId){
+        $result = [];
+        if($travelProductId && $travelItemId){
+            $sql = 'SELECT t.*, sci.travelItemId, sp.inventoryType, sci.id salechannelitemid,sc.status
+					FROM tb_salechannelitem sci, tb_travelitems t, tb_salechannel sc, tb_sellerproduct sp
+					WHERE sci.sellerTravelItemId=t.sellerTravelItemId AND sci.salechannelId=sc.id AND sci.sellerProductId=sp.sellerProductId 
+                          AND sc.travelProductId='.$travelProductId.' AND sci.travelItemId='.$travelItemId;
+            $this->_model->setQuery($sql);
+            $items = $this->_model->readAll();
+            $result = $this->createProductTravelItemContent($items, false);
+            if($result){
+                foreach ($result['data'] as $key => $value){
+                    $path1 = '/v2/providers/travel_connect_api/apis';
+                    $path2 = '/v1/marketplace/travel/tickets/'.$travelProductId.'/items/'.$travelItemId;
+                    $method="PUT";                    
+                    $responsive= $this->connectApi($method,$path1.$path2,true, $value);
+                    $responsive['value']=$value;
+                    $result=$responsive;
+                }
+            }
+        }
+        return $sql;
+    }
+    
+    // Phương thức xóa sản phẩm
+    public function deleteProduct($travelProductId){
+        $path1 = '/v2/providers/travel_connect_api/apis';
+        $path2 = "/v1/marketplace/travel/tickets/" . $travelProductId;
+        $method="DELETE";
+        return $this->connectApi($method,$path1.$path2,true);
+    }
+    
+    // Phương thức xóa tùy chọn sản phẩm
+    public function deleteProductTravelItem($travelProductId, $travelItemId){
+        $path1 = '/v2/providers/travel_connect_api/apis';
+        $path2 = '/v1/marketplace/travel/tickets/'.$travelProductId.'/items/'.$travelItemId;
+        $method="DELETE";
+        return $this->connectApi($method,$path1.$path2,true);
+    }
+    // Phướng thức Patch phí / số lượng
+    public function updateFeeAmount($travelProductId){
+        $result = [];
+        $sql = 'SELECT r.rateType, r.saleStartedAt, r.saleEndedAt, r.amount, r.price, r.pricesale, t.onSale, sci.travelItemId
+				FROM tb_travelitems t, tb_rates r, tb_salechannel sc, tb_salechannelitem sci
+				WHERE t.sellerTravelItemId=r.sellerTravelItemId AND sc.id=sci.salechannelId AND sci.sellerTravelItemId=t.sellerTravelItemId 
+                        AND t.isDelete=0 AND sc.travelProductId='.$travelProductId;
+     
+        echo $sql;
+        $this->_model->setQuery($sql);
+        $items = $this->_model->readAll();
+        if($items){
+            foreach ($items as $key => $value){
+                $timestamp= strtotime($value['saleEndedAt']) - strtotime($value['saleStartedAt']);
+                $day = round($timestamp/(60 * 60 * 24));
+                $date = date('Y-m-d',strtotime($value['saleStartedAt']));
+                $content=[];
+                for($i=0;$i<$day ;$i++){
+                    $content[] = [
+                        "calendarDate" => $date,
+                        "onSale" => ($value['onSale']?true:false),
+                        "rateType" => $value['rateType'],
+                        "salePrice" =>(int)$value['price'],
+                        "totalStockCount" =>(int)$value['amount']
+                    ];
+                    //"deadlineDay" =>1,
+                    //"deadlineHour" =>23,
+                    $date = date('Y-m-d',strtotime($date . "+1 day"));
+                }
+                echo '<pre>';
+                print_r($content);
+                echo '</pre>';
+                $path1 = '/v2/providers/travel_connect_api/apis';
+                $path2 = '/v1/marketplace/travel/tickets/'.$travelProductId.'/items/'.$value['travelItemId'];
+                $method="PATCH";
+                $result[] = $this->connectApi($method,$path1.$path2,true,$content);
+                
+            }
+        }
+        return $result;
+    }
+    
+    // Phương thức lấy ra hàng tồn
+    public function getInventoryItem($travelProductId, $travelItemId){
+        if($travelProductId && $travelItemId){
+            $path1 = '/v2/providers/travel_connect_api/apis';
+            $path2 = '/v1/marketplace/travel/tickets/'.$travelProductId.'/items/'.$travelItemId.'/inventories';
+            $method="GET";
+            return $this->connectApi($method,$path1.$path2,true);
+        }
+        return false;
+    }
+    
+    // Phương thức tạo dữ liệu cho phương thức thêm sản phẩm
+    public function createProductContent($sellerProductId,$channelTypeId, $onsale = null){
+        $productItem = $this->_model->loadRecord('sellerproduct', ['sellerProductId' => $sellerProductId]);
+        if($productItem){           
+            $newCancelPolicy = $newContacts = $newContents = $newImages = $newPublications = $newSearchtags = $newTravelitems = []; 
+            //
+            $cancelpolicy = $this->_model->loadRecords('cancelpolicy', ['sellerProductId' => $sellerProductId]);
+            if($cancelpolicy){
+                foreach ($cancelpolicy as $value){
+                    $refundRates=[];
+                    $items1 = $this->_model->loadRecords('refundrates', ['cancelPolicyId' => $value['cancelPolicyId']]);
+                    foreach ($items1 as $value1){
+                        $refundRates[] = [
+                            "conditionDays" => (int)$value1['conditionDays'],
+                            "conditionTime" => $value1['conditionTime'],
+                            "refundRate" => (int)$value1['refundRate']
+                        ];
+                    }
+                    //"cancellable" => $items1['cancellable']
+                    $cancelPeriodType="BEFORE_USE";
+                    $newCancelPolicy = [
+                        "cancelMarkType" => $value['cancelMarkType'],
+                        "cancelPeriodType" =>$cancelPeriodType,
+                        "cancelType" =>$value['cancelType'],
+                        "notice" =>$value['notice'],
+                        "refundRates" => $refundRates,
+                        "refundOnBusinessDay" =>(($value['refundOnBusinessDay'] == 1)?true:false),
+                        "refundUnusedTicket" =>(($value['refundUnusedTicket'] == 1)?true:false)
+                    ];
+                }
+            }
+            $this->_model->setQuery('SELECT `contact`, `contactType`, `contactUseType` 
+                                    FROM tb_contacts
+                                    WHERE `sellerProductId`='.$sellerProductId);
+            $contacts = $this->_model->readAll();
+            if($contacts){
+                $newContacts = $contacts;
+            }
+            //
+            $contents= $this->_model->loadRecords('contents', ['sellerProductId' => $sellerProductId]);    
+            if($contents){
+                foreach ($contents as $key => $value){
+                    $newContents[] = [
+                        "title" => $value['title'],
+                        "type" => $value['type'],
+                        "content" => $value['content'],
+                        "format" => $value['format'],
+                        "sellerUrl" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/" . $value['sellerUrl'],
+                        "sellerUrlMethod" => $value['sellerUrlMethod'],
+                    	"seq" => $key+1
+                    ];
+                }
+            }
+            //
+            $images = $this->_model->loadRecords('images', ['sellerProductId' => $sellerProductId]);
+            if($images){
+                foreach ($images as $key => $value){
+                    $newImages[] = [
+                        "sellerUrl" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/" . $value['sellerUrl'],
+                        "sellerUrlMethod" => $value['sellerUrlMethod'],
+                        "representative" => (($value['representative'] == 1 && $value['type'] ==1)?true:false),
+                        "sellerImageCategory" => $value['sellerImageCategory'],
+                        "imageGroup" => $value['imageGroup'],
+                        "description" => $value['description'],
+                    	"seq" => $key+1
+                    ];
+                }
+            }
+            //
+            $locations= $this->_model->loadRecords('locations', ['sellerProductId' => $sellerProductId]);
+            if($locations){
+                foreach ($locations as $value){
+                    $newlocations = [[
+                        "nation" => $value['nation'],
+                        "city" => $value['city'],
+                        "district" => $value['district'],
+                        'landNumberAddress' => $value['landNumberAddress'],
+                        'roadNameAddress' => $value['roadNameAddress']
+                    ]];
+                }
+            }
+           
+            //
+            $publications= $this->_model->loadRecords('publication', ['sellerProductId' => $sellerProductId]);
+            if($publications){
+                foreach ($publications as $value){
+                    $newPublications = [
+                        "isUseDirect" => (($value['isUseDirect'] == 1)?true:false),
+                        "ticketSendCriteriaType" => $value['ticketSendCriteriaType'],
+                        "ticketSendLimitTime" => (int)$value['ticketSendLimitTime'],
+                        "ticketSendSpentTime" => (int)$value['ticketSendSpentTime'],
+                        "ticketUsage" => $value['ticketUsage'],
+                        "useBarcode" => (($value['useBarcode'] == 1)?true:false),
+                        "externalCouponUseType" => (($value['useExternalTicketNumber'] == 1)?"REAL_TIME":"NONE"),
+                        "useExternalTicketNumber" => (($value['useExternalTicketNumber'] == 1)?true:false)
+                    ];
+                }
+            }
+            //
+            $this->_model->setQuery('SELECT `searchTags` FROM tb_searchtags WHERE `sellerProductId`='.$sellerProductId);
+            $searchtags= $this->_model->readAll();
+            $newSearchtags[]="string";
+            if($searchtags){
+                $newSearchtags=[];
+                foreach ($searchtags as $value){
+                    $newSearchtags[] = $value['searchTags'];
+                }
+            }
+            //
+            ///, 'isDelete' => 0
+            $travelitems = $this->_model->loadRecords('travelitems', ['sellerProductId' => $sellerProductId]);         
+            if($travelitems){                
+                foreach ($travelitems as $key1 => $value1){
+                    $travelitem = [
+                        "description" => "",
+                        "sellerTravelItemId" => "",
+                        "seq" => 1,
+                        "name" => "",
+                    	"onSale" => ($onsale==null)?($value1['onSale']==1?true:false):$onsale,
+                        "features" =>[],
+                        "rates" =>[]
+                    ];                    
+                    if($productItem['inventoryType']=='PERIOD'){
+                        $items1 = $this->_model->loadRecord('useperiod', ['sellerTravelItemId' => $value1['sellerTravelItemId']]);
+                        if($items1){
+                            $travelitem['usePeriod'] = [
+                                "useEndedAt" => $items1['useEndedAt'],
+                                "usePeriodName" => $items1['usePeriodName'],
+                                "useStartedAt" => $items1['useStartedAt']
+                            ];
+                        }  
+                    }
+                    $items2 = $this->_model->loadRecords('rates', ['sellerTravelItemId' => $value1['sellerTravelItemId']]);
+                    if($items2){                       
+                        foreach ($items2 as $key2 => $value2){
+                            $travelitem['rates'][] = [
+                                "maxPurchaseQtyPerPerson" => (int)$value2['maxPurchaseQtyPerPerson'],
+                                "maxPurchaseQtyPeriod" => (int)$value2['maxPurchaseQtyPeriod'],
+                                "price" => (int)$value2['price'],
+                                "priceType" => $value2['priceType'],
+                                "rateType" => $value2['rateType'],
+                                "representative" => (($value2['representative'] == 1)?true:false),                                
+                                "saleStartedAt" => $value2['saleStartedAt'],
+                                "saleEndedAt" => $value2['saleEndedAt'],                                
+                                "sellerRateId" => $value2['sellerRateId'],
+                            	"seq" => $key2+1
+                            ];
+                        }
+                    }
+                    
+                    $travelitem['onSale'] = ($value1['onSale'] == 1)?true:false;
+                    $travelitem['description'] = $value1['description'];
+                    $travelitem['sellerTravelItemId'] = $value1['sellerTravelItemId'];
+                    $travelitem['seq'] = $key1+1;
+                    $travelitem['name'] = $value1['name'];
+                    $newTravelitems[] = $travelitem;
+                }
+            }
+            
+            $this->_model->setQuery('SELECT ct.type_apivalue1,ct.type_apivalue2
+                                    FROM tb_salechannel sc , tb_channeltypes ct 
+                                    WHERE sc.channelTypeId=ct.type_id AND sc.sellerProductId="'.$sellerProductId.'" AND sc.channelTypeId="'.$channelTypeId.'"');
+            $item=$this->_model->read();
+            $travelType=  $item['type_apivalue1'];
+            $productDetailType= $item['type_apivalue2'];    
+            
+            
+            $data= $this->_model->loadRecords('informationuse', ['sellerProductId' => $sellerProductId]);
+            $introduction="introduction";
+            $csContactInfo="csContactInfo";
+            if($data){
+                foreach ($data as $value){
+                    if($value['type']=='introduction' && $value['content']!="")
+                        $introduction=$value['content'];
+                    if($value['type']=='csContactInfo' && $value['content']!="")
+                        $csContactInfo=$value['content'];
+                }
+            }
+            
+            $data= $this->_model->loadRecords('notice', ['sellerProductId' => $sellerProductId]);
+            $notice="";
+            $usageNotice="";
+            $inclusionNotice="";
+            $exclusionNotice='';
+            $trafficInfo="";
+            $publicTransportInfo="";
+            if($data){
+                foreach ($data as $value){
+                     if($value['type']=='notice')
+                        $notice=$value['content'];
+                    if($value['type']=='usageNotice')
+                        $usageNotice=$value['content'];
+                     if($value['type']=='inclusionNotice')
+                        $inclusionNotice=$value['content'];
+                     if($value['type']=='exclusionNotice')
+                         $exclusionNotice=$value['content'];
+                     if($value['type']=='trafficInfo')
+                         $trafficInfo=$value['content'];
+                     if($value['type']=='publicTransportInfo')
+                         $publicTransportInfo=$value['content'];
+                }
+            }
+            $features = [
+//                 [
+//                     'featureId' => 'UTILITY_FACILITIES',
+//                     'featureValues' => [],
+//                     'description' => ''
+//                 ],
+//                 [
+//                     'featureId' => 'CONVENIENT_FACILITIES',
+//                     'featureValues' => [],
+//                     'description' => ''
+               
+//                 ]
+             ];
+            
+            
+            $district= $this->_model->loadRecord('district', ['id' => $productItem['productDetailTypeId']]);
+            //(float)$productItem['displayCategoryCode']
+            return [
+                "adultOnly" => (($productItem['adultOnly']==1)?true:false),
+                "additionalInfoPrompt" => $productItem['additionalInfoPrompt'],
+                "displayCategoryCode" => 108804,
+                "displayKeyword" => $district['name'],
+                "estimatedBookingDuration" => (int)$productItem['estimatedBookingDuration'],
+                "notice" => $notice,
+                "exclusionNotice" => $exclusionNotice,
+                "inclusionNotice" => $inclusionNotice,
+                "instantBooking" => (($productItem['instantBooking']==1)?true:false),
+                "inventoryType" => $productItem['inventoryType'],
+                "maxPurchaseQuantity" => (int)$productItem['maxPurchaseQuantity'],
+                "name" => $productItem['name'],
+                "trafficInfo" => $trafficInfo,
+                "publicTransportInfo" => $publicTransportInfo,
+                "searchTags" =>$newSearchtags,                
+                "sellerProductId" => $sellerProductId,
+                "subordinateIds" => [""],           
+                "taxType" => $productItem['taxType'],
+                "productDetailType" => $productDetailType,
+                "travelType" => $travelType,
+                "usageNotice" => $usageNotice,
+                "cancelPolicy" =>$newCancelPolicy,                
+                "contacts" =>$newContacts,     
+                "introduction" => $introduction,
+                "csContactInfo" => $csContactInfo,
+                "contents" =>$newContents,
+                "images" =>$newImages,
+                "locations" =>$newlocations,
+                "publication" =>$newPublications,
+                "travelItems" => $newTravelitems,
+                'features' => $features
+            ];
+        } 
+        // "benefits" => [$productItem['benefits']],
+        //"additionalInfoPrompt" => $productItem['additionalInfoPrompt'],
+        /*"features" =>
+                [
+                    [
+                        "description" => "",
+                        "featureId" => "TYPE",
+                        "featureValues" => [ "WIFI","CAMERA"]
+                    ]
+                ]*/
+        return false;
+    }
+    // Phương thức tạo dữ liệu để thêm hoặc sửa tùy chọn $insert true | false
+    public function createProductTravelItemContent($data, $insert = true){
+    	$result = [];
+    	if($data){
+    		foreach ($data as $key1 => $value1){
+    			if(!empty($value1['travelItemId']) && $insert == true){
+    				continue;
+    			}
+    			$travelitem = [
+    					"description" => "",
+    					"sellerTravelItemId" => "",
+    					"seq" => $key1+1,
+    					"name" => "",
+    					"onSale" => true,
+    					"taxType" => $value1['taxType'],
+    					"features" =>
+    					[
+//     							[
+//     									"description" => "",
+//     									"featureId" => "OFFERING_SERVICE",
+//     									"featureValues" => [ "NO_CHARGE_CALL", "UNLIMITED_USE" ]
+//     							]
+    							
+    					],
+    					"rates" =>[]
+    			];
+    			if($value1['inventoryType']=='PERIOD'){
+    				$items1 = $this->_model->loadRecord('useperiod', ['sellerTravelItemId' => $value1['sellerTravelItemId']]);
+    				if($items1){
+    					$travelitem['usePeriod'] = [
+    							"useEndedAt" => $items1['useEndedAt'],
+    							"usePeriodName" => $items1['usePeriodName'],
+    							"useStartedAt" => $items1['useStartedAt']
+    					];
+    				}
+    			}
+    			$items2 = $this->_model->loadRecords('rates', ['sellerTravelItemId' => $value1['sellerTravelItemId']]);
+    			if($items2){
+    				foreach ($items2 as $key2 => $value2){
+    					$travelitem['rates'][] = [
+    							"maxPurchaseQtyPerPerson" => (int)$value2['maxPurchaseQtyPerPerson'],
+    							"maxPurchaseQtyPeriod" => (int)$value2['maxPurchaseQtyPeriod'],
+    							"price" => (int)$value2['price'],
+    							"priceType" => $value2['priceType'],
+    							"rateType" => $value2['rateType'],
+    							"representative" => (($value2['representative'] == 1)?true:false),
+    							"saleStartedAt" => $value2['saleStartedAt'],
+    							"saleEndedAt" => $value2['saleEndedAt'],
+    							"sellerRateId" => $value2['sellerRateId'],
+    							"seq" => $key2+1
+    					];
+    				}
+    			}
+    			$onsale=$value1['onSale'];
+    			if($value1['isDelete']==1) $onsale=0;
+    			if($value1['status']==-1) $onsale=0;
+    			
+    			$travelitem['onSale'] = ($onsale == 1)?true:false;
+    			$travelitem['description'] = $value1['description'];
+    			$travelitem['sellerTravelItemId'] = $value1['sellerTravelItemId'];    			
+    			$travelitem['name'] = $value1['name'];
+    			$result['salechannelitemid'][] = $value1['salechannelitemid'];
+    			$result['data'][] = $travelitem;    				
+    		}
+    	}
+    	return $result;
+    }
+    // Phương thức lấy danh sách hàng tồn
+    public function getInventoryList($travelProductId){
+        if($travelProductId){
+            $sql = 'SELECT r.rateType, r.saleStartedAt, r.saleEndedAt, r.amount, r.pricesale, t.onSale, sci.travelItemId
+				FROM tb_travelitems t, tb_rates r, tb_salechannel sc, tb_salechannelitem sci
+				WHERE t.sellerTravelItemId=r.sellerTravelItemId AND sc.id=sci.salechannelId AND sci.sellerTravelItemId=t.sellerTravelItemId AND sc.travelProductId='.$travelProductId;
+            $this->_model->setQuery($sql);
+            $items = $this->_model->readAll();
+            $result = [];
+            if($items){
+                foreach ($items as $key => $value){
+                    $result[] = $this->getInventoryItem($travelProductId, $value['travelItemId']);
+                }
+            }
+            return $result;
+        }
+        return false;
+    }
+    // Phương thức xử lý sử dụng vé
+    public function useTicket($ticketNumber){
+        //$ticketNumber="E6BA73-27000082192191";
+
+        $path1 = '/v2/providers/travel_backbone_api/apis/ticket-api';
+        $path2 = '/v1/tickets/'.$ticketNumber.'/redeem';
+        $method="POST";
+        $content = [
+            "dealId"   => null,
+            "optionId" => null,
+            "quantity" => 1
+        ];
+        return $this->connectApi($method,$path1.$path2,false,$content);
+    }
+    public function useMultiTicket($ticketNumbers){
+       // $ticketNumbers=["E6BA73-27000082192191"];
+        $path1 = '/v2/providers/travel_backbone_api/apis/ticket-api';
+        $path2 = '/v1/tickets/multiple/redeem';
+        $method="POST";
+        $content = [
+            "dealId"   => null,
+            "optionId" => null,
+            "quantity" => 1
+        ];
+        return $this->connectApi($method,$path1.$path2,false,$content);
+    }
+    public function unuseTicket($ticketNumber){
+        //$ticketNumber="E6BA73-27000082192191";
+        $path1 = '/v2/providers/travel_backbone_api/apis/ticket-api';
+        $path2 = '/v1/tickets/'.$ticketNumber.'/reclaim';
+        $method="POST";
+        $content = [
+            "dealId"   => null,
+            "optionId" => null,
+            "quantity" => 1,
+            "reclaimReason" => "업체귀책"
+        ];
+        return $this->connectApi($method,$path1.$path2,false,$content);
+    }
+    public function unuseMultiTicket($ticketNumbers){
+        //$ticketNumbers=["E6BA73-27000082192191"];
+        $path1 = '/v2/providers/travel_backbone_api/apis/ticket-api';
+        $path2 = '/v1/tickets/multiple/reclaim';
+        $method="POST";
+        $content = [
+            "dealId"   => null,
+            "optionId" => null,
+            "quantity" => 1,
+            "reclaimReason" => "업체귀책",
+            'ticketNumbers' =>  $ticketNumbers
+        ];
+        return $this->connectApi($method,$path1.$path2,false,$content);
+    }
+    public function getInfoBuyerTicket($dealId=null){
+        $offset=0;
+        $limit=1000;
+        $searchStartDateTime=date('Ymd',strtotime("-6 days"))."000000";
+        $searchEndDateTime=date("Ymd")."235959";
+        $path1 = '/v2/providers/travel_backbone_api/apis/ticket-api';
+        $path2 = '/v1/purchasers';
+        if($dealId==null)
+            $query="searchStartDateTime=$searchStartDateTime&searchEndDateTime=$searchEndDateTime&offset=$offset&limit=$limit";
+        else 
+            $query="searchStartDateTime=$searchStartDateTime&searchEndDateTime=$searchEndDateTime&dealId=$dealId&offset=$offset&limit=$limit";
+        $this->_query=$query;
+        $method="GET";
+        return $this->connectApi($method,$path1.$path2,false);
+    }
+    public function getDetailTicket($ticketNumber){
+//         $dealId="3000000001";
+//         $optionId="3100000001";
+//         $quantity="1";
+        $path1 = '/v2/providers/travel_backbone_api/apis/ticket-api';
+        $path2 = "/v1/tickets/$ticketNumber";
+        //$query="dealId=$dealId&optionId=$optionId&quantity=$quantity";
+        //$this->_query=$query;
+        $method="GET";
+        return $this->connectApi($method,$path1.$path2,false);
+    }
+    public function getDetailMultiTicket(){
+        $ticketNumber='7000000000151';
+        $dealId="3000000001";
+        $path1 = '/v2/providers/travel_backbone_api/apis/ticket-api';
+        $path2 = "/v1/deal/$dealId/tickets";
+        $content = [
+            'ticketNumbers' =>  $ticketNumber
+        ];
+        $method="POST";
+        return $this->connectApi($method,$path1.$path2,false,$content);
+        // còn bị lỗi
+    }
+    
+    /////////////////////////////////////////////////////////////////////////
+    
+    public function getInfoBuyerTicketV2($dealId = null){
+        $offset=0;
+        $limit=1000;
+        $searchStartDateTime=date('Y-m-d',strtotime("-6 days"))." 00:00:00";
+        $searchEndDateTime=date("Y-m-d")."  23:59:59";
+        $dealId="30000000495925";
+        $path1 = '/v2/providers/travel_backbone_api/apis/ticket-api';
+        $path2 = '/v2/purchasers';
+        if($dealId==null)
+            $query="searchStartDateTime=$searchStartDateTime&searchEndDateTime=$searchEndDateTime&offset=$offset&limit=$limit";
+        else
+            $query="searchStartDateTime=$searchStartDateTime&searchEndDateTime=$searchEndDateTime&dealId=$dealId&offset=$offset&limit=$limit";
+        $this->_query=$query;
+        $method="GET";
+        return $this->connectApi($method,$path1.$path2,false);
+    }
+}
+?>

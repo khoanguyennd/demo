@@ -1,0 +1,63 @@
+<?php
+
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+
+class NaverController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    public function register_stream_wrapper($projectId)
+    {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+    
+    // Phương thức index
+    public function indexAction() {
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        //https://nid.naver.com/nidlogin.login
+//         $crawler = $client->request('POST', 'https://nid.naver.com/nidlogin.login');
+//         $form = $crawler->filter('#frmNIDLogin')->form();
+//         $crawler = $client->submit($form, array(
+//             'id' => 't-bridge',
+//             'pw' => 'coupang135!'
+//         ));
+        $crawler = $client->request('GET', 'https://nid.naver.com/nidlogin.login');
+        $crawler ->extract($attributes);
+        //https://nid.naver.com/signin/v3/finalize?url=https%3A%2F%2Fwww.naver.com&svctype=1
+//         localechange:
+//         encpw: 1ce6820e21511a97bffe83266131cc754165b0f971a2c079cc3131ad83b76642e7b8ae3a2c76069006006554938c5251f50be2d5155a9ab974b71895dc773ccbf720f1281ca071c7bbb9fdd267c34cfb6b545b114914ddceed2398fa1b61f1deee2141be6f474ace71669472db4a43d572650c5fea47654a3d148d799fbe8512
+//         enctp: 1
+//         svctype: 1
+//         smart_LEVEL: -1
+//         bvsd: N4IgLiBcIEYMYHYBsBWAZgQwBwFoBMGAjEjgCx6I4wwZ44JoJ4DMzSbApgAww5cgAaEAGcoIQSAC2UPEOEwoXOXEVCArgshKQalVqFgAdpu1G9s8Hq4BfIA
+//         encnm: 100015632
+//         locale: en_US
+//         url: https://www.naver.com
+//         id:
+//          pw
+        
+//         $crawler = $client->request('GET', 'https://partner.booking.naver.com/booking-list-view');
+        
+        
+//         echo '<pre>';
+//         print_r($crawler);
+//         echo '</pre>';
+        
+        
+    }
+}
+
+?>
+<script>
+window.stop();
+</script>

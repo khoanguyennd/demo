@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Tbridge - Câu hỏi</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            *{margin: 0px; padding: 0px;}
+            .cl{clear: both;}
+            @media (min-width: 1200px){
+            }
+            @media (min-width: 992px) and (max-width: 1200px){
+
+            }
+            @media (min-width: 768px) and (max-width: 992px){
+
+            }
+            @media (min-width: 500px) and (max-width: 768px){
+                .t_cauhoi{padding: 10px;}
+                .t_header_cauhoi{position: relative; border-bottom: 1px solid #a9a9a9; padding: 5px 0px 10px 0px;}
+                .t_header_cauhoi a{position: absolute;top: 5px; left: 0px;}
+                .t_header_cauhoi h2{text-align: center;}
+                
+                .t_menu_cauhoi{padding: 15px 0px; height: 21px; border-bottom: 1px solid #a9a9a9;}
+                .t_menu_cauhoi ul{list-style: none;}
+                .t_menu_cauhoi ul li{float: left; padding-left: 10px;}
+                .t_menu_cauhoi ul li:first-child{padding-left: 0px;}
+                .t_menu_cauhoi ul li a{text-decoration: none; font-weight: bold; color: #000;}
+                .t_active{border-bottom: 3px solid red;height: 33px;}
+                .t_active a{color: red !important;}
+                
+                .list_cauhoi{border: 1px solid #a9a9a9; margin-bottom: 10px;}
+                .t_cauhoi_count_p{padding: 15px 0px;}
+                .p_channel_cauhoi{padding-top: 10px;}
+                .p_channel_cauhoi span{background: #376092; padding: 10px 10px 10px 5px; color: #fff;}
+                .list_cauhoi_1{width: 74%; float: left; padding: 3%;}
+                .p_list_cauhoi_1{margin-bottom: 10px; margin-top: 5px;}
+                .p_list_cauhoi_span_email{font-weight: bold;}
+                .p_list_cauhoi_span_time{color: #888;}
+                .list_cauhoi_2{width: 17%; float: left; padding-top: 20px; padding-left: 3%;}
+                .list_cauhoi_2 input{border: 1px solid #a9a9a9; color: #DB4437; padding: 5px; background: none;}
+            }
+            @media (min-width: 350px) and (max-width: 500px){
+                .t_cauhoi{padding: 10px;}
+                .t_header_cauhoi{position: relative; border-bottom: 1px solid #a9a9a9; padding: 5px 0px 10px 0px;}
+                .t_header_cauhoi a{position: absolute;top: 5px; left: 0px;}
+                .t_header_cauhoi h2{text-align: center;}
+                
+                .t_menu_cauhoi{padding: 15px 0px; height: 21px; border-bottom: 1px solid #a9a9a9;}
+                .t_menu_cauhoi ul{list-style: none;}
+                .t_menu_cauhoi ul li{float: left; padding-left: 10px;}
+                .t_menu_cauhoi ul li:first-child{padding-left: 0px;}
+                .t_menu_cauhoi ul li a{text-decoration: none; font-weight: bold; color: #000;}
+                .t_active{border-bottom: 3px solid red;height: 33px;}
+                .t_active a{color: red !important;}
+                
+                .list_cauhoi{border: 1px solid #a9a9a9; margin-bottom: 10px;}
+                .t_cauhoi_count_p{padding: 15px 0px;}
+                .p_channel_cauhoi{padding-top: 10px;}
+                .p_channel_cauhoi span{background: #376092; padding: 10px 10px 10px 5px; color: #fff;}
+                .list_cauhoi_1{width: 74%; float: left; padding: 3%;}
+                .p_list_cauhoi_1{margin-bottom: 10px; margin-top: 5px;}
+                .p_list_cauhoi_span_email{font-weight: bold;}
+                .p_list_cauhoi_span_time{color: #888;}
+                .list_cauhoi_2{width: 17%; float: left; padding-top: 20px; padding-left: 3%;}
+                .list_cauhoi_2 input{border: 1px solid #a9a9a9; color: #DB4437; padding: 5px; background: none;}                
+            }
+            @media (max-width: 350px){  
+                .t_cauhoi{padding: 10px;}
+                .t_header_cauhoi{position: relative; border-bottom: 1px solid #a9a9a9; padding: 5px 0px 10px 0px;}
+                .t_header_cauhoi a{position: absolute;top: 5px; left: 0px;}
+                .t_header_cauhoi h2{text-align: center;}
+                
+                .t_menu_cauhoi{padding: 15px 0px; height: 21px; border-bottom: 1px solid #a9a9a9;}
+                .t_menu_cauhoi ul{list-style: none;}
+                .t_menu_cauhoi ul li{float: left; padding-left: 10px;}
+                .t_menu_cauhoi ul li:first-child{padding-left: 0px;}
+                .t_menu_cauhoi ul li a{text-decoration: none; font-weight: bold; color: #000;}
+                .t_active{border-bottom: 3px solid red;height: 33px;}
+                .t_active a{color: red !important;}
+                
+                .list_cauhoi{border: 1px solid #a9a9a9; margin-bottom: 10px;}
+                .t_cauhoi_count_p{padding: 15px 0px;}
+                .p_channel_cauhoi{padding-top: 10px;}
+                .p_channel_cauhoi span{background: #376092; padding: 10px 10px 10px 5px; color: #fff;}
+                .list_cauhoi_1{width: 74%; float: left; padding: 3%;}
+                .p_list_cauhoi_1{margin-bottom: 10px; margin-top: 5px;}
+                .p_list_cauhoi_span_email{font-weight: bold;}
+                .p_list_cauhoi_span_time{color: #888;}
+                .list_cauhoi_2{width: 17%; float: left; padding-top: 20px; padding-left: 3%;}
+                .list_cauhoi_2 input{border: 1px solid #a9a9a9; color: #DB4437; padding: 5px; background: none;}
+            }
+        </style>
+    </head>
+    <body>
+        <div class="t_cauhoi">
+            <div class="t_header_cauhoi">
+                <a href="">
+                    <img src="img/back.png" alt=""/>
+                </a>
+                <h2>Câu hỏi chưa trả lời</h2>
+            </div>
+            <div class="t_menu_cauhoi">
+                <ul>
+                    <li class="t_active"><a href="">Toàn bộ</a></li>
+                    <li><a href="">Counpang</a></li>
+                    <li><a href="">Tmon</a></li>
+                    <li><a href="">Naver</a></li>
+                    <li><a href="">11st</a></li>
+                </ul>
+            </div>
+            <div class="t_cauhoi_count">
+                <p class="t_cauhoi_count_p">Tổng 32 kết quả</p>                
+                <div class="list_cauhoi">
+                    <p class="p_channel_cauhoi"><span>Tmon</span></p>
+                    <div class="list_cauhoi_1">                        
+                        <p class="p_list_cauhoi_1">
+                            <span class="p_list_cauhoi_span_email">hoang***@gmail.com</span> 
+                            <span class="p_list_cauhoi_span_time"> 2020-06-16 18:22:03</span>
+                        </p>
+                        <p>12월 27일~28일 6명이서 이용하려는데 방을 3개 잡고 싶은데, 방은 비슷해 보이는데 인원수에 따라서 가격이 …</p>
+                    </div>
+                    <div class="list_cauhoi_2">
+                        <input type="button" value="Trả lời" />
+                    </div><div class="cl"></div>
+                </div>
+                <div class="list_cauhoi">
+                    <p class="p_channel_cauhoi"><span>Tmon</span></p>
+                    <div class="list_cauhoi_1">                        
+                        <p class="p_list_cauhoi_1">
+                            <span class="p_list_cauhoi_span_email">hoang***@gmail.com</span> 
+                            <span class="p_list_cauhoi_span_time"> 2020-06-16 18:22:03</span>
+                        </p>
+                        <p>12월 27일~28일 6명이서 이용하려는데 방을 3개 잡고 싶은데, 방은 비슷해 보이는데 인원수에 따라서 가격이 …</p>
+                    </div>
+                    <div class="list_cauhoi_2">
+                        <input type="button" value="Trả lời" />
+                    </div><div class="cl"></div>
+                </div>
+                <div class="list_cauhoi">
+                    <p class="p_channel_cauhoi"><span>Tmon</span></p>
+                    <div class="list_cauhoi_1">                        
+                        <p class="p_list_cauhoi_1">
+                            <span class="p_list_cauhoi_span_email">hoang***@gmail.com</span> 
+                            <span class="p_list_cauhoi_span_time"> 2020-06-16 18:22:03</span>
+                        </p>
+                        <p>12월 27일~28일 6명이서 이용하려는데 방을 3개 잡고 싶은데, 방은 비슷해 보이는데 인원수에 따라서 가격이 …</p>
+                    </div>
+                    <div class="list_cauhoi_2">
+                        <input type="button" value="Trả lời" />
+                    </div><div class="cl"></div>
+                </div>
+                <div class="cl"></div>
+            </div>
+            
+            <div class="cl"></div>
+        </div>
+    </body>
+</html>

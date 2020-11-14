@@ -1,0 +1,573 @@
+<?php 
+	class ChannelController extends Controller{
+		
+		// Phương thức khởi tạo
+		public function __construct($params){			
+			parent::__construct($params);
+			$this->isLogin();		
+			$account = $_SESSION['accountshopping'];
+			if($account['temp']==1)
+			    Url::header($this->route('account')."#tab1");
+		}
+		
+		// Phương thức phân loại T-Gridge
+		public function tbridgeAction(){		   
+		    // Xử lý menu product type
+// 		    $items = $this->_model->loadProductTypes(Session::get('pdmode'));
+// 		    if($items){
+// 		        $this->_view->setData('menuTbridge', Helper::createMenuTgridge($items));
+// 		    }
+		    $sql= "SELECT t1.*, (SELECT COUNT(*) FROM tb_producttypes t2  WHERE t2.type_parentid = t1.type_id) as hasChild 
+                   FROM tb_producttypes as t1";
+		    if(isset($_SESSION['pdmode'])) {
+		        $pdmode=$_SESSION['pdmode'];
+    		    if($pdmode == true){
+    		        $sql .= ' WHERE type_status=1 AND type_id !=0';
+    		    }else{
+    		        $sql .= ' WHERE type_id !=0';
+    		    }
+	        }
+		    $this->_model->setQuery($sql);
+		    $data = $this->_model->readAll();
+		    foreach ($data as $value => $giatri)
+		    {
+		        $items[$giatri['type_id']] = array("parent_id" => $giatri['type_parentid'], 
+		                                      "typeid" => $giatri['type_id'], 
+                        		              "typestatus" => $giatri['type_status'], 
+                        		              "typelevel" => $giatri['type_level'], 
+                        		              "name" => $giatri['type_value'], 
+		                                      "hasChild" => $giatri['hasChild']);
+		    }
+		    
+            $str='<div class="treemenu">';
+            if(count($items) > 0){
+                $str.=$this->generateTreeView($items, 0);
+            }
+            
+            $str.='</div>';
+            $this->_view->setData('menuTbridge',$str);
+		    
+		    $this->_view->render('tbridge');
+		    
+		}
+		
+		public function generateTreeView($items, $currentParent, $currLevel = 0, $prevLevel = -1) {
+		    $str="";
+		    foreach ($items as $itemId => $item) {
+		        if ($currentParent == $item['parent_id']) {
+		            if ($currLevel > $prevLevel)
+		                $str.= "<ol class='tree'> ";
+		            if ($currLevel == $prevLevel)
+		                $str.= "</li>";
+		            $menuLevel = $item['parent_id'];
+		            if($item['hasChild'] > 0)
+		                $menuLevel = $itemId;
+                    $str.= '<li>
+                                <label data-parentid="'.$item['parent_id'].'" data-typeid="'.$item['typeid'].'" data-typestatus="'.$item['typestatus'].'" data-typelevel="'.$item['typelevel'].'" >'.$item['name'].'</label>
+                                <input type="checkbox" id="level'.$menuLevel.'" />';
+                        		            
+		            if ($currLevel > $prevLevel) 
+		                $prevLevel = $currLevel;
+		            $currLevel++;
+		            $str.= $this->generateTreeView ($items, $itemId, $currLevel, $prevLevel);
+		            $currLevel--;
+                }
+            }
+            if ($currLevel == $prevLevel) $str.= " </li> </ol>";
+            return $str;
+		}
+		// Phương thức thêm mới một phân loại
+		public function loadMatchTypeAjax(){
+		    $result = ['flag'=>false];
+		    $chid = $this->_params['chid'];
+		    $sql= "SELECT c.channel_name,ct.type_depth1,ct.type_depth2,ct.type_depth3,ct.type_depth4 ,ct.type_rate
+        		    FROM tb_matchtype mt, tb_channeltypes ct,tb_channels c
+        		    WHERE mt.channeltypeId =ct.type_id AND ct.channelid=c.channel_id
+        		    AND mt.typeId=$chid;";
+		   
+		    $result['ssl']=$sql;
+		    $this->_model->setQuery($sql);
+		    $data = $this->_model->readAll();
+		    $str="";
+		    foreach ($data as $value => $giatri)
+		    {
+		        
+		        $str.='  <div class="form_group clearfix">
+        		        <div class="form_item col-xs-2">
+        		          <h3>'.$giatri['channel_name'].'</h3>
+        		        </div>
+        		        <div class="form_item col-xs-10">
+            		        <p>'.$giatri['type_depth1'].' &gt; '.$giatri['type_depth2'].' &gt; '.$giatri['type_depth3'].' &gt '.$giatri['type_depth4'].'  : '.$giatri['type_rate'].'% </p>
+        		        </div>
+        		        </div> ';
+		    }
+		    $result['divresult']=$str;
+		    $result['flag']=true;
+		    echo json_encode($result);
+		}
+		public function loadMatchType1Ajax(){
+		    $result = ['flag'=>false];
+		    
+		    $items = $this->_model->loadRecords('channels', ['channel_status'=>1]);
+		    $str="";
+		    foreach ($items as $value => $giatri)
+		    {
+		        $str.=' <li data-channelId="'.$giatri['channel_id'].'" style="cursor: pointer;"> '.$giatri['channel_name'].'</li> ';
+		    }
+		    $result['divChannel']=$str;
+		    
+		    $chid = $this->_params['chid'];
+		    $sql= "SELECT c.channel_name,ct.type_depth1,ct.type_depth2,ct.type_depth3,ct.type_depth4 ,ct.type_rate, mt.channeltypeId, mt.typeId
+        		    FROM tb_matchtype mt, tb_channeltypes ct,tb_channels c
+        		    WHERE mt.channeltypeId =ct.type_id AND ct.channelid=c.channel_id
+        		    AND mt.typeId=$chid;";
+		    $this->_model->setQuery($sql);
+		    $data = $this->_model->readAll();
+		    $str="";
+		    foreach ($data as $value => $giatri)
+		    {
+		        $str.=' <li data-typeId="'.$giatri['typeId'].'" data-channeltypeId="'.$giatri['channeltypeId'].'"> 
+                            '.$giatri['channel_name'].' &gt; '.$giatri['type_depth1'].' &gt; '.$giatri['type_depth2'].' &gt; '.$giatri['type_depth3'].' &gt '.$giatri['type_depth4'].'  : '.$giatri['type_rate'].'% 
+                            <input type="button" name="" class="btn hover small btndelmatchtype" value="삭제">	
+                        </li>
+        		      ';
+		    }
+		    $result['divmathtype']=$str;
+		    $result['flag']=true;
+		    
+		    echo json_encode($result);
+		}
+		
+		public function loadtypedepth1Ajax(){
+		    $result = ['flag'=>false];
+		    $channelId = $this->_params['channelId'];
+		    $sql='  SELECT * FROM tb_channeltypes ct
+                    WHERE ct.channelid='.$channelId.'
+                    GROUP BY ct.type_depth1 
+                    ORDER BY ct.type_id';
+		    $this->_model->setQuery($sql);
+		    $items = $this->_model->readAll();
+		    $str="";
+		    foreach ($items as $value => $giatri)
+		    {
+		        $str.=' <li data-channelId="'.$channelId.'" data-typedepth1="'.$giatri['type_depth1'].'" style="cursor: pointer;"> '.$giatri['type_depth1'].'</li> ';
+		    }
+		    $result['divtypedepth1']=$str;
+		    $result['flag']=true;
+		    
+		    echo json_encode($result);
+		}
+		
+		public function loadtypedepth2Ajax(){
+		    $result = ['flag'=>false];
+		    $channelId = $this->_params['channelId'];
+		    $typedepth1 = $this->_params['typedepth1'];
+		    $sql='  SELECT * FROM tb_channeltypes ct
+                    WHERE ct.channelid='.$channelId.' AND ct.type_depth1="'.$typedepth1.'"
+                    GROUP BY ct.type_depth1,ct.type_depth2
+                    ORDER BY ct.type_id';
+		    $this->_model->setQuery($sql);
+		    $items = $this->_model->readAll();
+		    $str="";
+		    foreach ($items as $value => $giatri)
+		    {
+		        $str.=' <li data-channelId="'.$channelId.'" data-typedepth1="'.$giatri['type_depth1'].'" data-typedepth2="'.$giatri['type_depth2'].'" style="cursor: pointer;"> '.$giatri['type_depth2'].'</li> ';
+		    }
+		    $result['divtypedepth2']=$str;
+		    
+		    $result['flag']=true;
+		    
+		    echo json_encode($result);
+		}
+		
+		public function loadtypedepth3Ajax(){
+		    $result = ['flag'=>false];
+		    $channelId = $this->_params['channelId'];
+		    $typedepth1 = $this->_params['typedepth1'];
+		    $typedepth2 = $this->_params['typedepth2'];
+		    $sql='  SELECT * FROM tb_channeltypes ct
+                    WHERE ct.channelid='.$channelId.' AND ct.type_depth1="'.$typedepth1.'" AND ct.type_depth2="'.$typedepth2.'"
+                    GROUP BY ct.type_depth1,ct.type_depth2,ct.type_depth3
+                    ORDER BY ct.type_id';
+		    $this->_model->setQuery($sql);
+		    $items = $this->_model->readAll();
+		    $str="";
+		    foreach ($items as $value => $giatri)
+		    {
+		        $str.=' <li data-channelId="'.$channelId.'" data-typedepth1="'.$giatri['type_depth1'].'" data-typedepth2="'.$giatri['type_depth2'].'" data-typedepth3="'.$giatri['type_depth3'].'" style="cursor: pointer;"> '.$giatri['type_depth3'].'</li> ';
+		    }
+		    $result['divtypedepth3']=$str;
+		    
+		    $result['flag']=true;
+		    
+		    echo json_encode($result);
+		}
+		public function loadtypedepth4Ajax(){
+		    $result = ['flag'=>false];
+		    $channelId = $this->_params['channelId'];
+		    $typedepth1 = $this->_params['typedepth1'];
+		    $typedepth2 = $this->_params['typedepth2'];
+		    $typedepth3 = $this->_params['typedepth3'];
+		    $sql='  SELECT * FROM tb_channeltypes ct
+                    WHERE ct.channelid='.$channelId.' AND ct.type_depth1="'.$typedepth1.'" AND ct.type_depth2="'.$typedepth2.'" AND ct.type_depth3="'.$typedepth3.'"
+                    GROUP BY ct.type_depth1,ct.type_depth2,ct.type_depth3,ct.type_depth4
+                    ORDER BY ct.type_id';
+		    $this->_model->setQuery($sql);
+		    $items = $this->_model->readAll();
+		    $str="";
+		    foreach ($items as $value => $giatri)
+		    {
+		        if($giatri['type_depth4']!="")
+		        $str.=' <li data-channelId="'.$channelId.'" data-typedepth1="'.$giatri['type_depth1'].'" data-typedepth2="'.$giatri['type_depth2'].'" data-typedepth3="'.$giatri['type_depth3'].'" data-typedepth4="'.$giatri['type_depth4'].'" style="cursor: pointer;"> '.$giatri['type_depth4'].'</li> ';
+		    }
+		    $result['divtypedepth4']=$str;
+		    
+		    $result['flag']=true;
+		    
+		    echo json_encode($result);
+		}
+		//savematchtype
+		public function  savematchtypeAjax(){
+		    $chid = $this->_params['chid'];
+		    $this->_model->deleteRecord('matchtype', [ "typeId" => $chid ]);
+		    
+		    $str="";
+    		    if(isset( $this->_params['channeltypeId'])){
+    		    $typeId = $this->_params['typeId'];
+    		    $channeltypeId= $this->_params['channeltypeId'];
+    		    
+    		    $result = ['flag'=>false];
+    		    
+    		    $result['typeId']=$typeId;
+    		    $result['channeltypeId']=$channeltypeId;
+    		    
+    		    foreach ($channeltypeId as $value => $giatri)
+    		    {
+    		        $sql="INSERT INTO `tb_matchtype` (`typeId`, `channeltypeId`, `datetime`) VALUES ('". $chid."', '".$giatri."', NOW())";
+    		        $this->_model->setQuery($sql);
+    		        $this->_model->execute();
+    		        $result['sql'][]=$sql;
+    		    }
+    		    $sql= "SELECT c.channel_name,ct.type_depth1,ct.type_depth2,ct.type_depth3,ct.type_depth4 ,ct.type_rate
+            		    FROM tb_matchtype mt, tb_channeltypes ct,tb_channels c
+            		    WHERE mt.channeltypeId =ct.type_id AND ct.channelid=c.channel_id
+            		    AND mt.typeId=$chid;";
+    		    $this->_model->setQuery($sql);
+    		    $data = $this->_model->readAll();
+    		    foreach ($data as $value => $giatri)
+    		    {
+    		        $str.='  <div class="form_group clearfix">
+            		        <div class="form_item col-xs-2">
+            		          <h3>'.$giatri['channel_name'].'</h3>
+            		        </div>
+            		        <div class="form_item col-xs-10">
+                		        <p>'.$giatri['type_depth1'].' &gt; '.$giatri['type_depth2'].' &gt; '.$giatri['type_depth3'].' &gt '.$giatri['type_depth4'].'  : '.$giatri['type_rate'].'% </p>
+            		        </div>
+            		        </div> ';
+    		    }
+		    }
+		    $result['divresult']=$str;
+		    $result['flag']=true;
+		    echo json_encode($result);
+		}
+		// Phương thức thêm mới một phân loại
+		public function addProductTypeAjax(){
+		    $result = ['flag'=>false];
+		    
+	        $chparentid = $this->_params['chparentid'];
+	        $chname = $this->_params['chname'];
+	        $chlevel = $this->_params['chlevel'];
+	        $productType = Structure::producttype([
+	            'type_parentid'=>$chparentid,
+	            'type_value'=>$chname,
+	            'type_level'=>$chlevel+1,
+	            'type_status'=>$this->_params['chstatus']
+	        ]);
+	        if(($typeid = $this->_model->insertProductType($productType)) != false){
+	            $result['flag'] = true;
+	            $productType['type_id'] = $typeid;
+	            $result['row'] ='<li>
+	                                   <label data-parentid="'.$productType['type_parentid'].'" data-typeid="'.$productType['type_id'].'" data-typestatus="'.$productType['type_status'].'" data-typelevel="'.$productType['type_level'].'" >'.$productType['type_value'].'</label>
+	                                   <input type="checkbox" id="level'.$productType['type_id'].'" /> 
+                                </li>';
+	        }
+		    echo json_encode($result);
+		}
+		
+		public function getchanneltypeIdAjax(){
+		    $result = ['flag'=>false];
+		    $channelId = $this->_params['channelid'];
+		    $typedepth1 = $this->_params['typedepth1'];
+		    $typedepth2 = $this->_params['typedepth2'];
+		    $typedepth3 = $this->_params['typedepth3'];
+		    $typedepth4 = $this->_params['typedepth4'];
+		    $sql='  SELECT ct.*,c.channel_name 
+                    FROM tb_channeltypes ct ,tb_channels c
+                    WHERE ct.channelid=c.channel_id AND ct.channelid='.$channelId.' AND ct.type_depth1="'.$typedepth1.'" 
+                        AND ct.type_depth2="'.$typedepth2.'" AND ct.type_depth3="'.$typedepth3.'" 
+                        AND ct.type_depth4="'.$typedepth4.'"
+                 ';
+		    $result['sql']=$sql;
+		    $this->_model->setQuery($sql);
+		    $items = $this->_model->readAll();
+		    $result['channeltypeId']=$items[0]['type_id'];
+		    $result['channelname']=$items[0]['channel_name'];
+		    $result['typerate']=$items[0]['type_rate'];
+		    echo json_encode($result);
+		}
+		// Phương thức chỉnh sửa tên product type
+		public function editProductTypeAjax(){		   
+		    $result = ['flag'=>false];
+		    if(isset($this->_params['chid']) && isset($this->_params['chname']) && isset($this->_params['chstatus'])){
+		        $producType = [
+		            'type_value'=>$this->_params['chname'],
+		            'type_modified'=>time(),
+		            'type_modified_by'=>Structure::getUserId(true),
+		            'type_status'=>$this->_params['chstatus']
+		        ];
+		        if($this->_model->updateProductType($producType, $this->_params['chid']) != false){
+		            $result['flag'] = true;
+		        }
+		    }
+		    echo json_encode($result);
+		}
+		// Phương thức xóa product types
+		public function deleteProductTypeAjax(){
+		    $result = ['flag'=>false];
+		    if(isset($this->_params['strchild'])){
+		        preg_match('/^[0-9,]+$/', $this->_params['strchild'], $matchs);
+		        if($matchs){
+		            if($this->_model->deleteProductType($matchs[0]) != false){
+		                $result['flag'] = true;
+		            }
+		        }
+		    }
+		    echo json_encode($result);
+		}
+		
+		// Phương thức hiển thị product type
+		public function viewProductTypeAjax(){		    
+		    $result = ['flag'=>false];
+		    if(isset($this->_params['pdmode'])){
+		        $pdmode = ($this->_params['pdmode']=='true')?true:false;
+		        $sql= "SELECT t1.*, (SELECT COUNT(*) FROM tb_producttypes t2  WHERE t2.type_parentid = t1.type_id) as hasChild
+                       FROM tb_producttypes as t1";
+		        if($pdmode == true){
+		            $sql .= ' WHERE type_status=1 AND type_id !=0';
+		        }else{
+		            $sql .= ' WHERE type_id !=0';
+		        }
+		        
+		        $this->_model->setQuery($sql);
+		        $data = $this->_model->readAll();
+		        foreach ($data as $value => $giatri)
+		        {
+		            $items[$giatri['type_id']] = array("parent_id" => $giatri['type_parentid'],
+		                "typeid" => $giatri['type_id'],
+		                "typestatus" => $giatri['type_status'],
+		                "typelevel" => $giatri['type_level'],
+		                "name" => $giatri['type_value'],
+		                "hasChild" => $giatri['hasChild']);
+		        }
+		        $str='';
+		        if(count($items) > 0){
+		            $str.=$this->generateTreeView($items, 0);
+		        }
+		        $str.='';
+		        
+	            $result['flag'] = true;
+	            Session::set('pdmode', $pdmode);
+	            $result['produttype'] = $str;
+		    }
+		    echo json_encode($result);
+		}
+		
+		// Phương thức phân loại kênh bán
+		public function saleAction(){
+		    $total = $this->_model->countChannelType();
+		    $items = $this->_model->loadChannelType();
+
+            $data[] = '';
+
+            $channelTotalByChannelId = $this->_model->countChannelTypeByChannelID();
+            foreach ($channelTotalByChannelId as $value) {
+                $data[$value['channelid']] = $value['total'];
+            }
+
+            $this->_view->setData('total', $total['record']);
+		    $this->_view->setData('channelType', Helper::createRowChannelType($items, $data));
+		    $this->_view->render('sale');
+		}
+		
+		// Phương thức kiểm tra channel id đã tồn tại
+		public function checkChennelIDAjax(){
+		    $result = ['flag'=>false];
+		    if(isset($this->_params['channelid'])){
+		        if($this->_model->loadChannel($this->_params['channelid']) == false){
+		            $result['flag'] = true;
+		        }
+		    }
+		    echo json_encode($result);
+		}
+		
+		// Phương thức load file excel đăng mới của kênh bán
+		public function importTypeAjax(){
+		    $result = ['flag'=>false];		  
+		    if(isset($this->_params['channelname']) && isset($this->_params['channelid'])){
+		        $format = Func::config('productTypeDownloadExcel');
+		        if($format){
+		            if(isset($_FILES['fileupload']) && $_FILES['fileupload']['error'] == 0){
+		                $fileUpload = new Upload('fileupload');
+		                $fileUpload->setFileExtension('xls, xlsx');
+		                if($fileUpload->isValidate()){
+		                    $excel = new OfficeExcel();
+		                    $dataExcel = $excel->read($fileUpload->getFileTmp(), $format['columns']);
+		                    if($dataExcel['success'] == true){
+		                        // Update channel
+		                        if(isset($this->_params['clcid']) && $this->_params['clid']){
+		                            // data
+		                            $channel = $this->_model->loadChannel($this->_params['clcid']);
+		                            if($channel){
+		                                $channeltype = $channel['channel_type'];		                                		                                   
+		                                // Update channel type		
+		                                $channelTypes = $this->_model->loadChannelTypes($this->_params['clid']);	
+		                                $channel = $this->importType($dataExcel['data'], $channel, $channelTypes);
+		                            }		                            	                           
+		                        }else{
+		                            // data
+		                            $channel = Structure::channels([
+		                                'channel_cid'=>mb_strtoupper($this->_params['channelid']),
+		                                'channel_name'=>$this->_params['channelname'],
+		                                'channel_type'=>1
+		                            ]);
+		                            // Insert channel		                            
+		                            if(($cid = $this->_model->insertChannel($channel)) != false){
+		                                $channel['channel_id'] = $cid;	
+		                                $channelTypes = [];
+		                                $channel = $this->importType($dataExcel['data'], $channel, $channelTypes);
+		                            }
+		                        }
+		                        $result['flag'] = true;		                        
+		                        $channel['ID'] = Session::get('accountshopping')['ID'];
+		                        $result['row'] = Helper::createRowChannelType([$channel]);
+		                    }else{
+		                        $result['error'] = $this->convertErrUpload($fileUpload->showError());
+		                    }
+		                }else{
+		                    $result['error'] = $fileUpload->showError();
+		                }
+		            }
+		        }
+		    }
+		    echo json_encode($result);
+		}
+		
+		public function importType($dataExcel, $channel, $channelTypes){
+		    if($dataExcel && $channel){
+		        $channeltype = $channel['channel_type'];
+		        foreach ($dataExcel as $key => $value){
+	                $flag = true;
+	                $typeUpdate = [
+	                    'type_linkform'=>$value['type_linkform'],
+	                    'type_rate'=>($value['type_rate']*100),
+	                    'type_status'=>(strtoupper($value['type_status'])=='Y'?1:0),
+	                    'type_apivalue2'=>$value['type_apivalue2']
+	                ];
+	                foreach ($channelTypes as $k => $v){
+	                    if($value['type_depth1']==$v['type_depth1'] && $value['type_depth2']==$v['type_depth2'] && $value['type_depth3']==$v['type_depth3'] && $value['type_depth4']==$v['type_depth4']){
+	                        // update
+	                        $flag = false;
+	                        $this->_model->updateRecord('channeltypes', $typeUpdate, ['type_id'=>$v['type_id']]);
+	                        break;
+	                    }
+	                }
+	                if($flag == true){
+	                    // insert
+	                    $channeltype++;
+	                    $value = array_merge($value, $typeUpdate);
+	                    $value['channelid'] = $channel['channel_id'];
+	                    $typeid = $this->_model->insertChannelType(Structure::channeltypes($value));
+	                    if($typeid){
+	                        $value['type_id'] = $typeid;
+	                        $channelTypes[] = $value;
+	                    }
+	                }
+	            }
+		        $channelUpdate = [
+		            'channel_cid'=>mb_strtoupper($this->_params['channelid']),
+		            'channel_name'=>$this->_params['channelname'],
+		            'channel_type'=>$channeltype,
+		            'channel_modified'=>time(),
+		            'channel_modified_by'=>Structure::getUserId()
+		        ];
+		        $this->_model->updateRecord('channels', $channelUpdate, ['channel_id'=>$channel['channel_id']]);
+		        return array_merge($channel, $channelUpdate);
+		    }
+		}
+		
+		// Phương thức download file excel
+		public function downloadChannelTypeAjax(){
+		    $result = ['flag'=>false];
+		    if(isset($this->_params['cid'])){
+		        $format = Func::config('productTypeDownloadExcel');
+		        $items = $this->_model->loadChannelTypes($this->_params['cid']);
+		        if($items && $format){
+		            $format['export']['titleName'] = $this->_params['titleName'];
+		            $format['export']['description'] = $this->_params['description'];
+		            $excel = new OfficeExcel();
+		            $result['link'] = $excel->writeChannel($format['filename'], $items, $format['columns'], $format['export']);
+		            $result['flag'] = true;
+		        }
+		    }
+		    echo json_encode($result);
+		}
+		
+		// Phương thức download file excel
+		public function downloadProductTypeAjax(){
+		    $result = ['flag'=>false];
+		    if(isset($this->_params['titleName']) && isset($this->_params['description'])){
+		        $format = Func::config('productTypeDownloadExcel');
+		        if($format){
+		            $items = $this->_model->loadProductTypesByLevel();
+		            if($items){
+		                $format['export']['titleName'] = $this->_params['titleName'];
+		                $format['export']['description'] = $this->_params['description'];
+		                //$items= Helper::productType($items);
+		                if($items){
+		                    $excel = new OfficeExcel();
+		                    $fileName = 't-bridge-type';
+                            $channel_id = 1;
+		                    $channelTypes1 = $this->_model->listChannelTypes($channel_id);
+		                    $matchTypes1 = $this->_model->listMatchTypes($channel_id);
+
+                            $channel_id = 2;
+                            $channelTypes2 = $this->_model->listChannelTypes($channel_id);
+                            $matchTypes2 = $this->_model->listMatchTypes($channel_id);
+
+                            $channel_id = 3;
+                            $channelTypes3 = $this->_model->listChannelTypes($channel_id);
+                            $matchTypes3 = $this->_model->listMatchTypes($channel_id);
+		                    $result['link'] = $excel->writeProductType($fileName, $items, $matchTypes1, $channelTypes1, $matchTypes2, $channelTypes2, $matchTypes3, $channelTypes3); //$excel->writeProductType($format['filename'], $items, $format['columns'], $format['export']);
+		                    $result['flag'] = true;
+		                }
+		            }
+		        }
+		    }
+		    //echo json_encode($result);
+		}		
+		
+		// Phương thức hiển thị thông tin chỉnh sửa channel
+		public function getchannelAjax(){
+		    $result = ['flag'=>false];
+		    if(isset($this->_params['cid']) && isset($this->_params['id'])){
+		        $item = $this->_model->loadChannel($this->_params['cid']);
+		        if($item){
+		            $result['flag'] = true;
+		            $result['channelname'] = $item['channel_name'];
+		            $result['channelcid'] = $item['channel_cid'];
+		        }
+		    }
+		    echo json_encode($result);
+		}
+	}
+?>

@@ -1,0 +1,482 @@
+<?php 
+    class OrderController extends Controller{        
+        // Phương thức khởi tạo
+        public function __construct($params){
+            parent::__construct($params);
+            $this->isLogin();
+            $account = $_SESSION['accountshopping'];
+            if($account['temp']==1)
+                Url::header($this->route('account')."#tab1");
+        }
+        // Phương thức index
+        public function indexAction(){ 
+            $rows= [];
+            $m_channel = array();
+            // Nhà cung cấp
+            $list_supplier = $this->_model->loadSupplier(Structure::getUserId());
+            $this->_view->setData('list_supplier', $list_supplier);
+            // Kênh bán
+            $list_channel = $this->_model->loadRecords('channels');
+            $this->_view->setData('list_channel', $list_channel);
+            foreach ($list_channel as $value => $giatri) {
+                $m_channel[]= $giatri['channel_id'];
+            }
+            $sqlheader  = 'SELECT tp.*,tk.statusTicket,tk.restoreTicket,  sc.travelProductId,   sp.sellerProductId,  sp.`name` as productname, c.channel_name, c.channel_id ';
+            $sqlcount = 'SELECT COUNT(tp.id) as record ';
+            $sql = ' FROM  `tb_ticketPurchasers` tp,`tb_ticket` tk, tb_salechannel sc,tb_channeltypes ct, tb_channels c, tb_sellerproduct sp ';
+            $sql .= ' WHERE tp.ticketNumber=tk.ticketNumber AND tp.dealId=sc.vendorItemPackageId
+                            AND sc.channelTypeId=ct.type_id AND ct.channelid=c.channel_id
+                            AND sc.sellerProductId=sp.sellerProductId ';
+            
+              
+            $account = $_SESSION['accountshopping'];
+            if($account['role']==0){
+             
+            }else{
+                $sql.= " AND (sp.creator='".$account['ID']."' OR sp.creator IN (SELECT u2.ID FROM tb_user u1 ,tb_user u2
+    			                                                                WHERE u1.ID = '".$account['ID']."' 
+                                                                                 AND u2.idx_parent=u1.idx) ) ";
+            }
+            if (isset($this->_params['m_search'])) {
+                $m_start = $this->_params['datestart'];
+                $m_end = $this->_params['dateend'];
+                $sql .= ' AND tp.purchaseDateTime BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59" ';
+                $m_supplier = $this->_params['m_supplier'];
+                if($m_supplier != 0){
+                    $sql .= ' AND sp.`supplier`='.$m_supplier;
+                }
+                $m_channel = array();
+                if (isset($this->_params['m_channel'])) {
+                    $m_channel = $this->_params['m_channel'];
+                    if (count($m_channel) > 0) {
+                        $sql .= " AND ( ";
+                        foreach ($m_channel as $value => $giatri) {
+                            $sql .= " c.`channel_id`=$giatri OR ";
+                        }
+                        $sql = mb_substr($sql, 0, - 3);
+                        $sql .= " ) ";
+                    }
+                }
+                // Khôi phục
+                $m_restore = 0;
+                if (isset($this->_params['m_restore'])){
+                    $m_restore = 1;
+                    $sql .= ' AND tk.`restoreTicket`>0';
+                }
+                // Trạng thái // 0 mua xong, 1 xử dụng xongm 2 hoàn tiền xong, -1 hết hiệu lực xử dụng
+                $sql .= " AND ( ";
+                $m_status1=0;
+                if (isset($this->_params['m_status1'])){
+                    $m_status1 = 1;
+                    $sql .= ' tk.`statusTicket` = 1 OR ';
+                }
+                $m_status2=0;
+                if (isset($this->_params['m_status2'])){
+                    $m_status2 = 1;
+                    $sql .= ' tk.`statusTicket` = 2 OR ';
+                }
+                $m_status_3=0;
+                if (isset($this->_params['m_status_3'])){
+                    $m_status_3 = 1;
+                    $sql .= ' tk.`statusTicket` = -3 OR ';
+                }
+                $m_status3=0;
+                if (isset($this->_params['m_status3'])){
+                    $m_status3 = 1;
+                    $sql .= ' tk.`statusTicket` = 3 OR ';
+                }
+                $m_status4=0;
+                if (isset($this->_params['m_status4'])){
+                    $m_status4 = 1;
+                    $sql .= ' tk.`statusTicket` = -1 OR ';
+                }
+                $sql = mb_substr($sql, 0, - 3);
+                $sql .= " ) ";
+                if( $m_status1==0 && $m_status2==0 && $m_status3==0 && $m_status4==0)
+                    $sql = mb_substr($sql, 0, -10);
+                
+                    
+                // Keyword
+                $m_key = $this->_params['m_key'];
+                $m_name = $this->_params['m_name'];
+                $conKeyId = [
+                    1 => 'sp.`name`',
+                    2 => 'tp.`optionName`',
+                    3 => 'tp.`userName`',
+                    4 => 'tp.`dealId`',
+                    5 => 'sp.`sellerProductId`',
+                    6 => 'sc.travelProductId',
+                    7 => 'tp.optionId'
+                ];
+                if($m_key==0){
+                    $sql .= ' AND (    '.$conKeyId[1].' LIKE "%'.$m_name.'%" 
+                                    OR '.$conKeyId[2].' LIKE "%'.$m_name.'%" 
+                                    OR '.$conKeyId[3].' LIKE "%'.$m_name.'%" 
+                                    OR '.$conKeyId[4].' LIKE "%'.$m_name.'%" 
+                                    OR '.$conKeyId[5].' LIKE "%'.$m_name.'%" 
+                                    OR '.$conKeyId[6].' LIKE "%'.$m_name.'%" 
+                                    OR '.$conKeyId[7].' LIKE "%'.$m_name.'%" )';
+                } else{
+                    $sql .= ' AND '.$conKeyId[$m_key].' LIKE "%'.$m_name.'%"';
+                }
+            }elseif(isset($this->_params['m_search_mobi'])) {      
+                //echo "aaa";
+                $text_input_boloc="";
+                $text_ten_phone_mave = $this->_params['text_ten_phone_mave'];
+                if($text_ten_phone_mave!=""){
+                    $sql .= ' AND (sp.`name` LIKE "%'.$text_ten_phone_mave.'%" OR tp.`phoneNumber` LIKE "%'.$text_ten_phone_mave.'%" OR tp.`ticketNumber` LIKE "%'.$text_ten_phone_mave.'%")';
+                }
+                //thoigian
+                $thoigian= $this->_params['thoigian'];
+                if($thoigian==0){
+                    $sql .='';
+                    $text_input_boloc.="#".$this->_view->getItem('language','l_toanbo');
+                    $m_start = date("Y-m-d");
+                    $m_end = date("Y-m-d");                    
+                }elseif($thoigian==1){//hôm qua
+                    $get_thoigian = mktime(0, 0, 0, date("m"), date("d")-1, date("Y"));
+                    $m_start=date("Y-m-d", $get_thoigian);
+                    $m_end=date("Y-m-d", $get_thoigian);
+                    $sql .= ' AND tp.purchaseDateTime BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59" ';
+                    $text_input_boloc.="#".$this->_view->getItem('language','l_homqua');
+                }elseif($thoigian==2){//hôm nay
+                    $get_thoigian = mktime(0, 0, 0, date("m"), date("d"), date("Y"));
+                    $m_start=date("Y-m-d", $get_thoigian);
+                    $m_end=date("Y-m-d", $get_thoigian);
+                    $sql .= ' AND tp.purchaseDateTime BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59" ';
+                    $text_input_boloc.="#".$this->_view->getItem('language','l_homnay');
+                }elseif($thoigian==3){//7 ngày gần nhất
+                    $get_thoigian = mktime(0, 0, 0, date("m"), date("d")-7, date("Y"));
+                    $m_start=date("Y-m-d", $get_thoigian);
+                    $m_end=date("Y-m-d");
+                    $sql .= ' AND tp.purchaseDateTime BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59" ';
+                    $text_input_boloc.="#".$this->_view->getItem('language','l_7ngay');
+                }elseif($thoigian==4){//1 tháng gần nhất
+                    $get_thoigian = mktime(0, 0, 0, date("m")-1, date("d"), date("Y"));
+                    $m_start=date("Y-m-d", $get_thoigian);
+                    $m_end=date("Y-m-d");
+                    $sql .= ' AND tp.purchaseDateTime BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59" ';
+                    $text_input_boloc.="#".$this->_view->getItem('language','l_1thang');
+                }elseif($thoigian==5){//3 tháng gần nhất
+                    $get_thoigian = mktime(0, 0, 0, date("m")-3, date("d"), date("Y"));
+                    $m_start=date("Y-m-d", $get_thoigian);
+                    $m_end=date("Y-m-d");
+                    $sql .= ' AND tp.purchaseDateTime BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59" ';
+                    $text_input_boloc.="#".$this->_view->getItem('language','l_3thang');
+                }elseif($thoigian==6){//6 tháng gần nhất
+                    $get_thoigian = mktime(0, 0, 0, date("m")-6, date("d"), date("Y"));
+                    $m_start=date("Y-m-d", $get_thoigian);
+                    $m_end=date("Y-m-d");
+                    $sql .= ' AND tp.purchaseDateTime BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59" ';
+                    $text_input_boloc.="#".$this->_view->getItem('language','l_6thang');
+                }else{// nhập trực tiếp
+                    $m_start = $this->_params['datestart'];
+                    $m_end = $this->_params['dateend'];
+                    $sql .= ' AND tp.purchaseDateTime BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59" ';
+                    $text_input_boloc.="#".$this->_view->getItem('language','l_tructiep');
+                }
+                $checked_kenh= $this->_params['checked_kenh'];  
+                
+                $mang_kenh=array();
+                if(count($checked_kenh)>0){
+                    $text_input_boloc.=" #";
+                    for($i=0;$i<count($checked_kenh);$i++){
+                        $kenh = explode("_", $checked_kenh[$i]);
+                        $kenh_id=$kenh[0];
+                        $mang_kenh[]=$kenh_id;
+                        $kenh_name=$kenh[1];
+                        $text_input_boloc.=$kenh_name." ";
+                        if($kenh_id!=0){
+                            $sql .= ' AND c.channel_id='.$kenh_id.'';                            
+                        }                        
+                    }
+                }
+                
+                $check_ncc= $this->_params['check_ncc'];
+                if($check_ncc!=""){
+                    $ncc = explode("_", $check_ncc);
+                    $ncc_id=$ncc[0];
+                    $ncc_name=$ncc[1];
+                    $text_input_boloc.=" #".$ncc_name;
+                    if($ncc_id!=0){
+                        $sql .= ' AND sp.supplier='.$ncc_id.'';                        
+                    }
+                }
+                $m_supplier = 0;
+                $m_restore = 0;
+                $m_status1=1;
+                $m_status2=1;
+                $m_status_3=1;
+                $m_status3=1;
+                $m_status4=1;
+                $m_key = 1;
+                $m_name = "";
+                //echo $sqlheader.$sql; die();
+            }elseif(isset($this->_params['m_search_mobi_home'])) {
+                
+                $text_ten_phone_mave = $this->_params['text_ten_phone_mave']; 
+                if($text_ten_phone_mave!=""){
+                    $sql .= ' AND (tp.`userName` LIKE "%'.$text_ten_phone_mave.'%" OR tp.`phoneNumber` LIKE "%'.$text_ten_phone_mave.'%" OR tp.`ticketNumber` LIKE "%'.$text_ten_phone_mave.'%")';                  
+                }
+                $thoigian=0;
+                $text_input_boloc="#".$this->_view->getItem('language', 'l_toanbo')." #".$this->_view->getItem('language', 'l_toanbo')." #".$this->_view->getItem('language', 'l_toanbo');//#Toàn bộ #Toàn bộ #Toàn bộ";
+                $m_start = date("Y-m-d");
+                $m_end = date("Y-m-d"); 
+                $mang_kenh=array(0);
+                $ncc_id=0;
+                $m_supplier = 0;
+                $m_restore = 0;
+                $m_status1=1;
+                $m_status2=1;
+                $m_status_3=1;
+                $m_status3=1;
+                $m_status4=1;
+                $m_key = 1;
+                $m_name = "";
+                //echo $sqlheader.$sql; die();
+            }else{
+                $m_start = date("Y-m-d");
+                $m_end = date("Y-m-d");
+                $m_supplier = 0;
+                $m_restore = 0;
+                $m_status1=1;
+                $m_status2=1;
+                $m_status_3=1;
+                $m_status3=1;
+                $m_status4=1;
+                $m_key = 1;
+                $m_name = "";
+                
+                $text_ten_phone_mave="";
+                $thoigian=0;
+                $text_input_boloc=$this->_view->getItem('language', 'l_boloc');
+                $ncc_id=0;
+                $mang_kenh=array(0);
+                if (isset($this->_params['method'])){
+                    $method=$this->_params['method'];                    
+                    if($method=='today'){
+                        $m_status1=1;
+                        $m_status2=1;
+                        $m_status_3=0;
+                        $m_status3=0;
+                        $m_status4=0;
+                        $m_start = date("Y-m-d");
+                        $m_end = date("Y-m-d");
+                        $sql .= ' AND ( tk.`statusTicket`=1 OR tk.`statusTicket`=2) ';
+                        $sql .= ' AND tp.`purchaseDateTime` BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59"';
+                    }elseif($method=='unuse'){
+                        $m_status1=1;
+                        $m_status2=0;
+                        $m_status_3=0;
+                        $m_status3=0;
+                        $m_status4=0;
+                        $m_start = date('Y-m-d');
+                        $m_end = date("Y-m-d");
+                        $sql .= ' AND tk.`statusTicket`=1';
+                        //$sql .= ' AND tp.`purchaseDateTime` BETWEEN "'.$m_start.' 00:00:00" AND "'.$m_end.' 23:59:59"';
+                    }elseif($method=='done'){
+                        $sql .= ' AND tk.`statusTicket`=1';
+                    }elseif($method=='use'){
+                        $sql .= ' AND tk.`statusTicket`=2';
+                    }elseif($method=='returnprice'){
+                        $sql .= ' AND tk.`statusTicket`=3';
+                    }elseif($method=='die'){
+                        $sql .= ' AND tk.`statusTicket`=-1';
+                    }elseif($method=='refundmoney'){
+                        $sql .= ' AND tk.`statusTicket`=-3';
+                    } 
+                }
+
+            } 
+            //echo $sqlheader.$sql;
+            $_SESSION['sqlorder'] = $sql;            
+            if($_SESSION['mobile']!=0){
+                $items = $this->_model->loadOrder($sqlheader.$sql,$sqlcount.$sql,100);
+                $pagination = $this->paginationParamsmobi($items['count'], $this->route('order',['method'=>'sale']));
+            }else{
+                $items = $this->_model->loadOrder($sqlheader.$sql,$sqlcount.$sql,DEFAULT_LENGTH);
+                $pagination = $this->paginationParams($items['count'], $this->route('order',['method'=>'sale']));
+            }
+            if($pagination){
+                $rows = $items['data'];           
+                $this->_view->setData('length', $pagination['length']);
+                $this->_view->setData('pagination', $pagination['pagination']);
+                $this->_view->setData('total', $pagination['count']);
+            }
+            
+            $this->_view->setData('length', $pagination['length']);
+            $this->_view->setData('pagination', $pagination['pagination']);
+            $this->_view->setData('total', $pagination['count']);
+            
+            $this->_view->setData('ordertbody', Helper::createRowOrder($rows));
+            
+            $this->_view->setData('ordertbody_mobi', Helper::createRowOrderMobi($rows));
+            
+            $this->_view->setData('m_start', $m_start);
+            $this->_view->setData('m_end', $m_end);
+            $this->_view->setData('m_channel', $m_channel);
+            $this->_view->setData('m_supplier', $m_supplier);
+            $this->_view->setData('m_restore', $m_restore);
+            $this->_view->setData('m_status1', $m_status1);
+            $this->_view->setData('m_status2', $m_status2);
+            $this->_view->setData('m_status_3', $m_status_3);
+            $this->_view->setData('m_status3', $m_status3);
+            $this->_view->setData('m_status4', $m_status4);
+            $this->_view->setData('m_key', $m_key);
+            $this->_view->setData('m_name', $m_name);
+            
+            if($_SESSION['mobile']!=0){
+                $this->_view->setData('text_ten_phone_mave', $text_ten_phone_mave);
+                $this->_view->setData('thoigian', $thoigian);
+                $this->_view->setData('text_input_boloc', $text_input_boloc);
+                $this->_view->setData('ncc_id', $ncc_id);
+                $this->_view->setData('mang_kenh', $mang_kenh);
+                    $this->_view->setFileTemplate('web','temple_mobile');
+                    $this->_view->render('index_mobi');
+            }else{
+                    $this->_view->render('index');
+            }
+            
+        }
+        
+        // Phương thức index
+        public function statusTicketAction(){           
+            $rows= [];
+            $m_channel = array();
+            $statusTicket=$this->_params['statusTicket'];
+            $text_input_boloc=$this->_view->getItem('language', 'l_boloc'); 
+            // Nhà cung cấp
+            $list_supplier = $this->_model->loadSupplier(Structure::getUserId());
+            $this->_view->setData('list_supplier', $list_supplier);
+            // Kênh bán
+            $list_channel = $this->_model->loadRecords('channels');
+            $this->_view->setData('list_channel', $list_channel);
+            foreach ($list_channel as $value => $giatri) {
+                $m_channel[]= $giatri['channel_id'];
+            }
+            $sqlheader  = 'SELECT tp.*,tk.statusTicket,tk.restoreTicket,  sc.travelProductId,   sp.sellerProductId,  sp.`name` as productname, c.channel_name ';
+            $sqlcount = 'SELECT COUNT(tp.id) as record ';
+            $sql = ' FROM  `tb_ticketPurchasers` tp,`tb_ticket` tk, tb_salechannel sc,tb_channeltypes ct, tb_channels c, tb_sellerproduct sp ';
+            $sql .= ' WHERE tp.ticketNumber=tk.ticketNumber AND tp.dealId=sc.vendorItemPackageId
+                            AND sc.channelTypeId=ct.type_id AND ct.channelid=c.channel_id
+                            AND sc.sellerProductId=sp.sellerProductId ';
+            $account = $_SESSION['accountshopping'];
+            if($account['role']==0){
+             
+            }else{
+                $sql.= " AND (sp.creator='".$account['ID']."' OR sp.creator IN (SELECT u2.ID FROM tb_user u1 ,tb_user u2
+    			                                                                WHERE u1.ID = '".$account['ID']."' 
+                                                                                 AND u2.idx_parent=u1.idx) ) ";
+            }
+            $sql .= ' AND ( tk.`statusTicket`='.$statusTicket.') ';       
+            
+            //echo $sqlheader.$sql; die();            
+            //echo $sqlheader.$sql;
+            $_SESSION['sqlorder'] = $sql;
+            //echo $sqlheader.$sql; die();
+            $items = $this->_model->loadOrder($sqlheader.$sql,$sqlcount.$sql,DEFAULT_LENGTH);            
+            $pagination = $this->paginationParams($items['count'], $this->route('orderstatus',['statusTicket'=>$statusTicket]));
+            if($pagination){
+                $rows = $items['data'];           
+                $this->_view->setData('length', $pagination['length']);
+                $this->_view->setData('pagination', $pagination['pagination']);
+                $this->_view->setData('total', $pagination['count']);
+            }
+            $this->_view->setData('ordertbody', Helper::createRowOrderStatusTicket($rows));
+            $this->_view->setData('statusTicket', $statusTicket);
+            $this->_view->setData('text_input_boloc', $text_input_boloc);
+            if($_SESSION['mobile']!=0){
+                    $this->_view->setFileTemplate('web','temple_mobile');
+                    $this->_view->render('statusticket_mobi');
+            }else{
+                    $this->_view->render('index');
+            }            
+            
+        }
+        // Phương thức tìm kiếm và phân trang
+        public function searchAndPaginationAjax(){
+            $result = ['flag'=>false];
+            $length = ($this->_params['length'] ? $this->_params['length'] : DEFAULT_LENGTH);
+            $page = ($this->_params['page'] ? $this->_params['page'] : 1);
+            $begin = ($page - 1) * $length;
+            
+            $sqlheader  = 'SELECT tp.*,tk.statusTicket,tk.restoreTicket,  sc.travelProductId,   sp.sellerProductId,  sp.`name` as productname, c.channel_name ';
+            $sqlcount = 'SELECT COUNT(tp.id) as record ';
+            $sql= $_SESSION['sqlorder'] ;
+            $items = $this->_model->loadOrder($sqlheader.$sql,$sqlcount.$sql,$length,$begin);
+            $pagination = $this->paginationParams($items['count'], $this->route('order',['method'=>'sale']));
+            if($pagination){
+                $result = $pagination;
+                $result['rows'] = Helper::createRowOrder($items['data']);
+                $result['flag'] = true;
+            }
+            echo json_encode($result);
+        }
+        // Phương thức tìm kiếm và phân trang mobi
+        public function searchAndPaginationMobiAjax(){
+            $result = ['flag'=>false];
+            $length = ($this->_params['length'] ? $this->_params['length'] : DEFAULT_LENGTH);
+            $page = ($this->_params['page'] ? $this->_params['page'] : 1);
+            $begin = ($page - 1) * $length;
+            
+            $sqlheader  = 'SELECT tp.*,tk.statusTicket,tk.restoreTicket,  sc.travelProductId,   sp.sellerProductId,  sp.`name` as productname, c.channel_name ';
+            $sqlcount = 'SELECT COUNT(tp.id) as record ';
+            $sql= $_SESSION['sqlorder'] ;
+            $items = $this->_model->loadOrder($sqlheader.$sql,$sqlcount.$sql,$length,$begin);
+            $pagination = $this->paginationParams($items['count'], $this->route('order',['method'=>'sale']));
+            if($pagination){
+                $result = $pagination;
+                $result['rows'] = Helper::createRowOrderMobi($items['data']);
+                $result['flag'] = true;
+            }
+            echo json_encode($result);
+        }
+        // Phương thức thay đổi trạng thái
+        public function changeStatusAjax(){
+            $result = ['flag'=>false];
+            if(isset($this->_params['status'])){
+                foreach ($this->_params['status'] as $key => $value){
+                    $statusTicket=$value['status'];
+                    if($value['status']==2){
+                        $value['status'] = 1;
+                        $value['restore'] = 1;
+                    }else{
+                        $value['status'] = 2;
+                    }
+                    $result['id'][] = $value['id'];
+                    $result['statusid'][] = $value['status'];
+                    $result['restoreid'][] = $value['restore'];
+                    $this->_model->changeStatusTicket($value['id'], $value['status'], $value['restore']);
+                    
+                }
+                $count_total_status = $this->_model->countOrderStatus($statusTicket);
+                $status = Helper::statusOrder($value['status']);
+                $result['flag'] = true;
+                $result['status'] = $status['name'];
+                $result['action'] = $status['action'];
+                $result['restore'] = ($value['restore']?'Y':'-');
+                $result['spantotal'] = $count_total_status;
+            }
+            echo json_encode($result);
+        }
+        // Phương thức download file excel
+        public function downloadExcelAjax(){         
+            $format = Func::config('orderDownloadExcel');
+            if($format){
+                $sqlheader  = 'SELECT tp.*,tk.statusTicket,tk.restoreTicket,  sc.travelProductId, sp.sellerProductId,  sp.`name` as productname, c.channel_name ';
+                //$sqlcount = 'SELECT COUNT(tp.id) as record ';
+                $sql= $_SESSION['sqlorder'] ;
+                $items = $this->_model->downloadExcel($sqlheader.$sql);
+                if($items){                     
+                    $format['export']['titleName'] = $this->_params['titleName'];
+                    $format['export']['description'] = $this->_params['description'];                        
+                    $excel = new OfficeExcel();
+                    $excel->write($format['filename'], $items, $format['columns'], $format['export']);
+                } 
+            }                               
+            
+        }
+    
+    }
+
+?>

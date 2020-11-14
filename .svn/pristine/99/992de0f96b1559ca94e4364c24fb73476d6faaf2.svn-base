@@ -1,0 +1,55 @@
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+
+class NaverController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    public function register_stream_wrapper($projectId)
+    {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+    
+    // Phương thức index
+    public function indexAction() {
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        //https://nid.naver.com/nidlogin.login
+        $crawler = $client->request('POST', 'https://nid.naver.com/nidlogin.login');
+        $form = $crawler->filter('#frmNIDLogin')->form();
+        $crawler = $client->submit($form, array(
+                                    'id' => '0604057',
+                                    'pw' => 'yakeun87!@'
+        ));
+        $crawler = $client->request('GET', 'https://partner.booking.naver.com/booking-list-view');
+        echo '<pre>';
+        print_r($crawler);
+        echo '</pre>';
+        //56ad7bb155beb3562e5e65421d4c93f6f7118a167deb3aef1245d6819ccba6a6b093c14925763a8ad23fde69de1a973dd22b1839504bca2f1e00f043eac83cf7416ad6ebd84d93356a4838fb9e84f7a75e6dcb3f17348e45fca0608f71f5d37f81a222b4c83fc3935eec9e783ce0f6ea99edbfb45d296bfe706931f8e1d3927d
+        //http://localhost:8000/testNaver/index.php?
+        
+        localechange=
+        &encpw=8018a618da30609d36ef004720c6aa47bc4bbb77fc3e0f93bccd7ddce4f306aad9ab1cad0f2906a933376c8099dbe8175efbfdfb887e3b7b5df80f5f52fe10a07c3a79b7229b428a24c4183e2dbc0900d39783ffca64ae1eadc232e11e2f7fbeb2328d6090825fd088ab53212ffcc790436e9c96cd84868ba3a1aaacf1c2803e
+        &enctp=1
+        &svctype=1
+        &smart_LEVEL=1
+        &bvsd=N4IgLiBcIOwMwCYDGAjAZgBgIYFoAmAHCgTgCwEZo4CcpAjHDujNTAggKwBsBCGOGEABoQAZyghhIALZQEI0SigYFSZSICuSyCpAa1keeAB223WGMGjYAxgC%2BQA
+        &encnm=100015621
+        &locale=en_US
+        &url=https%3A%2F%2Fwww.naver.com
+        &id=&pw=
+        
+        
+    }
+}
+
+?>

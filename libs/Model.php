@@ -1,0 +1,265 @@
+<?php
+class Model {
+	protected $_pdo = NULL;
+	protected $_sta = NULL;
+	protected $_host = DB_HOST;
+	protected $_user = DB_USER;
+	protected $_pwd = DB_PWD;
+	protected $_database = DB_NAME;
+	protected $_table = '';
+	protected $_prefix = DEFAULT_PREFIX;
+	protected $_sql = '';
+	protected $_error = false;
+	
+	// Phương thức khởi tạo
+	public function __construct($params = array()) {
+		if ($params) {
+			$this->_host = $params ['host'];
+			$this->_user = $params ['user'];
+			$this->_pwd = $params ['pwd'];
+			$this->_database = $params ['database'];
+		}
+		$this->connect ();
+	}
+	
+	// Phương thức kết nối cơ sở dữ liệu
+	public function connect() {
+		try {
+			$this->_pdo = new PDO ( $this->_host . ';dbname=' . $this->_database, $this->_user, $this->_pwd );
+			$this->_pdo = new PDO ( $this->_host . ';dbname=' . $this->_database, $this->_user, $this->_pwd );
+			$this->_pdo->query ( 'set names "utf8"' );
+		} catch ( PDOException $ex ) {
+			die ( $ex->getMessage () );
+		}
+	}
+	
+	// Phương thức thiết lập tên database
+	public function setDatabase($database) {
+		$this->_database = $database;
+	}
+	
+	// Phương thức thiết lập tên bảng
+	public function setTable($table = NULL) {
+		if (! empty ( $table )) {
+			$this->_table = $this->_prefix . $table;
+			return $this->_table;
+		}
+	}
+	
+	// FUNCTION SET QUERY
+	public function setQuery($sql) {
+		$this->_sql = $sql;		
+	}
+	
+	// Phương thức thực thi câu truy vấn
+	public function execute($options = array()) {
+	    //echo '<h3>'.$this->_sql.'</h3>';
+		$this->_sta = $this->_pdo->prepare ( $this->_sql );
+		if ($options) {
+			for($i = 0; $i < count ( $options ); $i ++) {
+				$this->_sta->bindParam ( $i + 1, $options [$i] );
+			}
+		}		
+		$this->_sta->execute ();
+		return $this->_sta;
+	}
+	
+	// Phương thức đọc môtk dòng dữ liệu $fetch=true trả về Array; $fetch=false trả về Object
+	public function read($fetch = true) {
+	    if (! $result = $this->execute ()) {
+	        return false;
+	    }
+	    if ($fetch == true) {
+	        return $result->fetch ( PDO::FETCH_ASSOC );
+	    } else {
+	        return $result->fetch ( PDO::FETCH_OBJ );
+	    }
+	}
+	
+	// Phương thức đọc nhiều dòng dữ liệu $fetch=true trả về Array; $fetch=false trả về Object
+	public function readAll($fetch = true, $options = array()) {	  
+	    if ($options) {
+	        if (! $result = $this->execute ( $options )) {
+	            return false;
+	        }
+	    } else {
+	        if (! $result = $this->execute ()) {
+	            return false;
+	        }
+	    }	  
+	    if ($fetch == true) {
+	        return $result->fetchAll ( PDO::FETCH_ASSOC );
+	    } else {
+	        return $result->fetchAll ( PDO::FETCH_OBJ );
+	    }
+	}
+
+    // Phương thức tạo dòng dữ liệu insert hoặc update
+    public function createData($option = array(), $type = "insert")
+    {
+        if ($option) {
+            $data = array();
+            if ($type == "insert") {
+                $cols = $vals = '';
+                foreach ($option as $key => $value) {
+                	$cols .= ", `$key`";
+                	$vals .= is_null($value) ? (", NULL") : (", '".addslashes($value)."'");
+                }
+                $data['cols'] = substr($cols, 2);
+                $data['vals'] = substr($vals, 2);
+                return $data;
+            }
+            if ($type == "update") {
+                foreach ($option as $key => $value) {
+                    $data[] = "`" . $key . "`='" . addslashes($value) . "'";
+                }
+                return implode(',', $data);
+            }
+        }
+        $this->_error = true;
+    }
+
+    // Phương thức tạo điều kiện truy vấn
+    public function createWhere($option = array(), $concat = false)
+    {
+        $sql = '';
+        if ($option) {
+            if (isset($option['where'])) {
+                $sql = $option['where'];
+            }else{
+                $str= '';
+                foreach ($option as $key => $value) {
+                    $str .= " AND `" . addslashes($key). "`='" . addslashes($value) . "'";
+                }
+                $sql = substr($str, 5);
+            }
+            if($concat == false){
+                $sql = ' WHERE ' . $sql;
+            }else{
+                $sql = ' AND ' . $sql;
+            }
+        }
+        return $sql;
+    }
+
+    // Phương thức tạo tùy chọn cho SQL
+    public function createOptions($options = []){
+        $sql = '';
+        $default = [
+            'limit' => [
+                'position' => 0,
+                'length' => DEFAULT_LENGTH
+            ]
+        ];
+        $options = array_merge($default, $options);        
+        if ($options) {
+            if (array_key_exists('sort', $options)) {
+                $column = isset($options['sort']['column']) ? $options['sort']['column'] : NULL;
+                $order = isset($options['sort']['order']) ? $options['sort']['order'] : NULL;
+                if($column !== NULL && $order !== NULL){
+                    $sql .= ' ORDER BY ' . addslashes($column) . ' ' . addslashes($order);
+                }
+            }
+            if (array_key_exists('limit', $options)) {
+                $position = isset($options['limit']['position']) ? $options['limit']['position'] : 0;
+                $length = isset($options['limit']['length']) ? $options['limit']['length'] : 50;
+                $sql .= ' LIMIT ' . addslashes($position) . ', ' . addslashes($length);
+            }
+        }
+        return $sql;
+    }
+    
+    // Phương thức tạo string từ mảng truy vấn
+    public function convertId($option = array())
+    {
+        $array = array();
+        if($option){
+	        foreach ($option as $value) {
+	            $value = trim($value);
+	            if (! empty($value)) {
+	                $array[] = "'" . trim($value) . "'";
+	            }
+	        }
+        }
+        return implode(',', $array);
+    }
+
+    // Phương thức đếm dòng trả về khi truy vấn
+    public function getRowCount()
+    {
+        return $this->_sta->rowCount();
+    }
+
+    // Phương thức trả về id cuối cùng của bảng
+    public function getLastId()
+    {
+        return $this->_pdo->lastInsertId();
+    }
+
+    // Phương thức thêm một dòng dữ liệu
+    public function insertRecord($table, $data)
+    {
+        $data = $this->createData($data);
+        if (! $this->_error) {
+            $this->_sql = 'INSERT INTO `' . $this->setTable($table) . '` (' . $data['cols'] . ') VALUES (' . $data['vals'] . ')';
+            echo '<h3>'.$this->_sql.'</h3>';
+            $this->execute();
+            return $this->getLastId();
+        }
+        return false;
+    }
+   
+    // Phương thức cập nhật một hoặc nhiều dòng dữ liệu
+    public function updateRecord($table, $data, $where)
+    {
+        $data = $this->createData($data, 'update'); 
+        $where = $this->createWhere($where);
+        if (! $this->_error) {
+            $this->_sql = 'UPDATE `' . $this->setTable($table) . '` SET ' . $data .  $where;
+            //echo '<h3>'.$this->_sql.'</h3>';
+            $this->execute();
+            return $this->getRowCount();
+        }
+        return false;
+    }
+    
+    // Phương thức load một dòng dữ liệu từ bảng
+    public function loadRecord($table, $where = array(), $fetch = true)
+    {
+        $this->_sql = 'SELECT * FROM `'. $this->setTable($table) . '`' . $this->createWhere($where);
+        return $this->read($fetch);
+    }
+    
+    // Phương thức load nhiều dòng dữ liệu từ bảng
+    public function loadRecords($table, $where = array(), $fetch = true, $options = array())
+    {
+       $this->_sql = 'SELECT * FROM `' . $this->setTable($table) . '`' . $this->createWhere($where) . $this->createOptions($options);
+       //echo '<h3>'.$this->_sql.'</h3>';
+        return $this->readAll($fetch);
+    }
+    
+    // Phương thức xóa một hoặc nhiều dòng
+    public function deleteRecord($table, $where)
+    {
+        if ($table && $where) {
+            $this->_sql = "DELETE FROM `" . $this->setTable($table) .'`'. $this->createWhere($where);
+            $this->execute();
+            return $this->getRowCount();
+        }
+        return false;
+    }
+
+    // Phước thức ngắt kết nối database
+    public function disconnect()
+    {
+        $this->_pdo = NULL;
+    }
+
+    // Phương thức ngắt kết nối database tự động
+    public function __destruct()
+    {
+       $this->disconnect();
+    }
+
+}
+?>

@@ -1,0 +1,248 @@
+<?php
+$account = $_SESSION['accountshopping'];
+$page = $this->getData('page');
+
+$m_start = $this->getData('m_start');
+$m_end = $this->getData('m_end');
+$m_supplier = $this->getData('m_supplier');
+$m_channel = $this->getData('m_channel');
+$m_status = $this->getData('m_status');
+$m_key = $this->getData('m_key');
+$m_name = $this->getData('m_name');
+
+$list_supplier = $this->getData('supplierSelect');
+$list_channel = $this->getData('list_channel');
+?>
+
+<link rel="stylesheet" type="text/css" href="<?= URL_PUBLIC ?>css/jquery-ui.css" />
+<script type="text/javascript" src="<?= URL_PUBLIC ?>js/jquery-ui.js"></script>
+<script type="text/javascript">
+    window.onload = function () {
+        document.multiselect('#channelSelect');
+    };
+
+    $(document).ready(function () {
+        $.onchangetime = function (name) {
+            var d = new Date();
+            $('input.datepick[name="dateend"]').val($.getFormattedDate(d.getFullYear(), (d.getMonth() + 1).toString(), d.getDate().toString()));
+            $.datepickMilisecond('input.datepick[name="dateend"]');
+            if (name == 'week') {
+                d.setDate(d.getDate() - 7);
+            }
+            if (name == 'month') {
+                d.setMonth(d.getMonth() - 1);
+            }
+            if (name == 'threemonth') {
+                d.setMonth(d.getMonth() - 3);
+            }
+            $('input.datepick[name="datestart"]').val($.getFormattedDate(d.getFullYear(), (d.getMonth() + 1).toString(), d.getDate().toString()));
+            $.datepickMilisecond('input.datepick[name="datestart"]');
+        }
+        $('.changepick').on('click', function () {
+            $(this).closest('td').find('input.btn').removeClass('active');
+            $(this).addClass('active');
+            $.onchangetime($(this).attr('name'));
+        });
+        //$('.btn.changepick[name="week"]').click();
+
+        // Hiển thị form trả lời hoặc chỉnh sửa câu hỏi
+        $('#question').on('click', '.manager', function () {
+            var qsid = $(this).attr('data-qsid');
+            var channel= $(this).attr('data-channel');
+            var dealid = $(this).attr('data-dealid');
+            if(channel=="TMON")
+            	window.open("http://www.tmon.co.kr/deal/"+dealid);
+            if(channel=="COUPANG")
+            	window.open("https://trip.coupang.com/tp/products/"+dealid);
+            /*var qsid = $(this).attr('data-qsid');
+            if ($.isNumeric(qsid)) {
+                $.fn_ajax('viewform', {'qsid': qsid}, function (result) {
+                    if (result.flag == true) {
+                        $.fn_popup(true, 'question');
+                        $($.elt_popup).find('.question .content p a').attr('href', result.qsproductlink).text(result.qsproduct);
+                        $($.elt_popup).find('.question .content input').val(result.qsmessage);
+                        $($.elt_popup).find('.question .content textarea').val(result.qsreply);
+                        //$($.elt_popup).find('.question .content p').html(result.qsreply.length+"/100 "+'<?= $this->language('l_warnname') ?>');
+                        $($.elt_popup).find('.question .control input').attr({'data-qsid': result.qsid, 'data-createdreply': result.createdreply});
+                    }
+                });
+            }*/
+        });
+        // Thực hiện trả lời hoặc chỉnh sửa câu trả lời
+        $($.elt_popup + ' .question form').on('submit', function () {
+            var qsid = $(this).find('.control input').attr('data-qsid');
+            //var createdreply = $(this).find('.control input').attr('data-createdreply');
+            var messagereply = $(this).find('textarea').val();
+            if (messagereply && qsid && createdreply) {
+                $.fn_popup(false, 'question');
+                $.fn_ajax('excuteform', {'qsid': qsid, 'messagereply': messagereply}, function (result) {
+                    if (result.flag == true) {
+                        var element = $('#question .manager[data-qsid="' + qsid + '"]').val('<?= $this->language('l_edit') ?>').closest('tr');
+                        //$(element).find('td:nth-child(12)').text(result.createdreply);
+                        $(element).find('td:nth-child(3)').text('<?= $this->language('l_anwserdone') ?>');
+                    }
+                }, true);
+            }
+            return false;
+        });
+        // Thay đổi số dòng hiển thị trên một trang
+        $('div.question').on('change', 'select.select', function () {
+            var length = $(this).val();
+            if (length) {
+                $.fn_ajax('pagination', {'page': 1, 'length': length}, function (result) {
+                    $.fn_result(result);
+                }, true);
+            }
+            return false;
+        });
+        // Thực hiện phân trang
+        $('div.question').on('click', '.pagination a', function () {
+            var length = $(this).attr('data-length');
+            var page = $(this).attr('data-page');
+            if (length && page) {
+                $.fn_ajax('paginationmobi', {'page': page, 'length': length}, function (result) {
+                    $.fn_result(result);
+                    return false;
+                }, true);
+            }
+            return false;
+        });
+        // Hàm xử lý kết quả trả về		
+        $.fn_result = function (data) {
+            if (data.flag == true) {
+                document.getElementById('divquestionbody').innerHTML = data.divquestionbody;
+                document.getElementById('divpaging').innerHTML = data.divpaging;
+            }
+        }
+        // Thực hiện tại xuất file excel
+        $('button.downloadExcel').on('click', function (result) {
+            var tbody = $('.table').find('td.empty');
+            if (tbody.length > 0) {
+                //
+            } else {
+                var titleName = $('#contents .ct_head h3').text();
+                var description = $('#contents .ct_head p').text();
+                if (titleName && description) {
+                    window.open(encodeURI(jsData.urlAjax + 'downloadExcel?titleName=' + titleName + '&description=' + description));
+                }
+            }
+        });
+    });
+</script>
+<div class="t_cauhoi" id="question">
+    <div style="position: fixed;background: #fff;z-index: 5;width: 100%; top: 0px;">
+        <div class="t_header_cauhoi">
+            <a href="<?= $this->route('dashboard') ?>">
+                <img style="margin-top: 5px;" src="<?= URL_PUBLIC ?>temple_mobile/img/back.png" alt=""/>
+            </a>
+            <h2><?= $this->language('l_question1') ?></h2>
+        </div>
+        <div class="t_menu_cauhoi">
+            <ul>
+                <li class="t_active"><a href="<?= $this->route('question', ['method' => 'unreply']) ?>"><?= $this->language("l_toanbo") ?></a></li>
+                <?php foreach ($list_channel as $value => $giatri) { ?>
+                    <li><a href="<?= $this->route('questionchannel') ?>/<?= $giatri[1] ?>"><?= $giatri[1] ?></a></li>
+                <?php } ?>
+            </ul>
+        </div>
+    </div>
+    <div class="t_cauhoi_count question" style="margin-top: 79px;">
+        <div class="form_table form_group">
+            <div class="table_head bgwhite">
+                <div class="ctrl_head clearfix">
+                    <div class="title">
+                        <h3><?= $this->language('l_mbtotal') . $this->getData('total') ?> <?= $this->language('l_notification16') ?></h3>
+                    </div>
+                </div>
+            </div>  
+        </div>
+
+        <div id="divquestionbody">
+            <?= $this->getData('question_mobi') ?>
+        </div>                         
+        <div id="divpaging">
+            <?= $this->getData('pagination') ?>
+        </div>
+        <div class="cl"></div>
+    </div>
+    <div class="t_home_short">
+        <p>티브리지(주)  대표이사 : 000</p>
+        <p>사업자 등록번호 000-00-00000</p>
+        <p>서울시 000 00000</p>
+        <div class="t_home_short_a">
+            <button style="border: 0px; background: none;" type="button" name="popdieukhoan" id="popdieukhoan">⏐ <?= $this->language('l_dieukhoan') ?></button>
+            &nbsp;&nbsp;
+            <button style="border: 0px; background: none;" type="button" name="popchinhsach" id="popchinhsach">⏐ <?= $this->language('l_chinhsach') ?></button>                            
+        </div>
+
+    </div>
+    <div class="t_footer">
+        <div class="t_footer_1">
+            <a href="<?= $this->route('logout') ?>" title="<?= $this->language('l_areyousure') ?>" onclick="return confirm('<?= $this->language('l_areyousure') ?>');"><?= $this->language('l_logout') ?></a>
+        </div>
+        <div class="t_footer_2">
+            <a href="http://tbridge.lavianspa.com">
+                <input type="button" class="pcversion" value="PC버전" />
+            </a>
+        </div>
+    </div><div class="cl"></div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#popdieukhoan").on('click', function () {
+                $.fn_popup(true, 'popdieukhoan');
+                $("#rule1").addClass("active");
+                $("#rule2").removeClass("active");
+                $('.tab_content > div').hide();
+                $("#tab1a").show();
+            });
+            $("#popchinhsach").on('click', function () {
+                $.fn_popup(true, 'popdieukhoan');
+                $("#rule2").addClass("active");
+                $("#rule1").removeClass("active");
+                $('.tab_content > div').hide();
+                $("#tab2a").show();
+            });
+            if (location.hash) {
+                $('.tab_head a').removeClass('active');
+                $('.tab_head a[href=' + location.hash + ']').addClass('active');
+                $('.tab_content > div').hide();
+                $(location.hash + 'a').show();
+            }
+            $(".form_tab .tab_head").on('click', 'a', function () {
+                var id = $(this).attr('data-tab');
+                if (id) {
+                    $(this).closest('ul').find('a').removeClass('active');
+                    $(this).addClass('active');
+                    $('.tab_content > div').hide();
+                    $('#' + id + 'a').show();
+                }
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('.pcversion').on('click', function () {
+                $.fn_ajax('setversion', {}, function (result) {
+                    window.location = "<?= $this->route('dashboard') ?>";
+                    return false;
+                }, true);
+            });
+        });
+    </script>
+    <style>
+        div.form_tab .tab_head li a.active {
+            background: #fff;
+            border-bottom: 3px solid red;
+            border-right: 0px;
+            color: red;
+        }
+        div.form_tab .tab_head li a {
+            background: #fff;
+            color: #000;
+            border: 0px;
+            height:44px;
+        }
+        div.form_tab .tab_content {border-top: 0px !important;}
+    </style>
+    <div class="cl"></div>
+</div>

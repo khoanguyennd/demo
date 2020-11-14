@@ -1,0 +1,149 @@
+<?php 
+if(isset($_POST['encryptedLoginName'])){
+    
+}else{
+$time = round(microtime(true) * 1000); ?>
+<script type="text/javascript" src="https://www.11st.co.kr/js/common/rsa.js?noCache=<?=$time?>"></script>
+<form name="login_form" method="POST" action="">
+        <input type="hidden" id="encryptedLoginName" name="encryptedLoginName" value="">
+        <input type="hidden" id="encryptedPassWord" name="encryptedPassWord" value="">
+        <input type="hidden" id="priority" name="priority" value="">
+        <input type="hidden" name="authMethod" value="login">
+        <input type="hidden" name="returnURL" value="">
+        <input type="hidden" name="loginName" id="user-id"  value="ysjlabs">
+        <input type="hidden" id="passWord" name="passWord" value='yakeun87!@' >
+
+</form>
+
+<script>
+function checkForm() {
+    var form = document.login_form;
+    try {
+        if(rsa){
+
+            try{
+                form.priority.value=93;
+                form.encryptedLoginName.value=rsa.encrypt('ysjlabs');
+                form.encryptedPassWord.value=rsa.encrypt('yakeun87!@');
+                form.loginName.value = "";
+                form.passWord.value = "";
+            }catch(ex){
+                Logger.LoggingMsg('ID/PW RSA encrypt 오류');
+            }
+        }
+    } catch(ex){
+        Logger.LoggingMsg('로그인 자바스크립트 오류');
+    }
+
+    form.submit();
+}
+checkForm();
+</script>
+<?php }?>
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+class ST11stController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    public function register_stream_wrapper($projectId)
+    {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+    function callAPI($method, $url, $data) {
+        
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                    break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        //echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+       
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'Content-Type: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
+        ));
+     
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            //die("Connection Failure");
+        }
+        echo $result;
+        curl_close($curl);
+        return json_decode($result,true);
+    }
+    // Phương thức index
+    public function indexAction() {
+        echo $_POST['encryptedLoginName'];
+        $data =[    'encryptedLoginName' => $_POST['encryptedLoginName'],
+                    'encryptedPassWord' => $_POST['encryptedPassWord'],
+                    'priority' => 93,
+                    'authMethod' => 'login',
+                    'returnURL' => 'http://buy.11st.co.kr/order/OrderList.tmall',
+                    'loginName' => '',
+                    'passWord' => '' ,
+                    'autoId' => 'N'  ,
+                    'referer'=>'',
+                    'protocol'=> 'https',
+                    'age19'=> 'N',
+                    'captchaResponse'=>'',
+                    'etcTokenKey' =>''
+        ];
+        
+        //         $obj = $this->callAPI("POST", "https://login.11st.co.kr/auth/front/logincheck.tmall", $data);
+//         echo "<pre>";
+//         print_r($obj);
+
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $crawler = $client->request('GET', 'https://login.11st.co.kr/auth/front/login.tmall');
+        $crawler = $client->request('POST', 'https://login.11st.co.kr/auth/front/logincheck.tmall',$data);
+        $crawler = $client->request('GET', 'https://buy.11st.co.kr/order/OrderList.tmall');
+//         http://buy.11st.co.kr/order/OrderList.tmall
+//         ?currpageNo=
+//         &pageNumber=1
+//         &pageNumberPendingDone=1
+//         &pageNumberPendingFail=1
+//         &shDateFrom=20200531
+//         &shDateTo=20200730
+//         &shPrdNm=
+//         &shOrdprdStat=%2C%2C%2C%2C
+//         &type=orderList2nd
+//         &ver=02
+//         &nDate=16%3A33%3A42%2C+30%2F7%2F2020
+       //$crawler = $client->request('GET', 'http://www.11st.co.kr/html/main.html');
+         
+        echo '<pre>';
+        print_r($crawler);
+        echo '</pre>';
+       // 
+
+        
+    }
+}
+
+?>

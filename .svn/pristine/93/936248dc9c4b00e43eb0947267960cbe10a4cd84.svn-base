@@ -1,0 +1,134 @@
+<?php
+return [
+    'columns' => [
+        [
+            'title' => '옵션명(필수)',
+            'key' => 'name',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '인원유형',
+            'key' => 'rateType',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '기준가격근거(필수)',
+            'key' => 'priceType',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '과세',
+            'key' => 'taxType',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '판매가(필수)',
+            'key' => 'price',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '최대판매수량(필수)',
+            'key' => 'amount',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '판매상태(필수)',
+            'key' => 'onSale', //
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '판매시작일(필수)',
+            'key' => 'useStartedAt1',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '판매종료일(필수)',
+            'key' => 'useEndedAt1',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '유효기간시작일(바우처상품만 필수)',
+            'key' => 'saleStartedAt1',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+        [
+            'title' => '유효기간종료일(바우처상품만 필수)',
+            'key' => 'saleEndedAt1',//
+            'formatCode' => '0',
+            'styleArray' => 0,
+            'type' => 'export, import'
+        ],
+    ],
+    'filename' => 'product',
+    'export' => [
+        'titleName' => '',
+        'description' => '',
+        'format' => [
+            'date' => [],
+            'numeric' => []
+        ],
+        'insert' => [
+            'rateType' => [
+                'BASIC' => '해당없음',
+                'ADULT_DAEIN_AND_CHILD_SOIN' => '대인/소인동일',
+                'ADULT' => '성인',
+                'ADULT_DAEIN' => '대인',
+                'UNIVERSITY_STUDENT' => '대학생',
+                'HIGH_SCHOOL_STUDENT' => '고등학생',
+                'MIDDLE_SCHOOL_STUDENT' => '중학생',
+                'SCHOOL_CHILD' => '초등학생',
+                'HIGH_AND_MIDDLE_SCHOOL_STUDENT' => '중고생',
+                'ELEMENTARY_MIDDLE_AND_HIGH_SCHOOL_STUDENT' => '초중고생',
+                'TEENS' => '청소년',
+                'STUDENT' => '학생',
+                'PRESCHOOL_CHILD' => '미취학아동',
+                'CHILD' => '아동',
+                'CHILD_SOIN' => '소인',
+                'TODDLER' => '유아',
+                'INFANT' => '영아'
+            ],
+            'priceType' => [
+                'COUPANG_PRICE' => '쿠팡 가격',
+                'TOTAL_PRODUCT_PRICE' => '총 상품 가격',
+                'OWN_COMPANY_PRICE' => '자사 홈페이지가',
+                'OWN_COMPANY_MALL_SALE_PRICE' => '자사몰 판매가',
+                'ONLINE_SALE_PRICE' => '온라인 판매가',
+                'TRAVEL_AGENCY_SPECIAL_PRICE' => '여행사 특가',
+                'RESERVATION_SALE_PRICE' => '예매처 판매가',
+                'HOMEPAGE_SALE_PRICE' => '홈페이지 판매가',
+                'SITE_SALE_PRICE' => '현장 판매가'     
+            ],
+            'taxType' => [
+                'TAX' => '과세 (기본값)',
+                'FREE' => '면세',
+                'ZERO' => '영세'   
+            ],
+            'onSale' => [
+                '0' => '판매중지',
+                '1' => '판매중'
+            ]              
+        ]
+    ]
+];
+
+?>

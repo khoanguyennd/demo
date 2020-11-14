@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="f5cf1fee-e763-4e39-ae93-3be4738d5f0c" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="ProjectId" id="1bYxXDwjOho5YeHts4KwSM3X9N0" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../tmobile" />
+    <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
+    <property name="node.js.path.for.package.eslint" value="project" />
+    <property name="node.js.path.for.package.tslint" value="project" />
+    <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.PHP" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\xampp\htdocs\t_bridge\application\model" />
+    </key>
+  </component>
+  <component name="SvnConfiguration" cleanupOnStartRun="true">
+    <configuration useDefault="false">C:\Users\LG\AppData\Roaming\Subversion</configuration>
+    <supportedVersion>125</supportedVersion>
+    <option name="runUnderTerminal" value="true" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f5cf1fee-e763-4e39-ae93-3be4738d5f0c" name="Default Changelist" comment="" />
+      <created>1588822865764</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1588822865764</updated>
+      <workItem from="1588822868033" duration="3762000" />
+      <workItem from="1594602422850" duration="25925000" />
+      <workItem from="1594688344668" duration="78000" />
+      <workItem from="1594688574302" duration="1883000" />
+      <workItem from="1594690693522" duration="24353000" />
+      <workItem from="1594775279224" duration="12812000" />
+      <workItem from="1594788138885" duration="2108000" />
+      <workItem from="1594795159615" duration="12869000" />
+      <workItem from="1594861458323" duration="20865000" />
+      <workItem from="1594947984184" duration="12716000" />
+      <workItem from="1595034393019" duration="3471000" />
+      <workItem from="1595207130455" duration="28243000" />
+      <workItem from="1595293772718" duration="17119000" />
+      <workItem from="1595325313259" duration="1004000" />
+      <workItem from="1595379824487" duration="12466000" />
+      <workItem from="1595409990689" duration="2776000" />
+      <workItem from="1595466148446" duration="22553000" />
+      <workItem from="1595552797176" duration="26574000" />
+      <workItem from="1595639273994" duration="2353000" />
+      <workItem from="1595811748406" duration="735000" />
+      <workItem from="1595898152503" duration="598000" />
+      <workItem from="1595899325420" duration="5777000" />
+      <workItem from="1595984579766" duration="596000" />
+      <workItem from="1595986328759" duration="492000" />
+      <workItem from="1595986831257" duration="10286000" />
+      <workItem from="1596010057262" duration="787000" />
+      <workItem from="1596010856562" duration="5792000" />
+      <workItem from="1596071322226" duration="27690000" />
+      <workItem from="1596157836954" duration="631000" />
+      <workItem from="1596158484809" duration="15733000" />
+      <workItem from="1596416549307" duration="18554000" />
+      <workItem from="1596502804386" duration="599000" />
+      <workItem from="1596505234561" duration="2380000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="426" y="108" key="#Inspections" timestamp="1588834453843">
+      <screen x="0" y="0" width="1600" height="860" />
+    </state>
+    <state x="426" y="108" key="#Inspections/0.0.1600.860@0.0.1600.860" timestamp="1588834453843" />
+    <state x="507" y="73" key="#PHP" timestamp="1588823295399">
+      <screen x="0" y="0" width="1600" height="860" />
+    </state>
+    <state x="507" y="73" key="#PHP/0.0.1600.860@0.0.1600.860" timestamp="1588823295399" />
+    <state x="765" y="202" key="#com.intellij.ide.util.MemberChooser" timestamp="1595233293222">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="765" y="202" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1595233293222" />
+    <state x="696" y="224" key="FileChooserDialogImpl" timestamp="1596505857221">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="580" y="185" key="FileChooserDialogImpl/0.0.1600.860@0.0.1600.860" timestamp="1594609547520" />
+    <state x="696" y="224" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1596505857221" />
+    <state x="301" y="75" key="SettingsEditor" timestamp="1588823087808">
+      <screen x="0" y="0" width="1600" height="860" />
+    </state>
+    <state x="301" y="75" key="SettingsEditor/0.0.1600.860@0.0.1600.860" timestamp="1588823087808" />
+    <state width="498" height="446" key="SwitcherDM" timestamp="1595558845069">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="498" height="446" key="SwitcherDM/0.0.1920.1040@0.0.1920.1040" timestamp="1595558845069" />
+    <state x="777" y="317" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1595233204432">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="777" y="317" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040@0.0.1920.1040" timestamp="1595233204432" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1596443697806">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1596443697806" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/application/controller/Ticket4Controller.php</url>
+          <line>307</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/language/VN.php</url>
+          <line>565</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

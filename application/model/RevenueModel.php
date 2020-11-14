@@ -1,0 +1,247 @@
+<?php class RevenueModel extends Model{
+	
+	// Phương thức khới tạo
+	public function __construct(){
+		parent::__construct();
+	}
+
+	// Phương thức tạo câu lệnh sql01
+	public function createSql01(){
+	    return 'SELECT c.channel_id, c.channel_cid , c.channel_name, u.idx, u.ID, s.* ';
+	}
+	
+	// Phương thức tạo câu lệnh sql01
+	public function createSql02(){	   
+	    return 'FROM `'.$this->setTable('user').'` u, `'.$this->setTable('channels').'` c, `'.$this->setTable('channeltypes').'` ct, `'.$this->setTable('settlementchannel').'` s
+                WHERE c.channel_id=ct.channelid AND ct.type_id=s.channelTypeId AND s.supplier=u.idx ';
+	}
+	
+	// Phương thức tạo câu lệnh sql03
+	public function createSql03(){
+	    return ' AND s.`modified` BETWEEN "'.date('Y-m-d 00:00:00', time()).'" AND "'.date('Y-m-d 23:59:59', time()).'"';
+	}
+	
+	// Phương thức tạo câu lệnh sql04
+	public function createSql04(){
+	    return 'SELECT s.*, u.ID as supplier 
+                FROM `'.$this->setTable('settlementuser').'` s, `'.$this->setTable('user').'` u 
+                WHERE s.supplierId=u.idx ';
+	    
+	}
+	
+	// Phương thức tạo câu lệnh sql05
+	public function createSql05(){
+	    return ' AND s.`modified` BETWEEN "'.date('Y-m-d 00:00:00', strtotime("-1 months")).'" AND "'.date('Y-m-d 23:59:59', time()).'" ';
+	}
+	
+	// Phương thức lấy ra danh sách nhà cung cấp
+	public function loadSupplier($fetch = true){
+	    $sql = 'SELECT idx, ID FROM `'.$this->setTable('user').'`';
+	    $this->setQuery($sql);
+	    return $this->readAll($fetch);
+	}
+
+	// Phương thức count settlement
+	public function countSettlement($sql,$fetch = true){	    
+	    //$sql = 'SELECT COUNT(c.channel_id) as record '. $this->createSql02() . $this->createSql03();
+	    $this->setQuery($sql);
+	    return $this->read($fetch);
+	}
+	
+	// Phương thức lấy ra danh sách quyết toán
+	public function loadSettlement($sql,$length, $begin = 0, $fetch = true){
+	    //$sql = $this->createSql01() . $this->createSql02() . $this->createSql03();
+	    $sql .= $this->createOptions([
+    	    'sort'=>[
+    	        'column'=>'settlementday',
+    	        'order'=>'DESC'
+    	    ],
+    	    'limit'=>[
+    	        'position'=>$begin,
+    	        'length'=>$length
+    	    ]
+	    ]);	   
+	    $this->setQuery($sql);
+	    return $this->readAll($fetch);
+	}
+	
+    //Phương thức xuất ra chi tiết quyết toán
+
+
+	// Phương thức tìm kiếm quyết toán
+	public function searchSettlement($sql,$sql1,$length,$begin){
+        $sql .= $this->createOptions([
+            'sort'=>[
+                'column'=>'settlementday',
+                'order'=>'DESC'
+            ],
+            'limit'=>[
+                'position'=>$begin,
+                'length'=>$length
+            ]]);
+	    
+	    // count
+	    $this->setQuery($sql1);
+	    $count = $this->read();
+	    $data = [];
+	    if($count){
+	        // data
+	        $this->setQuery($sql);
+	        $data= $this->readAll();
+	    }
+	    return [
+	        'count'=>($count['record'])?$count['record']:0,
+	        'data'=>$data
+	    ];
+	}
+	
+    // phương thức lấy dữ liệu tạo quyết toán tự động
+	public function loadSettlementAuto1($fetch = true){
+	    //quyết toán trên kênh , vé đã sử dụng và hết hạn
+       $sql = 'SELECT sc.channelId, sp.supplier, 
+							         SUM(case when tk.statusTicket = 2 or tk.statusTicket = -1 then 1 else 0 end) as countid, 
+                        			SUM(case when tk.statusTicket = 2 or tk.statusTicket = -1 then tk.price else 0 end) as ticketprice, 
+                        			SUM(case when tk.statusTicket = 2 or tk.statusTicket = -1 then ((tk.price * sc.type_rate)/100) else 0 end) as feetotal, 
+                        			SUM(IF(tk.statusTicket=2,tk.totalAmount,0)) as quantitysolduse, 
+                        			SUM(IF(tk.statusTicket=-1,tk.totalAmount,0)) as quantitysoldexpired, 
+                        			SUM(IF(tk.statusTicket=2,tk.price,0)) as amountsolduse, 
+                        			SUM(IF(tk.statusTicket=-1,tk.price,0)) as amountsoldexpired 
+                 FROM tb_ticket tk, tb_ticketPurchasers tp, tb_salechannel sc,tb_sellerproduct sp, tb_channels c
+                WHERE tp.ticketNumber=tk.ticketNumber AND sc.vendorItemPackageId=tp.dealId AND sc.channelId=c.channel_id AND c.channel_cid="COUPANG"
+                			AND sc.sellerProductId=sp.sellerProductId AND tp.settlementStatus=0 AND tk.statusTicket !=3 
+                GROUP BY sc.channelId, sp.supplier';
+        $this->setQuery($sql);
+        return $this->readAll($fetch);
+    }
+    
+    // phương thức lấy dữ liệu tạo quyết toán tự động , vé đã sử dụng và hết hạn
+    public function loadSettlementAuto2($fetch = true){
+        $sql = 'SELECT sp.creator, sp.supplier, 
+									SUM(case when tk.statusTicket = 2 or tk.statusTicket = -1 then 1 else 0 end) as countid, 
+									SUM(case when tk.statusTicket = 2 or tk.statusTicket = -1 then tk.price else 0 end) as ticketprice, 
+                        			SUM(case when tk.statusTicket = 2 or tk.statusTicket = -1 then ((tk.price * sc.type_rate)/100) else 0 end) as feetotal, 
+                        			SUM(IF(tk.statusTicket=2,tk.totalAmount,0)) as quantitysolduse, 
+                        			SUM(IF(tk.statusTicket=-1,tk.totalAmount,0)) as quantitysoldexpired, 
+                        			SUM(IF(tk.statusTicket=2,tk.price,0)) as amountsolduse, 
+                        			SUM(IF(tk.statusTicket=-1,tk.price,0)) as amountsoldexpired 
+                FROM tb_ticket tk, tb_ticketPurchasers tp, tb_salechannel sc,tb_sellerproduct sp
+                WHERE tp.ticketNumber=tk.ticketNumber AND sc.vendorItemPackageId=tp.dealId 
+                			AND sc.sellerProductId=sp.sellerProductId AND tp.settlementStatus=0 AND tk.statusTicket !=3   
+                GROUP BY sp.creator,  sp.supplier;';
+        $this->setQuery($sql);
+        return $this->readAll($fetch);
+    }
+    
+    // phương thức lấy dữ liệu tạo quyết toán tự động
+    public function loadSettlementAuto3($creator, $supplier, $fetch = true){
+        $sql = 'SELECT sp.creator, sp.supplier, ct.channelid, sp.sellerProductId, 
+                        SUM(case when tk.statusTicket = 2 or tk.statusTicket = -1 then 1 else 0 end) as countid, tk.price, 
+						SUM(case when tk.statusTicket = 2 or tk.statusTicket = -1 then tk.price else 0 end) as ticketprice, 
+            			SUM(case when tk.statusTicket = 2 or tk.statusTicket = -1 then ((tk.price * sc.type_rate)/100) else 0 end) as feetotal, 
+            			SUM(IF(tk.statusTicket=2,tk.totalAmount,0)) as quantitysolduse, 
+            			SUM(IF(tk.statusTicket=-1,tk.totalAmount,0)) as quantitysoldexpired, 
+            			SUM(IF(tk.statusTicket=2,tk.price,0)) as amountsolduse, 
+            			SUM(IF(tk.statusTicket=-1,tk.price,0)) as amountsoldexpired 
+                FROM tb_ticket tk, tb_ticketPurchasers tp, tb_salechannel sc,tb_sellerproduct sp, tb_channeltypes ct 
+                WHERE tp.ticketNumber=tk.ticketNumber AND sc.vendorItemPackageId=tp.dealId 
+                			AND sc.sellerProductId=sp.sellerProductId AND sc.channelTypeId=ct.type_id AND tp.settlementstatus=0 AND tk.statusTicket !=3 
+                			AND sp.creator="'.$creator.'" AND sp.supplier="'.$supplier.'" 
+                GROUP BY sp.creator,sp.supplier,ct.channelid,sp.sellerProductId,tk.price ';
+        $this->setQuery($sql);
+        return $this->readAll($fetch);
+    }
+    
+    // Phương thức cập nhật trạng thái sau khi loadSettlementAuto
+    public function updateSettlementAuto(){
+        return $this->updateRecord('ticketPurchasers', ['settlementStatus'=>1], []);
+    }
+    
+    // Phương thức count dữ liệu của bảng settlementuser
+    public function countSettlementUser($sql){
+        $this->setQuery($sql);
+        return $this->read();
+    }
+
+    // Calculate revenue products by Channel
+    public function calculateRevenueByChannel($sql, $length = 0, $position = 0, $fetch = true) {
+        if( $length != 0)
+            $sql .= $this->createOptions([
+                'limit'=>[
+                    'position'=>$position,
+                    'length'=>$length
+                ]
+            ]);
+
+        $this->setQuery($sql);
+        return $this->readAll($fetch);
+    }
+
+
+    // Phương thức load nhiều dòng dữ liệu của bảng settlementuser
+    public function loadSettlementUsers($sql, $length, $begin = 0, $fetch = true){
+        // Options
+        $sql .= $this->createOptions([
+            'sort'=>[
+                'column'=>'id',
+                'order'=>'DESC'
+            ],
+            'limit'=>[
+                'position'=>$begin,
+                'length'=>$length
+            ]
+        ]);       
+        $this->setQuery($sql);
+        return $this->readAll($fetch);
+    }
+    
+    // Phương thức load 1 dòng dữ liệu của bảng settlementuser
+    public function loadSettlementUser($sid, $fetch = true){
+        $sql = $this->createSql04() . ' AND s.`id`='.$sid;      
+        $this->setQuery($sql);
+        return $this->read($fetch);
+    }
+    
+    // Phương thức load dữ liệu của bảng settlementuserdetail
+    public function loadSettlementUserDetail($sid, $fetch = true){
+        // Chạy tạm
+        $sql = 'SELECT c.channel_name as channelname,sp.`name` as productname ,sud.* 
+                FROM tb_settlementuserdetail sud, tb_channels c, tb_sellerproduct sp
+                WHERE sud.channelId=c.channel_id 
+                AND sud.sellerProductId=sp.sellerProductId 
+                AND sud.settlementuserId='.$sid;
+        $this->setQuery($sql);
+        return $this->readAll($fetch);
+    }
+
+    // Phương thức tìm kiếm tình hình quyết toán
+    public function searchSettlementStatus($sql,$sql1,$length,$begin){
+        $sql .= $this->createOptions([
+            'sort'=>[
+                'column'=>'id',
+                'order'=>'DESC'
+            ],
+            'limit'=>[
+                'position'=>$begin,
+                'length'=>$length
+            ]]);
+        
+        // count
+        $this->setQuery($sql1);
+        $count = $this->read();
+        $data = [];
+        if($count){
+            // data
+            $this->setQuery($sql);
+            $data= $this->readAll();
+        }
+        return [
+            'count'=>($count['record'])?$count['record']:0,
+            'data'=>$data,
+            'sql'=>$sql,
+            'sql1'=>$sql1
+        ];
+    }
+
+}
+
+?>

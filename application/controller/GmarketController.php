@@ -1,0 +1,1387 @@
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+
+class GmarketController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+   
+    // Phương thức index
+    public function indexAction($StartDate = null, $EndDate = null) {
+        
+        $data =[    'Password' => 'yakeun87!@',
+                    'Type' => 'S',
+                    'ReturnUrl' => 'http://www.esmplus.com/Home/Home',
+                    'SiteType' => 'GMKT',
+                    'Id' => 'ysjlabs',
+                    'RememberMe' => 'true',
+                    'RememberMe' => 'false'  ];
+
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $client->request('POST', 'https://www.esmplus.com/SignIn/Authenticate',$data);
+        
+        if ($StartDate == null && $EndDate == null) {
+            $lastYear = date('Y') - 1;
+            $StartDate = $lastYear . "-" . date("m-d");
+            $EndDate = date('Y-m-d');  
+        }
+
+        //get total
+        $dataInputCount=[
+            'siteGbn' => 0,
+            'searchAccount' =>  '459268',
+            'searchDateType' => 'TRD',
+            'searchSDT' => $StartDate,
+            'searchEDT' => $EndDate,
+            'searchKey' => 'ON',
+            'searchKeyword' => '',
+            'searchStatus' => '5010',
+            'searchAllYn' => 'N',
+            'SortFeild' => 'TransDate',
+            'SortType' => 'Desc',
+            'start' => 0,
+            'searchDistrType' => 'AL',
+            'searchGlobalShopType' => '', 
+            'searchOverseaDeliveryYn'=> ''
+        ];
+        $client->request("POST", "https://www.esmplus.com/Escrow/Delivery/GetBuyDecisionTabCount", $dataInputCount);
+        $totalCount = json_decode($client->getResponse()->getContent(), true);
+        $maxPages = ceil((int)$totalCount["totalCnt"]/20);
+
+        $data = [             
+            'limit' => 20,
+            'siteGbn' => 0,
+            'searchAccount' => '459268',
+            'searchDateType' => 'TRD',
+            'searchSDT' => $StartDate,
+            'searchEDT' => $EndDate,
+            'searchKey' => 'ON',
+            'searchKeyword' => '',
+            'searchStatus' => '5010',
+            'searchAllYn' => 'N',
+            'SortFeild' => 'TransDate',
+            'SortType' => 'Desc',
+            'start' => 0,
+            'searchDistrType' => 'AL',
+            'searchGlobalShopType' => '',
+            'searchOverseaDeliveryYn' => ''            
+        ];
+
+        $orderGmarket = [];
+        for($i=1; $i <= $maxPages; $i++ ){
+            $data['page'] = $i;
+            $client->request('POST', 'https://www.esmplus.com/Escrow/Delivery/BuyDecisionSearch',$data);
+            $orderGmarket = array_merge($orderGmarket, json_decode($client->getResponse()->getContent(),true)['data']);
+        }
+  
+        $result = $this->insertOrderData($orderGmarket);
+        if($result){
+            //echo "update data successfully";
+        }
+    }
+
+   // Phương thức upload file của gmatket và lưu vào need_send_to_gmarket table
+   public function uploadProductGmarkAction($StartDate = null, $EndDate = null) {
+      if(isset($_FILES['fileToUpload'])) {
+         $office = new OfficeExcel(); 
+         // echo '<pre>';
+         // print_r($_FILES['fileToUpload']);
+         $dataExcel = $office->readUploadProductGmarket($_FILES['fileToUpload']['tmp_name'],  0); 
+
+         foreach ($dataExcel as $key =>$product) {
+            
+            // echo '<pre>';
+            // print_r($product); 
+
+            $data = [
+               'site' => trim($product['C']),
+               'salesID' => trim($product['D']),
+               'majorCategoryName' => trim($product['E']),
+               'middleCategoryName' => trim($product['F']),
+               'subClassificationName' => trim($product['G']),
+               'majorCategoryNameAuct' => trim($product['H']),
+               'middleCategoryNameAuct' => trim($product['I']),
+               'subClassificationNameAuct' => trim($product['J']),
+               'majorCategoryNameGmark' => trim($product['K']),
+               'middleCategoryNameGmark' => trim($product['L']),
+               'subClassificationNameGmark' => trim($product['M']),
+               'productNameForSearch' => trim($product['N']),
+               'PromotionalPrdName' => trim($product['O']),
+               'salePrice' => trim($product['P']),
+               'filePrdImage' => trim($product['Q']),
+               'filePrdImageDetail' => trim($product['R']),
+               'productGroup' => trim($product['S']),
+               'shippingPolicy' => trim($product['T']),
+               'shippingMethod' => trim($product['U']),
+               'setShippingCost' => trim($product['V']),
+               'createtime' => date( "Y-m-d h:i:s"),
+            ];
+
+            // echo '<pre>';
+            // print_r($data);
+            $insertS11St = $this->_model->insertRecord('need_send_to_gmarket', $data);
+            if ($insertS11St) echo 'Data insert is successful! at row: ' . ((int)$key + 5) . '</br>';
+            else echo 'Data insert is unsuccessful! at row: ' . ((int)$key + 5) . '</br>';
+         }
+
+      }else{
+      
+            echo '<form action="" method="POST" enctype="multipart/form-data" >
+                        <input type="file" name="fileToUpload"/>
+                        <input type="submit" name="submit" value="submit"/>  
+               </form>';
+      
+      }
+   }
+
+    // Phương thức upload
+    public function uploadproductAction($StartDate = null, $EndDate = null) {
+        
+        if(isset($_FILES['fileToUpload'])){
+            
+            $office = new OfficeExcel(); 
+            
+            $dataExcel = $office->readuploadProduct($_FILES['fileToUpload']['tmp_name'],  0); 
+//                             echo "<pre>";
+//                             print_r($dataExcel);
+            
+            
+            
+            foreach ($dataExcel as $key =>$product){                
+                
+                $SYIStep1=$this->getdataSYIStep1($product);
+                $SYIStep2=$this->getdataSYIStep2($product);
+                $SYIStep3=$this->getdataSYIStep3($product);
+                
+                $dataUpload = '{
+                           "model":{
+                              "GoodsNo":null,
+                              "SiteGoodsNo":null,
+                              "IsIacSellingStatus":"0",
+                              "IsIacSellingStatusSpecified":true,
+                              "CommandType":"1",
+                              "IsLeaseAllowedInIac":false,
+                              "CallFrom":"0",
+                              "SYIStep1": '.$SYIStep1.',
+                              "SYIStep2": '.$SYIStep2.',
+                              "SYIStep3": '.$SYIStep3.',
+                              "IsSingleGoods":false,
+                              "SiteGoodsNoIac":null,
+                              "SiteGoodsNoGmkt":null,
+                              "GoodsKind":null,
+                              "BarCode":null,
+                              "IsSiteDisplayIac":false,
+                              "IsSiteDisplayGmkt":false,
+                              "SellingStatusIac":null,
+                              "SellingStatusGmkt":null,
+                              "MasterId":null,
+                              "LoginId":null,
+                              "IsDeleteGroup":false,
+                              "EditorUseYn":null,
+                              "SdInfo":{
+                                 "SdCategoryCode":null,
+                                 "SdBrandName":null,
+                                 "SdMakerId":"0",
+                                 "SdMakerName":null,
+                                 "SdBrandId":"0",
+                                 "SdProductBrandId":"0",
+                                 "SdProductBrandName":null,
+                                 "EpinCodeList":[
+                                  
+                                 ],
+                                 "SdAttrMatchingList":[
+                                  
+                                 ],
+                                 "SdBasicAttrMatching":{
+                                    "SalesUnit":"0",
+                                    "SalesUnitSpecified":true,
+                                    "EaPerBox":"0",
+                                    "EaPerBoxSpecified":true,
+                                    "EaPerPack":"0",
+                                    "EaPerPackSpecified":true,
+                                    "TotalEa":"0",
+                                    "TotalEaSpecified":true,
+                                    "TotalUnitAmount":"0",
+                                    "TotalUnitAmountSpecified":true,
+                                    "UnitAttrSeq":"0",
+                                    "UnitAttrSeqSpecified":true,
+                                    "UnitAttrValueSeq":"0",
+                                    "UnitAttrValueSeqSpecified":true
+                                 },
+                                 "EpinCreateReqBarcode":null,
+                                 "EpinCreateReqModelName":null,
+                                 "EpinCreateReqModelNo":null
+                              },
+                              "BuyableQuantityMappingType":"1",
+                              "IsIacConvertToSingleGoods":false,
+                              "IsGmktConvertToSingleGoods":false,
+                              "AdminId":null
+                           }
+                        }';
+                
+            
+            $data =[    'Password' => 'yakeun87!@',
+                'Type' => 'S',
+                'ReturnUrl' => 'http://www.esmplus.com/Home/Home',
+                'SiteType' => 'GMKT',
+                'Id' => 'ysjlabs',
+                'RememberMe' => 'false'  ];
+            $client = new Client(HttpClient::create(['timeout' => 60]));
+            
+            $client->xmlHttpRequest('POST', 'https://www.esmplus.com/SignIn/Authenticate',$data);
+            
+            $client->xmlHttpRequest('GET', 'https://www.esmplus.com/Sell/Goods?menuCode=TDM352');
+            //$str='{"model":{"GoodsNo":null,"SiteGoodsNo":null,"IsIacSellingStatus":"0","IsIacSellingStatusSpecified":true,"CommandType":"1","IsLeaseAllowedInIac":false,"CallFrom":"0","SYIStep1":{"RegMarketType":"0","SiteSellerId":[{"key":"1","value":"ysjlabs"},{"key":"2","value":"ysjlabs"}],"CatalogId":"0","CatalogName":"","CatalogLowestPrice":"0","SellType":"1","GoodsType":"1","GoodsName":{"InputType":"1","GoodsName":"abcdef","SiteGoodsName":[{"key":"1","value":""},{"key":"2","value":""}],"SiteGoodsNameEng":[{"key":"1","value":""},{"key":"2","value":""}],"SiteGoodsNameChn":[{"key":"1","value":""},{"key":"2","value":""}],"SiteGoodsNameJpn":[{"key":"1","value":""},{"key":"2","value":""}],"UseSellerNicknameIac":false,"AdMessageIac":""},"SiteCategoryCode":[{"key":"1","value":"18541200"},{"key":"2","value":"100000005200000307300029701"}],"SiteGoodsClassList":[{"key":"1","value":""},{"key":"2","value":""}],"Book":{"STCode":"","IsSTCodeImage":false,"ISBNCode":"","IsbnCodeAllowYn":"","Name":"","Author":"","Publisher":"","Price":"0","PublishDate":null,"MakerName":"","MakerNo":"","BrandName":"","BrandNo":"0","ImgSmall":"","Title":"","Translater":""},"MakerId":"0","MakerName":"","UserDefineMakerName":"","BrandId":"0","BrandName":"","UserDefineBrandName":"","GmktShopKind1":"-1","GmktShopKind2":"-1","GmktShopKind3":"-1","StatusCode":"","StoreShopCategoryGoods":{"CategoryLevel":"0","ShopLCategoryCode":"00000000","ShopMCategoryCode":"00000000","ShopSCategoryCode":"00000000"},"MiniShopCategoryGoods":{"CategoryLevel":"0","ShopLCategoryCode":"00000000","ShopMCategoryCode":"00000000","ShopSCategoryCode":"00000000"},"IsTPLGoods":false,"AdminRestrict":"","SiteSellerAdjustCommissionPrice":{"IacOpenAdjustCommissionPrice":"0","IacSpecialAdjustCommissionPrice":"0","GmktOpenAdjustCommissionPrice":"0","GmktSpecialAdjustCommissionPrice":"0"},"CatalogInfo":{"CatalogId":"0","CatalogIdSpecified":true,"CatalogName":null,"LowestPrice":"0","LowestPriceSpecified":true,"ImageUrl":null,"MakerId":"0","MakerIdSpecified":true,"MakerName":null,"BrandId":"0","BrandIdSpecified":true,"BrandName":null,"ModelName":null,"MainDescription":null,"MatchingItemCount":"0","MatchingItemCountSpecified":true,"ProductionDate":null,"ProductionDateSpecified":false,"ProductionDateType":"0","ProductionDateTypeSpecified":true,"PriceRenovationDate":null,"PriceRenovationDateSpecified":false,"IsAdult":false,"IsAdultSpecified":true,"IsBook":false,"IsBookSpecified":true}},"SYIStep2":{"SellingStatus":"0","GoodsStatus":"1","UsedMonths":"","IsGMKTEnvironmentFriendlyCertType":false,"IsIACEnvironmentFriendlyCertType":false,"Price":{"InputType":"1","GoodsPrice":"1000","GoodsPriceIAC":"1000","GoodsPriceGMKT":"1000","IsUserCustomSettlementGMKT":false,"GoodsPriceSettlementGMKT":"0","BookPrice":"0","OrgGoodsPrice":""},"PricePerUnit":{"Unit":"","UnitPrice":""},"WirelessCallingPlan":{"PhoneFeeType":"0","PhoneFeeUrl":"","Plans":[],"MobilePhoneFeeUrl":""},"MobileDevicePrice":{"PhoneDevicePrice":"","PhoneSupportDiscount":"","MakerSupportDiscount":"","TeleComSupportDiscount":"","PhoneAddDiscount":"","PhoneInstallmentPrice":""},"Stock":{"InputType":"1","GoodsCount":"100","SiteGoodsCountNo":"0","BuyableQuantityType":"0","BuyableQuantity":"","BuyableQuantityDay":"","GoodsCountIAC":"100","GoodsCountGMKT":"100"},"Options":{"InputType":"1","OptVerType":"1","OptVerTypeIAC":"1","OptVerTypeGMKT":"1","JsonData":"","JsonDataIAC":"","JsonDataGMKT":"","JsonDataLegacy":null},"OrderOption":{"OptType":"0","StockMngIs":null,"UnifyStockIs":null,"OptionNameInfo":{"OptName1":null,"RcmdOptNo1":null,"OptName2":null,"RcmdOptNo2":null,"OptName3":null,"RcmdOptNo3":null,"OptionNameLangList":[]},"OptionInfoList":[]},"Additions":{"InputType":"1","JsonData":"","JsonDataIAC":"","JsonDataGMKT":"","JsonDataLegacy":null,"CommonGoodsNo":null,"IsUseCommonGoods":false},"AddonService":{"AddonServiceUseType":"0","AddonServiceList":[]},"SellingPeriod":{"InputType":"1","IAC":{"StartDate":"2020-10-01 00:00:00","EndDate":"2020-12-30 23:59:59"},"GMKT":{"StartDate":"2020-10-01 00:00:00","EndDate":"2020-12-30 23:59:59"},"History":[]},"PreSale":{"UseSettingIAC":"False","SaleStartDateIAC":"2020-10-01"},"GoodsImage":{"AdditionalImages":[],"PrimaryImage":{"Operation":"1","Url":"http://image.esmplus.com/c/20201001/17/089c910a8ce94036/0","BigImage":"true"},"ListImage":{"Operation":"1","Url":"http://image.esmplus.com/c/20201001/17/62c26bad064e471e/0","BigImage":"true"},"FixedImage":{"Operation":"1","Url":"http://image.esmplus.com/c/20201001/17/29a22b8eee0d4f5e/0","BigImage":"true"},"ExpandedImage":{"Operation":"1","Url":"http://image.esmplus.com/c/20201001/17/a02c99c04db449cf/0","BigImage":"true"},"AdditionalImagesSite":"3","AdditionalImagesStr":"[]"},"DescriptionTypeSpecified":true,"Description":{"InputType":"1","Text":"","TextIAC":"","TextGMKT":""},"NewDescription":{"InputType":"1","Text":"abcd","TextEng":"","TextChn":"","TextJpn":"","TextIAC":"","TextGMKT":"","TextAdd":"","TextAddEng":"","TextAddChn":"","TextAddJpn":"","TextAddIAC":"","TextAddGMKT":"","TextPrmt":"","TextPrmtIAC":"","TextPrmtGMKT":""},"ItemCode":"","CustCategoryNo":"0","CustCategory":"카테고리","ExpiryDate":"--","ExpiryDateSpecified":true,"LaunchingDate":"undefined-undefined-undefined","LaunchingDateSpecified":true,"ManufacturedDate":"--","ManufacturedDateSpecified":true,"Origin":{"ProductType":null,"Type":"0","Name":"","Code":"","IsMultipleOrigin":"false"},"LegacyRawMaterials":"null","RawMaterials":"null","Capacity":{"Volume":null,"Unit":"0","IsMultipleVolume":false},"Manual":null,"ECoupon":{"MoneyType":"0","Price":"0","Ratio":"0","CouponName":null,"ExpireType":"0","Expire1StartDate":"2020-10-01T08:32:43.894Z","Expire1EndDate":"2020-10-01T08:32:43.894Z","Expire2Start":"0","Expire2Duration":"0","UseTermType":"0","UseTerm1StartDate":"2020-10-01T08:32:43.894Z","UseTerm1EndDate":"2020-10-01T08:32:43.894Z","UseTerm2Start":"0","UseTerm2Duration":"0","isDiffDate":false,"CouponTemplate":"0","CouponImageUrl":null,"DownloadTemplate":"0","DownloadImageUrl":null,"ApplyPlace":null,"ApplyPlaceKind":"BranchAddress","AddressNo":null,"IsInformByAddress":false,"Address":null,"IsInformByURL":false,"URL":null,"ApplyPlacePriority":"0","MobileUseInfo":null,"MobileHelpDeskphoneNo":null,"TelephoneNo":null,"AdditionalBenefit":null,"HasRestrictCondition":false,"RestrictCondition":null,"Guide":null,"PublicationCorp":null,"PublicationCorpURL":null,"IsCustomerNameView":false},"DeliveryInfo":{"CommonDeliveryUseYn":true,"InvalidDeliveryInfo":false,"CommonDeliveryWayOPTSEL":"1","GmktDeliveryWayOPTSEL":"0","IsCommonGmktUnifyDelivery":false,"GmktDeliveryCOMP":"100000012","IacDeliveryCOMP":"10013","IsCommonVisitTake":false,"IsCommonQuickService":false,"IsCommonIACPost":false,"CommonIACPostType":"0","CommonIACPostPaidPrice":"0","IsGmktVisitTake":false,"IsGmktQuickService":false,"IsGmktTodayDEPAR":false,"IsGmktTodayDEPARAgree":false,"IsGmktVisitReceiptTier":false,"MountBranchGroupSeq":"0","CommonVisitTakeType":"0","CommonVisitTakePriceDcAmnt":"0","CommonVisitTakeFreeGiftName":null,"CommonVisitTakeADDRNo":null,"CommonQuickServiceCOMPName":null,"CommonQuickServicePhone":null,"CommonQuickServiceDeliveryEnableRegionNo":null,"ShipmentPlaceNo":"1235725","DeliveryFeeType":"1","BundleDeliveryYNType":"1","BundleDeliveryTempNo":"4970995","EachDeliveryFeeType":null,"EachDeliveryFeeQTYEachGradeType":null,"DeliveryFeeTemplateJSON":"{\"DeliveryFeeType\":0, \"DeliveryFeeSubType\":0, \"FeeAmnt\":0, \"PrepayIs\":false, \"CodIs\":false, \"JejuAddDeliveryFee\":5000, \"BackwoodsAddDeliveryFee\":7000, \"ShipmentPlaceNo\":1235725, \"DetailList\":[]}","EachDeliveryFeePayYn":null,"IsCommonGmktEachADDR":false,"ReturnExchangeADDRNo":"1851578","OldReturnExchangeADDR":null,"OldReturnExchangeADDRTel":null,"OldReturnExchangeSetupDeliveryCOMPName":null,"OldReturnExchangeDeliveryFeeStr":null,"ExchangeADDRNo":"","ReturnExchangeSetupDeliveryCOMP":null,"ReturnExchangeSetupDeliveryCOMPName":null,"ReturnExchangeDeliveryFee":"0","ReturnExchangeDeliveryFeeStr":"","IacTransPolicyNo":"597211","GmktTransPolicyNo":"597212","IsGmktIACPost":false},"IsAdultProduct":"False","IsVATFree":"False","ASInfo":null,"CertIAC":{"HasIACCertType":false,"MedicalInstrumentCert":{"ItemLicenseNo":null,"AdDeliberationNo":null,"IsUse":false,"CertificationOfficeName":null,"CertificationNo":null,"Operation":"0"},"BroadcastEquipmentCert":{"BroadcastEquipmentIs":false,"AddtionalConditionIs":false,"IsUse":false,"CertificationOfficeName":null,"CertificationNo":null,"Operation":"0"},"FoodCert":{"IsUse":false,"CertificationOfficeName":null,"CertificationNo":null,"Operation":"0"},"HealthFoodCert":{"AdDeliberationNo":null,"IsUse":false,"CertificationOfficeName":null,"CertificationNo":null,"Operation":"0"},"EnvironmentFriendlyCert":{"CertificationType":null,"isIACEnvironmentFriendlyCertType":false,"isGMKTEnvironmentFriendlyCertType":false,"CertBizType":null,"ProducerName":null,"PresidentInfoNA":null,"RepItemName":null,"InfoHT":null,"CertGroupType":null,"InfoEM":null,"CertStartDate":null,"CertEndDate":null,"InfoAD":null,"CertificationOfficeName":null,"CertificationExpiration":null,"IsUse":false,"CertificationNo":null,"Operation":"0"},"SafeCert":{"SafeCertType":"0","AuthItemType":"0","CertificationNo":null,"IsUse":null,"CertificationOfficeName":null,"Operation":"0"},"ChildProductSafeCert":{"ChangeType":"0","SafeCertDetailInfoList":null},"IntegrateSafeCert":{"ItemNo":null,"IntegrateSafeCertGroupList":[{"SafeCertGroupNo":"1","CertificationType":"1"},{"SafeCertGroupNo":"2","CertificationType":"1"},{"SafeCertGroupNo":"3","CertificationType":"1"}]}},"CertificationNoGMKT":"","LicenseSeqGMKT":[],"OfficialNotice":{"NoticeItemGroupNo":"18","NoticeItemCodes":[{"NoticeItemCode":"18-1","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-10","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-11","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-12","NoticeItemValue":"12시 이전 주문시 당일출고 (주말,공휴일 제외)"},{"NoticeItemCode":"18-2","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-3","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-4","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-5","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-6","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-7","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-8","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-9","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"999-5","NoticeItemValue":""}]},"ItemWeight":"0","SkuList":[],"SkuMatchingVerNo":"0","RentalAddInfo":null,"CertificationTextGMKT":null,"LicenseTextGMKT":null,"InventoryNo":null,"SingleSellerShop":null,"IsUseSellerFunding":null},"SYIStep3":{"G9RegisterCommand":"0","IsG9Goods":false,"IsOnlyG9Goods":false,"SellerDiscount":{"DiscountAmtIac1":"0","DiscountAmtIac2":"0","DiscountAmtGmkt1":"0","DiscountAmtGmkt2":"0","IsUsed":"2","IsUsedSpecified":true,"DiscountType":"1","DiscountTypeSpecified":true,"DiscountAmt":"0","DiscountAmtSpecified":true,"DiscountAmt1":"0","DiscountAmt1Specified":true,"DiscountAmt2":"0","DiscountAmt2Specified":true,"StartDate":"2020-10-01T08:32:43.895Z","StartDateSpecified":true,"EndDate":"9999-12-31T14:59:59.999Z","EndDateSpecified":true,"DiscountTypeIac":"0","DiscountTypeSpecifiedIac":false,"StartDateIac":"2020-10-01T08:32:43.895Z","StartDateSpecifiedIac":true,"EndDateIac":"9999-12-31T14:59:59.999Z","IacEndDateSpecified":true,"DiscountAmtIac":"0","DiscountAmtSpecifiedIac":true,"DiscountTypeGmkt":"0","DiscountTypeSpecifiedGmkt":false,"StartDateGmkt":"2020-10-01T08:32:43.895Z","StartDateSpecifiedGmkt":true,"EndDateGmkt":"9999-12-31T14:59:59.999Z","EndDateSpecifiedGmkt":true,"DiscountAmtGmkt":"0","DiscountAmtSpecifiedGmkt":true},"FreeGift":{"IsUsed":"2","IsUsedSpecified":true,"IsOnly":"1","IsOnlySpecified":true,"IacFreeGiftName":"","GmkFreeGiftName":""},"IsPcs":true,"IsPcsSpecified":true,"IacPcsCoupon":true,"IacPcsCouponSpecified":true,"GmkPcsCoupon":true,"GmkPcsCouponSpecified":true,"GmkBargain":false,"GmkBargainSpecified":true,"IacFreeWishKeyword":["스킨케어"],"IacDiscountAgreement":false,"IacDiscountAgreementSpecified":true,"GmkDiscountAgreement":true,"GmkDiscountAgreementSpecified":true,"GmkOverseaAgreementSeller":true,"GmkOverseaAgreementSellerSpecified":true,"IacBuyerBenefit":{"IsUsed":"2","IsUsedSpecified":true,"StartDate":"2020-10-01T08:32:43.895Z","StartDateSpecified":true,"EndDate":"2020-10-02T08:32:43.895Z","EndDateSpecified":true,"IsMemberDiscount":false,"IsMemberDiscountSpecified":true,"MemberDiscountPrice":"0","MemberDiscountPriceSpecified":true,"IsBulkDiscount":false,"IsBulkDiscountSpecified":true,"BulkDiscountQty":"0","BulkDiscountQtySpecified":true,"BulkDiscountPrice":"0","BulkDiscountPriceSpecified":true},"GmkBuyerBenefit":{"IsUsed":"2","IsUsedSpecified":true,"Type":"","StartDate":"2020-10-01T08:32:43.895Z","StartDateSpecified":true,"EndDate":"2020-10-02T08:32:43.895Z","EndDateSpecified":true,"ConditionType":"","ConditionValue":"0","ConditionValueSpecified":true,"Unit":"","UnitValue":"0","UnitValueSpecified":true,"WhoFee":""},"IacDonation":{"IsUsed":"2","IsUsedSpecified":true,"StartDate":"2020-10-01T08:32:43.895Z","StartDateSpecified":true,"EndDate":"2020-10-02T08:32:43.895Z","EndDateSpecified":true,"DonationPrice":"0","DonationPriceSpecified":true,"DonationMaxPrice":"0","DonationMaxPriceSpecified":true,"DonationType":""},"GmkDonation":{"IsUsed":"2","IsUsedSpecified":true,"StartDate":"2020-10-01T08:32:43.895Z","StartDateSpecified":true,"EndDate":"2020-10-02T08:32:43.895Z","EndDateSpecified":true,"DonationPrice":"0","DonationPriceSpecified":true,"DonationMaxPrice":"0","DonationMaxPriceSpecified":true,"DonationType":""},"IacSellerPoint":{"IsUsed":"2","IsUsedSpecified":true,"PointType":"1","PointTypeSpecified":true,"Point":"0","PointSpecified":true},"GmkSellerMileage":{"IsUsed":"2","IsUsedSpecified":true,"PointType":"1","PointTypeSpecified":true,"Point":"0","PointSpecified":true},"IacChance":{"IsUsed":"2","IsUsedSpecified":true,"StartDate":"2020-10-01T08:32:43.895Z","StartDateSpecified":true,"EndDate":"2020-10-02T08:32:43.895Z","EndDateSpecified":true,"ChanceQty":"0"},"IacBrandShop":{"IsUsedSpecified":true,"LCategoryCode":"","MCategoryCode":"","SCategoryCode":"","BrandCode":"","BrandName":"","BrandImage":[]},"GmkBizOn":{"IsUsedSpecified":true,"LCategoryCode":"","MCategoryCode":"","SCategoryCode":""},"IacAdditional":[],"GmkAdditional":[],"IacPayWishKeyword":[],"IacAdPromotion":{"CategorySmart":{"LCategoryPrice":"0","LCategoryPriceSpecified":true,"MCategoryPrice":"0","MCategoryPriceSpecified":true,"SCategoryPrice":"0","SCategoryPriceSpecified":true,"BestMainPrice":"0","BestMainPriceSpecified":true},"CategoryPower":{"LCategoryPrice":"0","LCategoryPriceSpecified":true,"MCategoryPrice":"0","MCategoryPriceSpecified":true,"SCategoryPrice":"0","SCategoryPriceSpecified":true,"BestMainPrice":"0","BestMainPriceSpecified":true},"Best100Smart":{"LCategoryPrice":"0","LCategoryPriceSpecified":true,"MCategoryPrice":"0","MCategoryPriceSpecified":true,"SCategoryPrice":"0","SCategoryPriceSpecified":true,"BestMainPrice":"0","BestMainPriceSpecified":true},"Chance":{"LCategoryPrice":"0","LCategoryPriceSpecified":true,"MCategoryPrice":"0","MCategoryPriceSpecified":true,"SCategoryPrice":"0","SCategoryPriceSpecified":true,"BestMainPrice":"0","BestMainPriceSpecified":true},"AccessMode":"1","AccessModeSpecified":true},"GmkAdPromotion":{"LargePlus":"0","LargePlusSpecified":true,"LargePowerMini":"0","LargePowerMiniSpecified":true,"LargeBestPower":"0","LargeBestPowerSpecified":true,"MiddlePlus":"0","MiddlePlusSpecified":true,"MiddlePower":"0","MiddlePowerSpecified":true,"MiddleDetailPower":"0","MiddleDetailPowerSpecified":true,"MiddleBestPower":"0","MiddleBestPowerSpecified":true,"SmallPlus":"0","SmallPlusSpecified":true,"SmallPower":"0","SmallPowerSpecified":true},"OverseaAgree":{"Gubun":"0","GubunSpecified":false,"OverseaDisAgreeIs":false},"IsLeaseAvailableInIac":false,"GmktShopGroupCd":"0","IsIacFreeWishKeyword":false,"IacFreeWishKeywordEndDate":false,"IacCommissionRate":"0","IacCommissionRateOpenMarket":"0","IacCommissionRateGroupBy":"0","IsIacFeeDiscountItem":false,"IsDispExclude":true,"IsDispExcludeSpecified":true},"IsSingleGoods":false,"SiteGoodsNoIac":null,"SiteGoodsNoGmkt":null,"GoodsKind":null,"BarCode":null,"IsSiteDisplayIac":false,"IsSiteDisplayGmkt":false,"SellingStatusIac":null,"SellingStatusGmkt":null,"MasterId":null,"LoginId":null,"IsDeleteGroup":false,"EditorUseYn":null,"SdInfo":{"SdCategoryCode":null,"SdBrandName":null,"SdMakerId":"0","SdMakerName":null,"SdBrandId":"0","SdProductBrandId":"0","SdProductBrandName":null,"EpinCodeList":[],"SdAttrMatchingList":[],"SdBasicAttrMatching":{"SalesUnit":"0","SalesUnitSpecified":true,"EaPerBox":"0","EaPerBoxSpecified":true,"EaPerPack":"0","EaPerPackSpecified":true,"TotalEa":"0","TotalEaSpecified":true,"TotalUnitAmount":"0","TotalUnitAmountSpecified":true,"UnitAttrSeq":"0","UnitAttrSeqSpecified":true,"UnitAttrValueSeq":"0","UnitAttrValueSeqSpecified":true},"EpinCreateReqBarcode":null,"EpinCreateReqModelName":null,"EpinCreateReqModelNo":null},"BuyableQuantityMappingType":"1","IsIacConvertToSingleGoods":false,"IsGmktConvertToSingleGoods":false,"AdminId":null}}';
+            $client->xmlHttpRequest("POST",'https://www.esmplus.com/sell/goods/save',[],[],['Content-Type' => 'application/json'],$dataUpload);
+            
+            echo $client->getResponse()->getContent();
+//             echo '<pre>';
+//             print_r(json_decode( $client->getResponse()->getContent(),true));
+            }
+            
+        }else{
+        
+        echo '<form action="" method="POST" enctype="multipart/form-data" >
+    				<input type="file" name="fileToUpload"/>
+    				<input type="submit" name="submit" value="submit"/>  
+			  </form>';
+        
+        }
+        
+       //http://www.esmplus.com/sell/goods/save
+       $str='{"model":{"GoodsNo":"3485388451","SiteGoodsNo":"1901876951","IsIacSellingStatus":"0","IsIacSellingStatusSpecified":false,"CommandType":"2","IsLeaseAllowedInIac":false,"CallFrom":"0","SYIStep1":{"RegMarketType":"2","SiteSellerId":[{"key":"2","value":"ysjlabs"}],"CatalogId":"0","CatalogName":"","CatalogLowestPrice":"0","SellType":"1","GoodsType":"1","GoodsName":{"InputType":"1","GoodsName":"abcdef","SiteGoodsName":[{"key":"1","value":""},{"key":"2","value":""}],"SiteGoodsNameEng":[{"key":"1","value":""},{"key":"2","value":""}],"SiteGoodsNameChn":[{"key":"1","value":""},{"key":"2","value":""}],"SiteGoodsNameJpn":[{"key":"1","value":""},{"key":"2","value":""}],"UseSellerNicknameIac":false,"AdMessageIac":""},"SiteCategoryCode":[{"key":"1","value":""},{"key":"2","value":"100000005200000307300029701"}],"SiteGoodsClassList":[{"key":"2","value":""}],"Book":{"STCode":"","IsSTCodeImage":false,"ISBNCode":"","IsbnCodeAllowYn":"","Name":"","Author":"","Publisher":"","Price":"0","PublishDate":null,"MakerName":"","MakerNo":"","BrandName":"","BrandNo":"0","ImgSmall":"","Title":"","Translater":""},"MakerId":"0","MakerName":"","UserDefineMakerName":"","BrandId":"0","BrandName":"","UserDefineBrandName":"","GmktShopKind1":"0","GmktShopKind2":"28","GmktShopKind3":"28","StatusCode":"11","StoreShopCategoryGoods":{"CategoryLevel":"0","ShopLCategoryCode":"00000000","ShopMCategoryCode":"00000000","ShopSCategoryCode":"00000000"},"MiniShopCategoryGoods":{"CategoryLevel":"0","ShopLCategoryCode":"00000000","ShopMCategoryCode":"00000000","ShopSCategoryCode":"00000000"},"IsTPLGoods":false,"AdminRestrict":"","SiteSellerAdjustCommissionPrice":{"IacOpenAdjustCommissionPrice":"0","IacSpecialAdjustCommissionPrice":"0","GmktOpenAdjustCommissionPrice":"0","GmktSpecialAdjustCommissionPrice":"0"},"CatalogInfo":{"CatalogId":"0","CatalogIdSpecified":false,"CatalogName":null,"LowestPrice":"0","LowestPriceSpecified":false,"ImageUrl":null,"MakerId":"0","MakerIdSpecified":false,"MakerName":null,"BrandId":"0","BrandIdSpecified":false,"BrandName":null,"ModelName":null,"MainDescription":null,"MatchingItemCount":"0","MatchingItemCountSpecified":false,"ProductionDate":null,"ProductionDateSpecified":false,"ProductionDateType":"0","ProductionDateTypeSpecified":false,"PriceRenovationDate":null,"PriceRenovationDateSpecified":false,"IsAdult":false,"IsAdultSpecified":false,"IsBook":false,"IsBookSpecified":false}},"SYIStep2":{"SellingStatus":"11","GoodsStatus":"1","UsedMonths":"","IsGMKTEnvironmentFriendlyCertType":false,"IsIACEnvironmentFriendlyCertType":false,"Price":{"InputType":"1","GoodsPrice":"1000","IsUserCustomSettlementGMKT":false,"GoodsPriceSettlementGMKT":"0","BookPrice":"0","OrgGoodsPrice":"1,000"},"PricePerUnit":{"Unit":"","UnitPrice":""},"WirelessCallingPlan":{"PhoneFeeType":"0","PhoneFeeUrl":"","Plans":[],"MobilePhoneFeeUrl":""},"MobileDevicePrice":{"PhoneDevicePrice":"","PhoneSupportDiscount":"","MakerSupportDiscount":"","TeleComSupportDiscount":"","PhoneAddDiscount":"","PhoneInstallmentPrice":""},"Stock":{"InputType":"1","GoodsCount":"100","SiteGoodsCountNo":"0","BuyableQuantityType":"0","BuyableQuantity":"","BuyableQuantityDay":"","GoodsCountIAC":"0","GoodsCountGMKT":"0"},"Options":{"InputType":"1","OptVerType":"1","OptVerTypeIAC":"1","OptVerTypeGMKT":"1","JsonData":"","JsonDataIAC":"","JsonDataGMKT":"","JsonDataLegacy":null},"OrderOption":{"OptType":"0","StockMngIs":null,"UnifyStockIs":null,"OptionNameInfo":{"OptName1":null,"RcmdOptNo1":null,"OptName2":null,"RcmdOptNo2":null,"OptName3":null,"RcmdOptNo3":null,"OptionNameLangList":null},"OptionInfoList":[]},"Additions":{"InputType":"1","JsonData":"","JsonDataIAC":"","JsonDataGMKT":"","JsonDataLegacy":null,"CommonGoodsNo":"1901876951","IsUseCommonGoods":false},"AddonService":{"AddonServiceUseType":"0","AddonServiceList":[]},"SellingPeriod":{"InputType":"1","IAC":{"StartDate":"","EndDate":""},"GMKT":{"StartDate":"","EndDate":""},"History":[{"StartDate":"2020-10-01T15:00:00.000Z","StartDateSpecified":true,"EndDate":"2020-12-30T14:59:59.000Z","EndDateSpecified":true}]},"PreSale":{},"GoodsImage":{"AdditionalImages":[],"PrimaryImage":{"Operation":"0","Url":"http://gdimg1.gmarket.co.kr/goods_image2/middle_img/190\\187\\1901876951.jpg?tcache=637372568610763926"},"ListImage":{"Operation":"0","Url":"http://gdimg1.gmarket.co.kr/goods_image2/middle_img2/190\\187\\1901876951.jpg?tcache=637372568610763926"},"FixedImage":{"Operation":"0","Url":"http://gdimg1.gmarket.co.kr/goods_image2/middle_jpgimg/190\\187\\1901876951.jpg?tcache=637372568610763926"},"ExpandedImage":{"Operation":"0","Url":"http://gdimg1.gmarket.co.kr/goods_image2/large_img/190\\187\\1901876951.jpg?tcache=637372568610763926"},"AdditionalImagesSite":"3","AdditionalImagesStr":"[]"},"DescriptionTypeSpecified":true,"Description":{"InputType":"1","Text":"","TextIAC":"","TextGMKT":""},"NewDescription":{"InputType":"1","Text":"abcd","TextEng":"","TextChn":"","TextJpn":"","TextIAC":"","TextGMKT":"","TextAdd":"","TextAddEng":"","TextAddChn":"","TextAddJpn":"","TextAddIAC":"","TextAddGMKT":"","TextPrmt":"","TextPrmtIAC":"","TextPrmtGMKT":""},"ItemCode":"","CustCategoryNo":"0","CustCategory":"카테고리","ExpiryDate":"--","ExpiryDateSpecified":true,"LaunchingDate":"undefined-undefined-undefined","LaunchingDateSpecified":true,"ManufacturedDate":"--","ManufacturedDateSpecified":true,"Origin":{"ProductType":"","Type":"3","Name":"","Code":"","IsMultipleOrigin":"false"},"LegacyRawMaterials":"null","RawMaterials":"null","Capacity":{"Volume":null,"Unit":"0","IsMultipleVolume":false},"Manual":null,"ECoupon":{"MoneyType":"0","Price":"0","Ratio":"0","CouponName":null,"ExpireType":"0","Expire1StartDate":"2020-10-02T08:34:21.296Z","Expire1EndDate":"2020-10-02T08:34:21.296Z","Expire2Start":"0","Expire2Duration":"0","UseTermType":"0","UseTerm1StartDate":"2020-10-02T08:34:21.296Z","UseTerm1EndDate":"2020-10-02T08:34:21.296Z","UseTerm2Start":"0","UseTerm2Duration":"0","isDiffDate":false,"CouponTemplate":"0","CouponImageUrl":null,"DownloadTemplate":"0","DownloadImageUrl":null,"ApplyPlace":null,"ApplyPlaceKind":"BranchAddress","AddressNo":null,"IsInformByAddress":false,"Address":null,"IsInformByURL":false,"URL":null,"ApplyPlacePriority":"0","MobileUseInfo":null,"MobileHelpDeskphoneNo":null,"TelephoneNo":null,"AdditionalBenefit":null,"HasRestrictCondition":false,"RestrictCondition":null,"Guide":null,"PublicationCorp":null,"PublicationCorpURL":null,"IsCustomerNameView":false,"Period":"0"},"DeliveryInfo":{"CommonDeliveryUseYn":true,"InvalidDeliveryInfo":false,"CommonDeliveryWayOPTSEL":"0","GmktDeliveryWayOPTSEL":"1","IsCommonGmktUnifyDelivery":false,"GmktDeliveryCOMP":"100000012","IacDeliveryCOMP":null,"IsCommonVisitTake":false,"IsCommonQuickService":false,"IsCommonIACPost":false,"CommonIACPostType":"0","CommonIACPostPaidPrice":"0","IsGmktVisitTake":false,"IsGmktQuickService":false,"IsGmktTodayDEPAR":false,"IsGmktTodayDEPARAgree":false,"IsGmktVisitReceiptTier":false,"MountBranchGroupSeq":"0","CommonVisitTakeType":"0","CommonVisitTakePriceDcAmnt":"0","CommonVisitTakeFreeGiftName":null,"CommonVisitTakeADDRNo":null,"CommonQuickServiceCOMPName":null,"CommonQuickServicePhone":null,"CommonQuickServiceDeliveryEnableRegionNo":null,"ShipmentPlaceNo":"1235725","DeliveryFeeType":"1","BundleDeliveryYNType":"1","BundleDeliveryTempNo":"4970995","EachDeliveryFeeType":null,"EachDeliveryFeeQTYEachGradeType":null,"DeliveryFeeTemplateJSON":"{\"DeliveryFeeType\":0, \"DeliveryFeeSubType\":0, \"FeeAmnt\":0, \"PrepayIs\":false, \"CodIs\":false, \"JejuAddDeliveryFee\":5000, \"BackwoodsAddDeliveryFee\":7000, \"ShipmentPlaceNo\":1235725, \"DetailList\":[]}","EachDeliveryFeePayYn":null,"IsCommonGmktEachADDR":false,"ReturnExchangeADDRNo":"1851578","OldReturnExchangeADDR":null,"OldReturnExchangeADDRTel":null,"OldReturnExchangeSetupDeliveryCOMPName":null,"OldReturnExchangeDeliveryFeeStr":null,"ExchangeADDRNo":"","ReturnExchangeSetupDeliveryCOMP":null,"ReturnExchangeSetupDeliveryCOMPName":null,"ReturnExchangeDeliveryFee":"0","ReturnExchangeDeliveryFeeStr":"","IacTransPolicyNo":"0","GmktTransPolicyNo":"597212","IsGmktIACPost":false},"IsAdultProduct":"False","IsVATFree":"False","ASInfo":" ","CertIAC":{"HasIACCertType":false,"MedicalInstrumentCert":{"ItemLicenseNo":null,"AdDeliberationNo":null,"IsUse":false,"CertificationOfficeName":null,"CertificationNo":null,"Operation":"0"},"BroadcastEquipmentCert":{"BroadcastEquipmentIs":false,"AddtionalConditionIs":false,"IsUse":false,"CertificationOfficeName":null,"CertificationNo":null,"Operation":"0"},"FoodCert":{"IsUse":false,"CertificationOfficeName":null,"CertificationNo":null,"Operation":"0"},"HealthFoodCert":{"AdDeliberationNo":null,"IsUse":false,"CertificationOfficeName":null,"CertificationNo":null,"Operation":"0"},"EnvironmentFriendlyCert":{"CertificationType":null,"isIACEnvironmentFriendlyCertType":false,"isGMKTEnvironmentFriendlyCertType":false,"CertBizType":null,"ProducerName":null,"PresidentInfoNA":null,"RepItemName":null,"InfoHT":null,"CertGroupType":null,"InfoEM":null,"CertStartDate":null,"CertEndDate":null,"InfoAD":null,"CertificationOfficeName":null,"CertificationExpiration":null,"IsUse":false,"CertificationNo":null,"Operation":"0"},"SafeCert":{"SafeCertType":"0","AuthItemType":"0","CertificationNo":null,"IsUse":null,"CertificationOfficeName":null,"Operation":"0"},"ChildProductSafeCert":{"ChangeType":"0","SafeCertDetailInfoList":null},"IntegrateSafeCert":{"ItemNo":null,"IntegrateSafeCertGroupList":[{"SafeCertGroupNo":"1","CertificationType":"1"},{"SafeCertGroupNo":"2","CertificationType":"1"},{"SafeCertGroupNo":"3","CertificationType":"1"}]}},"CertificationNoGMKT":"","LicenseSeqGMKT":[],"OfficialNotice":{"NoticeItemGroupNo":"18","NoticeItemCodes":[{"NoticeItemCode":"18-1","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-10","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-11","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-12","NoticeItemValue":"12시 이전 주문시 당일출고 (주말,공휴일 제외)"},{"NoticeItemCode":"18-2","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-3","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-4","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-5","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-6","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-7","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-8","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"18-9","NoticeItemValue":"상품상세설명 참조"},{"NoticeItemCode":"999-5","NoticeItemValue":""}]},"ItemWeight":"0","SkuList":[],"SkuMatchingVerNo":"0","RentalAddInfo":null,"CertificationTextGMKT":null,"LicenseTextGMKT":null,"InventoryNo":null,"SingleSellerShop":null,"IsUseSellerFunding":null},"SYIStep3":{"G9RegisterCommand":"0","IsG9Goods":false,"IsOnlyG9Goods":false,"SellerDiscount":{"DiscountAmtIac1":"0","DiscountAmtIac2":"0","DiscountAmtGmkt1":"0","DiscountAmtGmkt2":"0","IsUsed":"2","IsUsedSpecified":false,"DiscountType":"1","DiscountTypeSpecified":false,"DiscountAmt":"0","DiscountAmtSpecified":false,"DiscountAmt1":"0","DiscountAmt1Specified":false,"DiscountAmt2":"0","DiscountAmt2Specified":false,"StartDate":"2020-10-02T08:34:21.296Z","StartDateSpecified":false,"EndDate":"9999-12-31T14:59:59.999Z","EndDateSpecified":false,"DiscountTypeIac":"0","DiscountTypeSpecifiedIac":false,"StartDateIac":"2020-10-02T08:34:21.296Z","StartDateSpecifiedIac":false,"EndDateIac":"9999-12-31T14:59:59.999Z","IacEndDateSpecified":false,"DiscountAmtIac":"0","DiscountAmtSpecifiedIac":false,"DiscountTypeGmkt":"0","DiscountTypeSpecifiedGmkt":false,"StartDateGmkt":"2020-10-02T08:34:21.296Z","StartDateSpecifiedGmkt":false,"EndDateGmkt":"9999-12-31T14:59:59.999Z","EndDateSpecifiedGmkt":false,"DiscountAmtGmkt":"0","DiscountAmtSpecifiedGmkt":false},"FreeGift":{"IsUsed":"2","IsUsedSpecified":true,"IsOnly":"2","IsOnlySpecified":false,"IacFreeGiftName":"","GmkFreeGiftName":""},"IsPcs":true,"IsPcsSpecified":true,"IacPcsCoupon":true,"IacPcsCouponSpecified":false,"GmkPcsCoupon":true,"GmkPcsCouponSpecified":true,"GmkBargain":false,"GmkBargainSpecified":true,"IacFreeWishKeyword":[],"IacDiscountAgreement":true,"IacDiscountAgreementSpecified":false,"GmkDiscountAgreement":true,"GmkDiscountAgreementSpecified":true,"GmkOverseaAgreementSeller":true,"GmkOverseaAgreementSellerSpecified":true,"IacBuyerBenefit":{"IsUsed":"2","IsUsedSpecified":false,"StartDate":"2020-10-02T08:34:21.296Z","StartDateSpecified":false,"EndDate":"2020-10-03T08:34:21.296Z","EndDateSpecified":false,"IsMemberDiscount":false,"IsMemberDiscountSpecified":false,"MemberDiscountPrice":"0","MemberDiscountPriceSpecified":false,"IsBulkDiscount":false,"IsBulkDiscountSpecified":false,"BulkDiscountQty":"0","BulkDiscountQtySpecified":false,"BulkDiscountPrice":"0","BulkDiscountPriceSpecified":false},"GmkBuyerBenefit":{"IsUsed":"2","IsUsedSpecified":false,"Type":"","StartDate":"2020-10-02T08:34:21.296Z","StartDateSpecified":false,"EndDate":"2020-10-03T08:34:21.296Z","EndDateSpecified":false,"ConditionType":"","ConditionValue":"0","ConditionValueSpecified":false,"Unit":"","UnitValue":"0","UnitValueSpecified":false,"WhoFee":""},"IacDonation":{"IsUsed":"2","IsUsedSpecified":false,"StartDate":"2020-10-02T08:34:21.296Z","StartDateSpecified":false,"EndDate":"2020-10-03T08:34:21.296Z","EndDateSpecified":false,"DonationPrice":"0","DonationPriceSpecified":false,"DonationMaxPrice":"0","DonationMaxPriceSpecified":false,"DonationType":""},"GmkDonation":{"IsUsed":"2","IsUsedSpecified":false,"StartDate":"2020-10-02T08:34:21.296Z","StartDateSpecified":false,"EndDate":"2020-10-03T08:34:21.296Z","EndDateSpecified":false,"DonationPrice":"0","DonationPriceSpecified":false,"DonationMaxPrice":"0","DonationMaxPriceSpecified":false,"DonationType":""},"IacSellerPoint":{"IsUsed":"2","IsUsedSpecified":false,"PointType":"1","PointTypeSpecified":false,"Point":"0","PointSpecified":false},"GmkSellerMileage":{"IsUsed":"2","IsUsedSpecified":false,"PointType":"1","PointTypeSpecified":false,"Point":"0","PointSpecified":false},"IacChance":{"IsUsed":"2","IsUsedSpecified":false,"StartDate":"2020-10-02T08:34:21.296Z","StartDateSpecified":false,"EndDate":"2020-10-03T08:34:21.296Z","EndDateSpecified":false,"ChanceQty":"0"},"IacBrandShop":{"IsUsed":"2","IsUsedSpecified":false,"LCategoryCode":"","MCategoryCode":"","SCategoryCode":"","BrandCode":"","BrandName":"","BrandImage":[]},"GmkBizOn":{"IsUsedSpecified":false,"LCategoryCode":"","MCategoryCode":"","SCategoryCode":""},"IacAdditional":[],"GmkAdditional":[],"IacPayWishKeyword":[],"IacAdPromotion":{"CategorySmart":{"LCategoryPrice":"0","LCategoryPriceSpecified":false,"MCategoryPrice":"0","MCategoryPriceSpecified":false,"SCategoryPrice":"0","SCategoryPriceSpecified":false,"BestMainPrice":"0","BestMainPriceSpecified":false},"CategoryPower":{"LCategoryPrice":"0","LCategoryPriceSpecified":false,"MCategoryPrice":"0","MCategoryPriceSpecified":false,"SCategoryPrice":"0","SCategoryPriceSpecified":false,"BestMainPrice":"0","BestMainPriceSpecified":false},"Best100Smart":{"LCategoryPrice":"0","LCategoryPriceSpecified":false,"MCategoryPrice":"0","MCategoryPriceSpecified":false,"SCategoryPrice":"0","SCategoryPriceSpecified":false,"BestMainPrice":"0","BestMainPriceSpecified":false},"Chance":{"LCategoryPrice":"0","LCategoryPriceSpecified":false,"MCategoryPrice":"0","MCategoryPriceSpecified":false,"SCategoryPrice":"0","SCategoryPriceSpecified":false,"BestMainPrice":"0","BestMainPriceSpecified":false},"AccessMode":"1","AccessModeSpecified":false},"GmkAdPromotion":{"LargePlus":"0","LargePlusSpecified":false,"LargePowerMini":"0","LargePowerMiniSpecified":false,"LargeBestPower":"0","LargeBestPowerSpecified":false,"MiddlePlus":"0","MiddlePlusSpecified":false,"MiddlePower":"0","MiddlePowerSpecified":false,"MiddleDetailPower":"0","MiddleDetailPowerSpecified":false,"MiddleBestPower":"0","MiddleBestPowerSpecified":false,"SmallPlus":"0","SmallPlusSpecified":false,"SmallPower":"0","SmallPowerSpecified":false},"OverseaAgree":{"RegType":"S","Gubun":"0","GubunSpecified":true,"OverseaDisAgreeIs":false},"IsLeaseAvailableInIac":false,"GmktShopGroupCd":"0","IsIacFreeWishKeyword":false,"IacFreeWishKeywordEndDate":false,"IacCommissionRate":"0","IacCommissionRateOpenMarket":"0","IacCommissionRateGroupBy":"0","IsIacFeeDiscountItem":false,"IsDispExclude":true,"IsDispExcludeSpecified":false},"IsSingleGoods":false,"SiteGoodsNoIac":null,"SiteGoodsNoGmkt":null,"GoodsKind":null,"BarCode":null,"IsSiteDisplayIac":false,"IsSiteDisplayGmkt":false,"SellingStatusIac":null,"SellingStatusGmkt":null,"MasterId":null,"LoginId":null,"IsDeleteGroup":false,"EditorUseYn":null,"SdInfo":{"SdCategoryCode":null,"SdBrandName":null,"SdMakerId":"0","SdMakerName":null,"SdBrandId":"0","SdProductBrandId":"0","SdProductBrandName":null,"EpinCodeList":[],"SdAttrMatchingList":[],"SdBasicAttrMatching":{"SalesUnit":"0","SalesUnitSpecified":false,"EaPerBox":"0","EaPerBoxSpecified":false,"EaPerPack":"0","EaPerPackSpecified":false,"TotalEa":"0","TotalEaSpecified":false,"TotalUnitAmount":"0","TotalUnitAmountSpecified":false,"UnitAttrSeq":"0","UnitAttrSeqSpecified":false,"UnitAttrValueSeq":"0","UnitAttrValueSeqSpecified":false},"EpinCreateReqBarcode":null,"EpinCreateReqModelName":null,"EpinCreateReqModelNo":null},"BuyableQuantityMappingType":"1","IsIacConvertToSingleGoods":false,"IsGmktConvertToSingleGoods":false,"AdminId":null}}';
+       
+       
+        
+    }
+    
+    public function  getdataSYIStep1($product){
+        
+        $site1=$product[0];
+        $site2=$product[1];
+        
+        $SYIStep1='{
+                             "RegMarketType":"0",
+                             "SiteSellerId":[
+                                {
+                                   "key":"1",
+                                   "value":"'.$site1['B'].'"
+                                },
+                                {
+                                   "key":"2",
+                                   "value":"'.$site2['B'].'"
+                                }
+                             ],
+                             "CatalogId":"0",
+                             "CatalogName":"",
+                             "CatalogLowestPrice":"0",
+                             "SellType":"1",
+                             "GoodsType":"1",
+                             "GoodsName":{
+                                "InputType":"1",
+                                "GoodsName":"'.$site1['K'].'",
+                                "SiteGoodsName":[
+                                   {
+                                      "key":"1",
+                                      "value":"'.$site1['K'].'" 
+                                   },
+                                   {
+                                      "key":"2",
+                                      "value":"'.$site2['K'].'"
+                                   }
+                                ],
+                                "SiteGoodsNameEng":[
+                                   {
+                                      "key":"1",
+                                      "value":""
+                                   },
+                                   {
+                                      "key":"2",
+                                      "value":""
+                                   }
+                                ],
+                                "SiteGoodsNameChn":[
+                                   {
+                                      "key":"1",
+                                      "value":""
+                                   },
+                                   {
+                                      "key":"2",
+                                      "value":""
+                                   }
+                                ],
+                                "SiteGoodsNameJpn":[
+                                   {
+                                      "key":"1",
+                                      "value":""
+                                   },
+                                   {
+                                      "key":"2",
+                                      "value":""
+                                   }
+                                ],
+                                "UseSellerNicknameIac":false,
+                                "AdMessageIac":""
+                             },
+                             "SiteCategoryCode":[
+                                {
+                                   "key":"1",
+                                   "value":"18541200"
+                                },
+                                {
+                                   "key":"2",
+                                   "value":"100000005200000307300029701"
+                                }
+                             ],
+                             "SiteGoodsClassList":[
+                                {
+                                   "key":"1",
+                                   "value":""
+                                },
+                                {
+                                   "key":"2",
+                                   "value":""
+                                }
+                             ],
+                             "Book":{
+                                "STCode":"",
+                                "IsSTCodeImage":false,
+                                "ISBNCode":"",
+                                "IsbnCodeAllowYn":"",
+                                "Name":"",
+                                "Author":"",
+                                "Publisher":"",
+                                "Price":"0",
+                                "PublishDate":null,
+                                "MakerName":"",
+                                "MakerNo":"",
+                                "BrandName":"",
+                                "BrandNo":"0",
+                                "ImgSmall":"",
+                                "Title":"",
+                                "Translater":""
+                             },
+                             "MakerId":"0",
+                             "MakerName":"",
+                             "UserDefineMakerName":"",
+                             "BrandId":"0",
+                             "BrandName":"",
+                             "UserDefineBrandName":"",
+                             "GmktShopKind1":"-1",
+                             "GmktShopKind2":"-1",
+                             "GmktShopKind3":"-1",
+                             "StatusCode":"",
+                             "StoreShopCategoryGoods":{
+                                "CategoryLevel":"0",
+                                "ShopLCategoryCode":"00000000",
+                                "ShopMCategoryCode":"00000000",
+                                "ShopSCategoryCode":"00000000"
+                             },
+                             "MiniShopCategoryGoods":{
+                                "CategoryLevel":"0",
+                                "ShopLCategoryCode":"00000000",
+                                "ShopMCategoryCode":"00000000",
+                                "ShopSCategoryCode":"00000000"
+                             },
+                             "IsTPLGoods":false,
+                             "AdminRestrict":"",
+                             "SiteSellerAdjustCommissionPrice":{
+                                "IacOpenAdjustCommissionPrice":"0",
+                                "IacSpecialAdjustCommissionPrice":"0",
+                                "GmktOpenAdjustCommissionPrice":"0",
+                                "GmktSpecialAdjustCommissionPrice":"0"
+                             },
+                             "CatalogInfo":{
+                                "CatalogId":"0",
+                                "CatalogIdSpecified":true,
+                                "CatalogName":null,
+                                "LowestPrice":"0",
+                                "LowestPriceSpecified":true,
+                                "ImageUrl":null,
+                                "MakerId":"0",
+                                "MakerIdSpecified":true,
+                                "MakerName":null,
+                                "BrandId":"0",
+                                "BrandIdSpecified":true,
+                                "BrandName":null,
+                                "ModelName":null,
+                                "MainDescription":null,
+                                "MatchingItemCount":"0",
+                                "MatchingItemCountSpecified":true,
+                                "ProductionDate":null,
+                                "ProductionDateSpecified":false,
+                                "ProductionDateType":"0",
+                                "ProductionDateTypeSpecified":true,
+                                "PriceRenovationDate":null,
+                                "PriceRenovationDateSpecified":false,
+                                "IsAdult":false,
+                                "IsAdultSpecified":true,
+                                "IsBook":false,
+                                "IsBookSpecified":true
+                             }
+                          }';
+        return $SYIStep1;
+    }
+    
+    public function  getdataSYIStep2($product){
+        
+        $site1=$product[0];
+        $site2=$product[1];
+        
+        $SYIStep2= '{
+         "SellingStatus":"0",
+         "GoodsStatus":"1",
+         "UsedMonths":"",
+         "IsGMKTEnvironmentFriendlyCertType":false,
+         "IsIACEnvironmentFriendlyCertType":false,
+         "Price":{
+            "InputType":"1",
+            "GoodsPrice":"'.$site1['P'].'",
+            "GoodsPriceIAC":"'.$site2['P'].'",
+            "GoodsPriceGMKT":"'.$site1['P'].'",
+            "IsUserCustomSettlementGMKT":false,
+            "GoodsPriceSettlementGMKT":"0",
+            "BookPrice":"0",
+            "OrgGoodsPrice":""
+         },
+         "PricePerUnit":{
+            "Unit":"",
+            "UnitPrice":""
+         },
+         "WirelessCallingPlan":{
+            "PhoneFeeType":"0",
+            "PhoneFeeUrl":"",
+            "Plans":[
+               
+            ],
+            "MobilePhoneFeeUrl":""
+         },
+         "MobileDevicePrice":{
+            "PhoneDevicePrice":"",
+            "PhoneSupportDiscount":"",
+            "MakerSupportDiscount":"",
+            "TeleComSupportDiscount":"",
+            "PhoneAddDiscount":"",
+            "PhoneInstallmentPrice":""
+         },
+         "Stock":{
+            "InputType":"1",
+            "GoodsCount":"'.$site1['T'].'",
+            "SiteGoodsCountNo":"0",
+            "BuyableQuantityType":"0",
+            "BuyableQuantity":"",
+            "BuyableQuantityDay":"",
+            "GoodsCountIAC":"'.$site1['T'].'",
+            "GoodsCountGMKT":"'.$site2['T'].'"
+         },
+         "Options":{
+            "InputType":"1",
+            "OptVerType":"1",
+            "OptVerTypeIAC":"1",
+            "OptVerTypeGMKT":"1",
+            "JsonData":"",
+            "JsonDataIAC":"",
+            "JsonDataGMKT":"",
+            "JsonDataLegacy":null
+         },
+         "OrderOption":{
+            "OptType":"0",
+            "StockMngIs":null,
+            "UnifyStockIs":null,
+            "OptionNameInfo":{
+               "OptName1":null,
+               "RcmdOptNo1":null,
+               "OptName2":null,
+               "RcmdOptNo2":null,
+               "OptName3":null,
+               "RcmdOptNo3":null,
+               "OptionNameLangList":[
+                  
+               ]
+            },
+            "OptionInfoList":[
+               
+            ]
+         },
+         "Additions":{
+            "InputType":"1",
+            "JsonData":"",
+            "JsonDataIAC":"",
+            "JsonDataGMKT":"",
+            "JsonDataLegacy":null,
+            "CommonGoodsNo":null,
+            "IsUseCommonGoods":false
+         },
+         "AddonService":{
+            "AddonServiceUseType":"0",
+            "AddonServiceList":[
+               
+            ]
+         },
+         "SellingPeriod":{
+            "InputType":"1",
+            "IAC":{
+               "StartDate":"'.$site2['AH'].' 00:00:00",
+               "EndDate":"'.$site2['Y'].' 23:59:59"
+            },
+            "GMKT":{
+               "StartDate":"'.$site1['AH'].' 00:00:00",
+               "EndDate":"'.$site1['Y'].' 23:59:59"
+            },
+            "History":[
+               
+            ]
+         },
+         "PreSale":{
+            "UseSettingIAC":"False",
+            "SaleStartDateIAC":"'.$site1['AH'].'"
+         },
+         "GoodsImage":{
+            "AdditionalImages":[
+               
+            ],
+            "PrimaryImage":{
+               "Operation":"1",
+               "Url":"http://'.$site1['AG'].'",
+               "BigImage":"true"
+            },
+            "ListImage":{
+               "Operation":"1",
+               "Url":"http://'.$site1['AG'].'",
+               "BigImage":"true"
+            },
+            "FixedImage":{
+               "Operation":"1",
+               "Url":"http://'.$site1['AG'].'",
+               "BigImage":"true"
+            },
+            "ExpandedImage":{
+               "Operation":"1",
+               "Url":"http://'.$site1['AG'].'",
+               "BigImage":"true"
+            },
+            "AdditionalImagesSite":"3",
+            "AdditionalImagesStr":"[]"
+         },
+         "DescriptionTypeSpecified":true,
+         "Description":{
+            "InputType":"1",
+            "Text":"",
+            "TextIAC":"",
+            "TextGMKT":""
+         },
+         "NewDescription":{
+            "InputType":"1",
+            "Text":"abcd",
+            "TextEng":"",
+            "TextChn":"",
+            "TextJpn":"",
+            "TextIAC":"",
+            "TextGMKT":"",
+            "TextAdd":"",
+            "TextAddEng":"",
+            "TextAddChn":"",
+            "TextAddJpn":"",
+            "TextAddIAC":"",
+            "TextAddGMKT":"",
+            "TextPrmt":"",
+            "TextPrmtIAC":"",
+            "TextPrmtGMKT":""
+         },
+         "ItemCode":"",
+         "CustCategoryNo":"0",
+         "CustCategory":"카테고리",
+         "ExpiryDate":"--",
+         "ExpiryDateSpecified":true,
+         "LaunchingDate":"undefined-undefined-undefined",
+         "LaunchingDateSpecified":true,
+         "ManufacturedDate":"--",
+         "ManufacturedDateSpecified":true,
+         "Origin":{
+            "ProductType":null,
+            "Type":"0",
+            "Name":"",
+            "Code":"",
+            "IsMultipleOrigin":"false"
+         },
+         "LegacyRawMaterials":"null",
+         "RawMaterials":"null",
+         "Capacity":{
+            "Volume":null,
+            "Unit":"0",
+            "IsMultipleVolume":false
+         },
+         "Manual":null,
+         "ECoupon":{
+            "MoneyType":"0",
+            "Price":"0",
+            "Ratio":"0",
+            "CouponName":null,
+            "ExpireType":"0",
+            "Expire1StartDate":"2020-10-01T08:32:43.894Z",
+            "Expire1EndDate":"2020-10-01T08:32:43.894Z",
+            "Expire2Start":"0",
+            "Expire2Duration":"0",
+            "UseTermType":"0",
+            "UseTerm1StartDate":"2020-10-01T08:32:43.894Z",
+            "UseTerm1EndDate":"2020-10-01T08:32:43.894Z",
+            "UseTerm2Start":"0",
+            "UseTerm2Duration":"0",
+            "isDiffDate":false,
+            "CouponTemplate":"0",
+            "CouponImageUrl":null,
+            "DownloadTemplate":"0",
+            "DownloadImageUrl":null,
+            "ApplyPlace":null,
+            "ApplyPlaceKind":"BranchAddress",
+            "AddressNo":null,
+            "IsInformByAddress":false,
+            "Address":null,
+            "IsInformByURL":false,
+            "URL":null,
+            "ApplyPlacePriority":"0",
+            "MobileUseInfo":null,
+            "MobileHelpDeskphoneNo":null,
+            "TelephoneNo":null,
+            "AdditionalBenefit":null,
+            "HasRestrictCondition":false,
+            "RestrictCondition":null,
+            "Guide":null,
+            "PublicationCorp":null,
+            "PublicationCorpURL":null,
+            "IsCustomerNameView":false
+         },
+         "DeliveryInfo":{
+            "CommonDeliveryUseYn":true,
+            "InvalidDeliveryInfo":false,
+            "CommonDeliveryWayOPTSEL":"1",
+            "GmktDeliveryWayOPTSEL":"0",
+            "IsCommonGmktUnifyDelivery":false,
+            "GmktDeliveryCOMP":"100000012",
+            "IacDeliveryCOMP":"10013",
+            "IsCommonVisitTake":false,
+            "IsCommonQuickService":false,
+            "IsCommonIACPost":false,
+            "CommonIACPostType":"0",
+            "CommonIACPostPaidPrice":"0",
+            "IsGmktVisitTake":false,
+            "IsGmktQuickService":false,
+            "IsGmktTodayDEPAR":false,
+            "IsGmktTodayDEPARAgree":false,
+            "IsGmktVisitReceiptTier":false,
+            "MountBranchGroupSeq":"0",
+            "CommonVisitTakeType":"0",
+            "CommonVisitTakePriceDcAmnt":"0",
+            "CommonVisitTakeFreeGiftName":null,
+            "CommonVisitTakeADDRNo":null,
+            "CommonQuickServiceCOMPName":null,
+            "CommonQuickServicePhone":null,
+            "CommonQuickServiceDeliveryEnableRegionNo":null,
+            "ShipmentPlaceNo":"1235725",
+            "DeliveryFeeType":"1",
+            "BundleDeliveryYNType":"1",
+            "BundleDeliveryTempNo":"4970995",
+            "EachDeliveryFeeType":null,
+            "EachDeliveryFeeQTYEachGradeType":null,
+            "DeliveryFeeTemplateJSON":"{\"DeliveryFeeType\":0, \"DeliveryFeeSubType\":0, \"FeeAmnt\":0, \"PrepayIs\":false, \"CodIs\":false, \"JejuAddDeliveryFee\":5000, \"BackwoodsAddDeliveryFee\":7000, \"ShipmentPlaceNo\":1235725, \"DetailList\":[]}",
+            "EachDeliveryFeePayYn":null,
+            "IsCommonGmktEachADDR":false,
+            "ReturnExchangeADDRNo":"1851578",
+            "OldReturnExchangeADDR":null,
+            "OldReturnExchangeADDRTel":null,
+            "OldReturnExchangeSetupDeliveryCOMPName":null,
+            "OldReturnExchangeDeliveryFeeStr":null,
+            "ExchangeADDRNo":"",
+            "ReturnExchangeSetupDeliveryCOMP":null,
+            "ReturnExchangeSetupDeliveryCOMPName":null,
+            "ReturnExchangeDeliveryFee":"0",
+            "ReturnExchangeDeliveryFeeStr":"",
+            "IacTransPolicyNo":"597211",
+            "GmktTransPolicyNo":"597212",
+            "IsGmktIACPost":false
+         },
+         "IsAdultProduct":"False",
+         "IsVATFree":"False",
+         "ASInfo":null,
+         "CertIAC":{
+            "HasIACCertType":false,
+            "MedicalInstrumentCert":{
+               "ItemLicenseNo":null,
+               "AdDeliberationNo":null,
+               "IsUse":false,
+               "CertificationOfficeName":null,
+               "CertificationNo":null,
+               "Operation":"0"
+            },
+            "BroadcastEquipmentCert":{
+               "BroadcastEquipmentIs":false,
+               "AddtionalConditionIs":false,
+               "IsUse":false,
+               "CertificationOfficeName":null,
+               "CertificationNo":null,
+               "Operation":"0"
+            },
+            "FoodCert":{
+               "IsUse":false,
+               "CertificationOfficeName":null,
+               "CertificationNo":null,
+               "Operation":"0"
+            },
+            "HealthFoodCert":{
+               "AdDeliberationNo":null,
+               "IsUse":false,
+               "CertificationOfficeName":null,
+               "CertificationNo":null,
+               "Operation":"0"
+            },
+            "EnvironmentFriendlyCert":{
+               "CertificationType":null,
+               "isIACEnvironmentFriendlyCertType":false,
+               "isGMKTEnvironmentFriendlyCertType":false,
+               "CertBizType":null,
+               "ProducerName":null,
+               "PresidentInfoNA":null,
+               "RepItemName":null,
+               "InfoHT":null,
+               "CertGroupType":null,
+               "InfoEM":null,
+               "CertStartDate":null,
+               "CertEndDate":null,
+               "InfoAD":null,
+               "CertificationOfficeName":null,
+               "CertificationExpiration":null,
+               "IsUse":false,
+               "CertificationNo":null,
+               "Operation":"0"
+            },
+            "SafeCert":{
+               "SafeCertType":"0",
+               "AuthItemType":"0",
+               "CertificationNo":null,
+               "IsUse":null,
+               "CertificationOfficeName":null,
+               "Operation":"0"
+            },
+            "ChildProductSafeCert":{
+               "ChangeType":"0",
+               "SafeCertDetailInfoList":null
+            },
+            "IntegrateSafeCert":{
+               "ItemNo":null,
+               "IntegrateSafeCertGroupList":[
+                  {
+                     "SafeCertGroupNo":"1",
+                     "CertificationType":"1"
+                  },
+                  {
+                     "SafeCertGroupNo":"2",
+                     "CertificationType":"1"
+                  },
+                  {
+                     "SafeCertGroupNo":"3",
+                     "CertificationType":"1"
+                  }
+               ]
+            }
+         },
+         "CertificationNoGMKT":"",
+         "LicenseSeqGMKT":[
+            
+         ],
+         "OfficialNotice":{
+            "NoticeItemGroupNo":"18",
+            "NoticeItemCodes":[
+               {
+                  "NoticeItemCode":"18-1",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-10",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-11",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-12",
+                  "NoticeItemValue":"12시 이전 주문시 당일출고 (주말,공휴일 제외)"
+               },
+               {
+                  "NoticeItemCode":"18-2",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-3",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-4",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-5",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-6",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-7",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-8",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"18-9",
+                  "NoticeItemValue":"상품상세설명 참조"
+               },
+               {
+                  "NoticeItemCode":"999-5",
+                  "NoticeItemValue":""
+               }
+            ]
+         },
+         "ItemWeight":"0",
+         "SkuList":[
+            
+         ],
+         "SkuMatchingVerNo":"0",
+         "RentalAddInfo":null,
+         "CertificationTextGMKT":null,
+         "LicenseTextGMKT":null,
+         "InventoryNo":null,
+         "SingleSellerShop":null,
+         "IsUseSellerFunding":null
+      }';
+        return $SYIStep2;
+    }
+    
+    public function  getdataSYIStep3($product){
+        $site1=$product[0];
+        $site2=$product[1];
+        $SYIStep3 = '{
+                             "G9RegisterCommand":"0",
+                             "IsG9Goods":false,
+                             "IsOnlyG9Goods":false,
+                             "SellerDiscount":{
+                                "DiscountAmtIac1":"0",
+                                "DiscountAmtIac2":"0",
+                                "DiscountAmtGmkt1":"0",
+                                "DiscountAmtGmkt2":"0",
+                                "IsUsed":"2",
+                                "IsUsedSpecified":true,
+                                "DiscountType":"1",
+                                "DiscountTypeSpecified":true,
+                                "DiscountAmt":"0",
+                                "DiscountAmtSpecified":true,
+                                "DiscountAmt1":"0",
+                                "DiscountAmt1Specified":true,
+                                "DiscountAmt2":"0",
+                                "DiscountAmt2Specified":true,
+                                "StartDate":"2020-10-01T08:32:43.895Z",
+                                "StartDateSpecified":true,
+                                "EndDate":"9999-12-31T14:59:59.999Z",
+                                "EndDateSpecified":true,
+                                "DiscountTypeIac":"0",
+                                "DiscountTypeSpecifiedIac":false,
+                                "StartDateIac":"2020-10-01T08:32:43.895Z",
+                                "StartDateSpecifiedIac":true,
+                                "EndDateIac":"9999-12-31T14:59:59.999Z",
+                                "IacEndDateSpecified":true,
+                                "DiscountAmtIac":"0",
+                                "DiscountAmtSpecifiedIac":true,
+                                "DiscountTypeGmkt":"0",
+                                "DiscountTypeSpecifiedGmkt":false,
+                                "StartDateGmkt":"2020-10-01T08:32:43.895Z",
+                                "StartDateSpecifiedGmkt":true,
+                                "EndDateGmkt":"9999-12-31T14:59:59.999Z",
+                                "EndDateSpecifiedGmkt":true,
+                                "DiscountAmtGmkt":"0",
+                                "DiscountAmtSpecifiedGmkt":true
+                             },
+                             "FreeGift":{
+                                "IsUsed":"2",
+                                "IsUsedSpecified":true,
+                                "IsOnly":"1",
+                                "IsOnlySpecified":true,
+                                "IacFreeGiftName":"",
+                                "GmkFreeGiftName":""
+                             },
+                             "IsPcs":true,
+                             "IsPcsSpecified":true,
+                             "IacPcsCoupon":true,
+                             "IacPcsCouponSpecified":true,
+                             "GmkPcsCoupon":true,
+                             "GmkPcsCouponSpecified":true,
+                             "GmkBargain":false,
+                             "GmkBargainSpecified":true,
+                             "IacFreeWishKeyword":[
+                                "스킨케어"
+                             ],
+                             "IacDiscountAgreement":false,
+                             "IacDiscountAgreementSpecified":true,
+                             "GmkDiscountAgreement":true,
+                             "GmkDiscountAgreementSpecified":true,
+                             "GmkOverseaAgreementSeller":true,
+                             "GmkOverseaAgreementSellerSpecified":true,
+                             "IacBuyerBenefit":{
+                                "IsUsed":"2",
+                                "IsUsedSpecified":true,
+                                "StartDate":"2020-10-01T08:32:43.895Z",
+                                "StartDateSpecified":true,
+                                "EndDate":"2020-10-02T08:32:43.895Z",
+                                "EndDateSpecified":true,
+                                "IsMemberDiscount":false,
+                                "IsMemberDiscountSpecified":true,
+                                "MemberDiscountPrice":"0",
+                                "MemberDiscountPriceSpecified":true,
+                                "IsBulkDiscount":false,
+                                "IsBulkDiscountSpecified":true,
+                                "BulkDiscountQty":"0",
+                                "BulkDiscountQtySpecified":true,
+                                "BulkDiscountPrice":"0",
+                                "BulkDiscountPriceSpecified":true
+                             },
+                             "GmkBuyerBenefit":{
+                                "IsUsed":"2",
+                                "IsUsedSpecified":true,
+                                "Type":"",
+                                "StartDate":"2020-10-01T08:32:43.895Z",
+                                "StartDateSpecified":true,
+                                "EndDate":"2020-10-02T08:32:43.895Z",
+                                "EndDateSpecified":true,
+                                "ConditionType":"",
+                                "ConditionValue":"0",
+                                "ConditionValueSpecified":true,
+                                "Unit":"",
+                                "UnitValue":"0",
+                                "UnitValueSpecified":true,
+                                "WhoFee":""
+                             },
+                             "IacDonation":{
+                                "IsUsed":"2",
+                                "IsUsedSpecified":true,
+                                "StartDate":"2020-10-01T08:32:43.895Z",
+                                "StartDateSpecified":true,
+                                "EndDate":"2020-10-02T08:32:43.895Z",
+                                "EndDateSpecified":true,
+                                "DonationPrice":"0",
+                                "DonationPriceSpecified":true,
+                                "DonationMaxPrice":"0",
+                                "DonationMaxPriceSpecified":true,
+                                "DonationType":""
+                             },
+                             "GmkDonation":{
+                                "IsUsed":"2",
+                                "IsUsedSpecified":true,
+                                "StartDate":"2020-10-01T08:32:43.895Z",
+                                "StartDateSpecified":true,
+                                "EndDate":"2020-10-02T08:32:43.895Z",
+                                "EndDateSpecified":true,
+                                "DonationPrice":"0",
+                                "DonationPriceSpecified":true,
+                                "DonationMaxPrice":"0",
+                                "DonationMaxPriceSpecified":true,
+                                "DonationType":""
+                             },
+                             "IacSellerPoint":{
+                                "IsUsed":"2",
+                                "IsUsedSpecified":true,
+                                "PointType":"1",
+                                "PointTypeSpecified":true,
+                                "Point":"0",
+                                "PointSpecified":true
+                             },
+                             "GmkSellerMileage":{
+                                "IsUsed":"2",
+                                "IsUsedSpecified":true,
+                                "PointType":"1",
+                                "PointTypeSpecified":true,
+                                "Point":"0",
+                                "PointSpecified":true
+                             },
+                             "IacChance":{
+                                "IsUsed":"2",
+                                "IsUsedSpecified":true,
+                                "StartDate":"2020-10-01T08:32:43.895Z",
+                                "StartDateSpecified":true,
+                                "EndDate":"2020-10-02T08:32:43.895Z",
+                                "EndDateSpecified":true,
+                                "ChanceQty":"0"
+                             },
+                             "IacBrandShop":{
+                                "IsUsedSpecified":true,
+                                "LCategoryCode":"",
+                                "MCategoryCode":"",
+                                "SCategoryCode":"",
+                                "BrandCode":"",
+                                "BrandName":"",
+                                "BrandImage":[
+                                   
+                                ]
+                             },
+                             "GmkBizOn":{
+                                "IsUsedSpecified":true,
+                                "LCategoryCode":"",
+                                "MCategoryCode":"",
+                                "SCategoryCode":""
+                             },
+                             "IacAdditional":[
+                                
+                             ],
+                             "GmkAdditional":[
+                                
+                             ],
+                             "IacPayWishKeyword":[
+                                
+                             ],
+                             "IacAdPromotion":{
+                                "CategorySmart":{
+                                   "LCategoryPrice":"0",
+                                   "LCategoryPriceSpecified":true,
+                                   "MCategoryPrice":"0",
+                                   "MCategoryPriceSpecified":true,
+                                   "SCategoryPrice":"0",
+                                   "SCategoryPriceSpecified":true,
+                                   "BestMainPrice":"0",
+                                   "BestMainPriceSpecified":true
+                                },
+                                "CategoryPower":{
+                                   "LCategoryPrice":"0",
+                                   "LCategoryPriceSpecified":true,
+                                   "MCategoryPrice":"0",
+                                   "MCategoryPriceSpecified":true,
+                                   "SCategoryPrice":"0",
+                                   "SCategoryPriceSpecified":true,
+                                   "BestMainPrice":"0",
+                                   "BestMainPriceSpecified":true
+                                },
+                                "Best100Smart":{
+                                   "LCategoryPrice":"0",
+                                   "LCategoryPriceSpecified":true,
+                                   "MCategoryPrice":"0",
+                                   "MCategoryPriceSpecified":true,
+                                   "SCategoryPrice":"0",
+                                   "SCategoryPriceSpecified":true,
+                                   "BestMainPrice":"0",
+                                   "BestMainPriceSpecified":true
+                                },
+                                "Chance":{
+                                   "LCategoryPrice":"0",
+                                   "LCategoryPriceSpecified":true,
+                                   "MCategoryPrice":"0",
+                                   "MCategoryPriceSpecified":true,
+                                   "SCategoryPrice":"0",
+                                   "SCategoryPriceSpecified":true,
+                                   "BestMainPrice":"0",
+                                   "BestMainPriceSpecified":true
+                                },
+                                "AccessMode":"1",
+                                "AccessModeSpecified":true
+                             },
+                             "GmkAdPromotion":{
+                                "LargePlus":"0",
+                                "LargePlusSpecified":true,
+                                "LargePowerMini":"0",
+                                "LargePowerMiniSpecified":true,
+                                "LargeBestPower":"0",
+                                "LargeBestPowerSpecified":true,
+                                "MiddlePlus":"0",
+                                "MiddlePlusSpecified":true,
+                                "MiddlePower":"0",
+                                "MiddlePowerSpecified":true,
+                                "MiddleDetailPower":"0",
+                                "MiddleDetailPowerSpecified":true,
+                                "MiddleBestPower":"0",
+                                "MiddleBestPowerSpecified":true,
+                                "SmallPlus":"0",
+                                "SmallPlusSpecified":true,
+                                "SmallPower":"0",
+                                "SmallPowerSpecified":true
+                             },
+                             "OverseaAgree":{
+                                "Gubun":"0",
+                                "GubunSpecified":false,
+                                "OverseaDisAgreeIs":false
+                             },
+                             "IsLeaseAvailableInIac":false,
+                             "GmktShopGroupCd":"0",
+                             "IsIacFreeWishKeyword":false,
+                             "IacFreeWishKeywordEndDate":false,
+                             "IacCommissionRate":"0",
+                             "IacCommissionRateOpenMarket":"0",
+                             "IacCommissionRateGroupBy":"0",
+                             "IsIacFeeDiscountItem":false,
+                             "IsDispExclude":true,
+                             "IsDispExcludeSpecified":true
+                          }';
+        return $SYIStep3;
+    }
+    private function insertOrderData($orderData){
+        if(isset($orderData) && is_array($orderData) && count($orderData)){
+            foreach ($orderData as $key => $val) {
+                $ticket = [
+                    'useAmount' => $val['TotalCnt'],
+                    'totalAmount' => $val['TotalCnt'],
+                    'ticketNumber' => $val['InvoiceNo'],
+                    'price' => str_replace(",", "", $val['SupplyPrice']),
+                    'purchasedAt' => $val['PayDate'],
+                    //'canceledAt' => $val['PayExpireDate'],
+                    'optionId' => "",
+                    'dealId' => $val['GoodsNo']
+                ];
+                $queryTicket = $this->_model->loadRecord('ticket', ['ticketNumber' => $val['InvoiceNo']]);
+                if ($queryTicket) {
+                    $this->_model->updateRecord('ticket', $ticket, ['ticketNumber' => $val['InvoiceNo']]);
+                } else {
+                    $this->_model->insertRecord('ticket', $ticket);
+                }
+                $SiteID=$val['SiteID'];
+                $SiteID=str_replace('<strong class="c_018f10">', '', $SiteID);
+                $SiteID=str_replace('<strong class="c_ff0909">', '', $SiteID);
+                $SiteID=str_replace('</strong>', '', $SiteID);
+                $dealName=str_replace('</span>', '', $val['GoodsName']);
+                $dealName= explode('">',$dealName);
+                $dealName=$dealName[1];
+                $ticketPurchasers = [
+                    'orderNumber' => $val['OrderNo'],
+                    'ticketNumber' => $val['InvoiceNo'],
+                    'userName' => $val['BuyerName'],
+                    'phoneNumber' => $val['BuyerHt'],
+                    'dealId' => $val['GoodsNo'],
+                    'dealName' => $dealName,
+                    'optionId' => "",
+                    'optionName' => "",
+                    'price' => str_replace(",", "", $val['SupplyPrice']),
+                    'purchaseDateTime' => $val['PayDate'],
+                    'paymentDateTime' => $val['TransDate'],
+                    'fee' =>  str_replace(",", "", $val['ServiceUseAmnt']),
+                    'status' => 'COMPLETE',
+                    'channel_name' =>  $SiteID
+                ];
+                $queryTicketPurchasers = $this->_model->loadRecord('ticketPurchasers', ['ticketNumber' => $val['InvoiceNo']]);
+                if ($queryTicketPurchasers) {
+                    $this->_model->updateRecord('ticketPurchasers', $ticketPurchasers, ['ticketNumber' => $val['InvoiceNo']]);
+                }else {
+                    $this->_model->insertRecord('ticketPurchasers', $ticketPurchasers);
+                }
+            }
+            return true;
+        }
+        return false;
+    }   
+
+    public function questionAction($channel = null, $StartDate = null, $EndDate = null){
+        //$channel='A';
+        if($channel==null && isset($this->_params['channel']))
+            $channel=$this->_params['channel'];
+              // echo $channel;
+        $data =[    
+                'Password' => 'yakeun87!@',
+                'Type' => 'S',
+                'ReturnUrl' => 'http://www.esmplus.com/Home/Home',
+                'SiteType' => 'GMKT',
+                'Id' => 'ysjlabs',
+                'RememberMe' => 'true',
+                'RememberMe' => 'false'  ];
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $client->request('POST', 'https://www.esmplus.com/SignIn/Authenticate',$data);
+        
+        if ($StartDate == null && $EndDate == null) {
+            $StartDate = (date("Y") - 1)  . date("md");
+            $EndDate = date("Ymd");
+        }
+
+        if($channel=='G')
+            $this->_model->updateRecord('question', ['isDelete' => 1], ['where' => 'question_created > "'.date('Y-m-d',strtotime($StartDate)).' 00:00:00" AND channel_name="GMKT"']);  
+        //$this->_model->updateRecord('question', ['isDelete' => 1], ['where' => 'question_created > "'.$StartDate.' 00:00:00" AND channel_name="WMAKE"']);  
+    //       echo $StartDate . " - " . $EndDate;
+    //   die();
+        $dataQuestion['page'] =1;
+        $dataQuestion['limit'] =20;
+        $paramsData=[
+            "Site" => $channel,
+            "Account" => "All",
+            "DateType" => "DA",
+            "StartDate" => $StartDate,
+            "EndDate" => $EndDate,
+            "InquryType" => "AL",
+            "QueryType" => "AL",
+            "ReplyType" => "AL",
+            "KeywordType" => "KC",
+            "Keyword" => "",
+            "OrderType" => "0",
+            "PageSize" => 20,
+            "CurrentPage" => 1,
+            "TotalCount" => 0            
+        ];
+        $dataQuestion['paramsData'] = json_encode($paramsData);
+        $dataQuestion['SortFeild'] = 'ItemNo';
+        $dataQuestion['SortType'] = 'Asc';
+        
+        // lấy tống số câu hỏi
+//         $client->request("POST", "https://www.esmplus.com/Member/CustomerService/GetInquryList", $dataQuestion);  
+//         $results = json_decode($client->getResponse()->getContent(), true);
+//         $totalCount = $results['total'];
+
+        // lấy tất cả câu hỏi
+        $dataQuestion['limit'] = 300; // tông số 300
+        $client->request("POST", "https://www.esmplus.com/Member/CustomerService/GetInquryList", $dataQuestion);  
+        $results = json_decode($client->getResponse()->getContent(), true);
+        // echo "<pre>";
+        // print_r($results['data']);
+        // die;
+        $questionData=[];
+        if($results['success']==1){
+            foreach ($results['data'] as $value) {
+                if($value['ReplyType']=='처리완료'){ // đã trả lời
+                    $detail=[
+                        'SeqNo' => $value['SeqNo'],
+                        'Token' => $value['Token']
+                    ];
+                    $client->request("POST", "https://www.esmplus.com/Member/CustomerService/GetInquiryDetail", $detail);  
+                    $html= $client->getResponse()->getContent();
+                    
+                    
+                    $pieces = explode('<div class="txt">', $html);
+                    $count=count($pieces);
+                    $content= strip_tags($pieces[$count-1]);
+                    
+                    $pieces = explode('<p class="date">', $html);
+                    $count=count($pieces);
+                    $pieces1 = explode('</p>', $pieces[$count-1]);
+                    $date =  strip_tags($pieces1[0]);
+                    $date = str_replace('[답변일 :', '', $date);
+                    $date = str_replace(']', '', $date);
+                    
+                    $value['questionDetail']['date']=$date;
+                    $value['questionDetail']['content']=$content;
+                }else{ // chưa trả lời
+                    $value['questionDetail']['date']='';
+                    $value['questionDetail']['content']='';
+                }
+                $questionData[]=$value;
+            }
+            
+            $this->insertQuestionData($questionData);
+        }
+    }
+    private function insertQuestionData($questionData){
+        foreach ($questionData as $value) {
+            $pieces = explode(" ", $value['ItemNo']);
+            $data = [
+                'question_name' => $value['BuyerName'],
+                'question_email' => "",
+                'question_content' => $value['Content'],
+                'question_created' => $value['InsDate'].":00",
+                'question_status' => 1,
+                'orderNumber' => $value['OrderNo'],
+                'dealName' => "",
+                'dealId' =>$pieces[0],
+                'question_purchase' => "",
+                'channel_name' => $value['SiteType'],
+                'inquiryId' => $value['SeqNo'],
+                'isDelete' => 0
+            ];
+            if ($value['ReplyType'] == "처리완료") {
+                $data['question_status'] = 2;
+                $data['reply_name'] = $value['SellerId'];
+                $data['reply_email'] = "";
+                $data['reply_created'] =$value['questionDetail']['date'];
+                $data['reply_content'] = $value['questionDetail']['content'];
+            }
+            
+            $inquiryId = trim($value['SeqNo']);
+            $result = $this->_model->loadRecord('question', ['inquiryId' => $inquiryId , 'channel_name'=>$value['SiteType']]);
+            if ($result) {
+                $this->_model->updateRecord('question', $data, ['inquiryId' => $inquiryId, 'channel_name'=>$value['SiteType']]);
+            } else {
+                $this->_model->insertRecord('question', $data);
+            }
+        }
+        
+    }
+
+    public function replyQuestionAction($seqNo, $content){
+        $data =[    'Password' => 'yakeun87!@',
+        'Type' => 'S',
+        'ReturnUrl' => 'http://www.esmplus.com/Home/Home',
+        'SiteType' => 'GMKT',
+        'Id' => 'ysjlabs',
+        'RememberMe' => 'true',
+        'RememberMe' => 'false'  ];
+
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        $client->request('POST', 'https://www.esmplus.com/SignIn/Authenticate',$data);
+
+        // Get token 
+        $channel='G';
+        $lastYear = date('Y') -1;
+        $StartDate = $lastYear . date("md");
+        $EndDate = date('Ymd');    
+        $paramsData=[
+            "Site" => $channel,
+            "Account" => "All",
+            "DateType" => "DA",
+            "StartDate" => $StartDate,
+            "EndDate" => $EndDate,
+            "InquryType" => "AL",
+            "QueryType" => "AL",
+            "ReplyType" => "AL",
+            "KeywordType" => "KC",
+            "Keyword" => "",
+            "OrderType" => "0",
+            "PageSize" => 20,
+            "CurrentPage" => 1,
+            "TotalCount" => 0            
+        ];
+        $dataQuestion['paramsData'] = json_encode($paramsData);
+        $dataQuestion['SortFeild'] = 'ItemNo';
+        $dataQuestion['SortType'] = 'Asc';
+        
+        $client->request("POST", "https://www.esmplus.com/Member/CustomerService/GetInquryList", $dataQuestion);
+        $results = json_decode($client->getResponse()->getContent(), true);
+        $token = "";
+
+        foreach ($results['data'] as  $question) {
+            if($question['SeqNo'] == $seqNo) {
+                $token = $question['Token'];
+                break;
+            }
+        }
+        // answer the quesiton
+        $answerData = [
+            'SeqNo' => $seqNo,
+            'rSeqNo' => '0',
+            'Title' => '여보세요',
+            'Answer' => $content,
+            'Method' => '게시판',
+            'ResType' => 'Bulletin',
+            'Token' => $token,
+            'ResStatus' => 'Answerd'
+        ];
+
+        $client->request('POST', 'https://www.esmplus.com/Member/CustomerService/AddAnswerInquiry',$answerData);
+        $response = $client->getResponse();
+        echo '<pre>';
+        print_r($response);
+
+    }
+
+
+}
+
+?>

@@ -1,0 +1,983 @@
+<?php
+
+require PATH_ROOT . '/vendor1/autoload.php';
+
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+
+use Google\Cloud\Storage\StorageClient;
+
+class WemakepriceController extends Controller {
+
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+
+    public function register_stream_wrapper($projectId) {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+
+    function callAPI($method, $url, $data, $token) {
+
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        //echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+        if ($token == "") {
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json;charset=UTF-8'
+            ));
+        } else {
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json;charset=UTF-8',
+                'Authorization: ' . $token
+            ));
+        }
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            //die("Connection Failure");
+        }
+        curl_close($curl);
+        return json_decode($result, true);
+    }
+
+    private function getTokenLogin($data = '', $url = '') {
+        if ($data == '' || !isset($data)) {
+            $data = '{"loginType":"PARTNER","userId":"tbridge1","userPwd":"dwkez6nivv"}';
+        }
+        if ($url == '' || !isset($url)) {
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/user/login';
+        }
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+
+        $header = array(
+            'Accept: application/json',
+            'Content-Type: application/json'
+        );
+
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        $results = curl_exec($curl);
+
+        if (!$results) {
+            return false;
+        }
+        curl_close($curl);
+        $result = json_decode($results, true);
+        $token = "Bearer " . $result['token'];
+        return $token;
+    }
+
+    private function insertProductWMP($token, $dataInsert) {
+        if (is_array($dataInsert) && count($dataInsert)) {
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/base';
+            $data = json_encode($dataInsert);
+            $result = $this->callAPI('POST', $url, $data, $token);
+            if (isset($result['goodsId']))
+                return $result['goodsId'];
+        }
+        return false;
+    }
+
+    private function updateProductWMP($token, $goodIds, $data, $step) {
+
+        if ($step == 1) {
+            $data = [
+                'alerts' => [
+                    [
+                        "id" => 36395,
+                        "email" => "testingkakaogv@gmail.com12",
+                        "kakaoMobileNum" => "testing Kakao12",
+                        "subject" => "093965756612",
+                        "useEmail" => false,
+                        "useKakao" => false
+                    ]
+                ],
+                "changeableProductFee" => true,
+                "facility" => [
+                    "address1" => "제주특별자치도 제주시 애월읍 장소로 219-112",
+                    "address2" => "testing address detail12",
+                    "latitude" => "33.43333730041612",
+                    "longitude" => "126.38019015260812",
+                    "mainPhone" => "08456611312",
+                    "name" => "testing name12",
+                    "subPhone" => "11412",
+                    "subPhoneName" => "08412",
+                    "url" => "http://24h.com.vn12"
+                ],
+                "mdId" => "201712005912",
+                "mdName" => "김희재",
+                "partnerId" => "tbridge1",
+                "partnerName" => "(주)티브리지",
+                "productFee" => [
+                    "rateType" => "PERCENT",
+                    "rateValue" => "33.00"
+                ],
+                "locationType" => "DOMESTIC"
+            ];
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/base';
+
+            $data = json_encode($data);
+            $result = $this->callAPI('PUT', $url, $data, $token);
+        } elseif ($step == 2) {
+            $data = [
+                "addInfo" => "other info testing",
+                "agency" => "",
+                "cancelFees" => [],
+                "contactUs" => "",
+                "description" => "",
+                "hasCancelFee" => false,
+                "hasRequiredInput" => false,
+                "images" => [
+                    [
+                        "uid" => "1595836094181",
+                        "order" => 0,
+                        "url" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/googledrive.PNG",
+                        "fileUrl" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/googledrive.PNG"
+                    ]
+                ],
+                "listingImages" => [
+                    [
+                        "uid" => "1595836430344",
+                        "order" => 0,
+                        "url" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/greentower.PNG",
+                        "fileUrl" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/greentower.PNG"
+                    ]
+                ],
+                "information" => "description call testing",
+                "isCancelable" => true,
+                "isMandatoryReservation" => false,
+                "isPendingReservation" => false,
+                "maxQuantityPerPerson" => 0,
+                "maxQuantityPerPurchase" => 0,
+                "name" => "call api add product",
+                "openingHours" => [
+                    "holiday" => "",
+                    "weekday" => ["end" => "23:30", "start" => "01:30"],
+                    "weekend" => ["end" => "", "start" => ""]
+                ],
+                "parkingInfo" => [
+                    "information" => "",
+                    "parkingType" => "FREE"
+                ],
+                "period" => "",
+                "productCategory1" => "CT000003",
+                "productCategory2" => "CT000082",
+                "refund" => "",
+                "refundRuleText" => "info Refund money testing",
+                "regionCategory" => "CR000004",
+                "additional" => [],
+                "saleDeadlineDay" => null,
+                "saleEndAt" => "2021-07-23T02:00:00",
+                "saleStartAt" => "2020-07-28T01:00:00",
+                "scheduleKind" => "PERIOD",
+                "store" => "",
+                "useEndAt" => "2020-08-21T02:00:00",
+                "useInfo" => "use infomation 123",
+                "useStartAt" => "2020-07-28T01:30:00",
+                "useType" => "NOW",
+                "useTypeStartAt" => "",
+                "isIncludeDateOption" => false,
+                "recommendList" => [],
+                "locationType" => "DOMESTIC"
+            ];
+
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/detail';
+
+            $data = json_encode($data);
+            $result = $this->callAPI('POST', $url, $data, $token);
+        } elseif ($step == 3) {
+            $sql = '    SELECT sc.sellerProductId, sc.travelProductId, st.sellerTravelItemId, st.travelItemId, st.optionCategoryId, tv.name, 
+                                tv.isDelete, sc.type_rate, tv.onsale, ra.price, ra.pricesale, ra.amount, ra.saleEndedAt
+                        FROM tb_salechannel sc, tb_salechannelitem st, tb_travelitems tv, tb_rates ra
+                        WHERE sc.sellerProductId = st.sellerProductId AND st.sellerTravelItemId = tv.sellerTravelItemId 
+                                AND tv.sellerTravelItemId = ra.sellerTravelItemId AND sc.travelProductId = "' . $goodIds . '" ';
+
+            $this->_model->setQuery($sql);
+            $results3 = $this->_model->readAll();
+
+            $optionName = [];
+            foreach ($results3 as $items) {
+                array_push($optionName, $items['name']);
+            }
+
+            $data = ["categoryInfos" => [
+                    [
+                        "categoryName" => "option name",
+                        "categoryValues" => $optionName,
+                        "depth" => 1
+                    ]
+                ],
+                "optionBase" => [
+                    "basicPrice" => (float) $results3[0]['price'],
+                    "salePrice" => (float) $results3[0]['price'], //pricesale
+                    "stockQuantity" => $results3[0]['amount'],
+                    "isDisplay" => ($results3[0]['onsale'] == 1) ? true : false
+                ],
+                "removeCategoryValues" => []
+            ];
+
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/options/base';
+            $data = json_encode($data);
+            $result = $this->callAPI('POST', $url, $data, $token);
+
+            // Options
+            $urlOptions = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/options/base';
+            $objOptions = $this->callAPI("GET", $urlOptions, null, $token);
+
+            $optionCategoryId = [];
+            // Get $optionCategoryId
+            $i = 0;
+            foreach ($objOptions['optionCategoryMap'] as $item) {
+                $optionCategoryId[$i] = $item['optionCategoryId'];
+                $i++;
+            }
+
+            // Add options
+            $options = [];
+            $i = 0;
+            $addOptions = 0;
+            $editOptions = 0;
+            foreach ($results3 as $items) {
+                if (empty($items['travelItemId'])) {
+                    $addOptions = 1;
+                    $onSale = true;
+                    if ($items['isDelete'] == 1) {
+                        $onSale = false;
+                    } elseif ($items['onsale'] == 0) {
+                        $onSale = false;
+                    }
+                    $optionData = [
+                        'basicPrice' => $items['price'],
+                        'displaySaleEndDate' => null,
+                        'isDisplay' => $onSale,
+                        'optionCategoryId' => $optionCategoryId[$i],
+                        'optionCategoryValues' => (string) $items['name'],
+                        'partnerGoodsCode' => null,
+                        'rateValue' => $items['type_rate'],
+                        'saleEndDate' => null,
+                        'salePrice' => $items['price'], //pricesale
+                        'stockQuantity' => $items['amount'],
+                        'useDate' => null
+                    ];
+                    array_push($options, $optionData);
+                    $i++;
+                } else {
+                    $editOptions = 1;
+                    $onSale = true;
+                    if ($items['isDelete'] == 1) {
+                        $onSale = false;
+                    } elseif ($items['onsale'] == 0) {
+                        $onSale = false;
+                    }
+                    $optionData = [
+                        'basicPrice' => $items['price'],
+                        'id' => (int) $items['travelItemId'],
+                        'isDisplay' => $onSale,
+                        'optionCategoryId' => $items['optionCategoryId'], //$optionCategoryId[$i],
+                        'optionCategoryValues' => (string) $items['name'],
+                        'partnerGoodsCode' => null,
+                        'rateValue' => $items['type_rate'],
+                        'saleEndDate' => '2020-07-31T00:30:00', //$items['saleEndedAt'],
+                        'salePrice' => $items['price'], //pricesale
+                        'stockQuantity' => $items['amount'],
+                        'useDate' => null
+                    ];
+
+                    array_push($options, $optionData);
+                    $i++;
+                }
+            }
+
+            if ($options) {
+                $data = [
+                    'optionBaseId' => $objOptions['optionBase']['id'],
+                    "options" => $options
+                ];
+
+                if ($addOptions == 1) {
+                    $data = json_encode($data);
+                    $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/options';
+                    $result = $this->callAPI('POST', $url, $data, $token);
+                }
+
+                if ($editOptions == 1) {
+                    $data = json_encode($data);
+                    $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/options';
+                    $result = $this->callAPI('PUT', $url, $data, $token);
+                }
+
+                $data = [
+                    'pageNumber' => 1,
+                    'pageSize' => 100,
+                    'showSoldOut' => true
+                ];
+                $urlOptionsId = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/options/search';
+                $objOptionsIds = $this->callAPI("POST", $urlOptionsId, json_encode($data), $token);
+
+                $travelItemId = [];
+                $i = 0;
+                foreach ($objOptionsIds['results'] as $iemOptionIdValue) {
+                    $travelItemId[$i] = $iemOptionIdValue['id'];
+                    $i ++;
+                }
+
+                $i = 0;
+                foreach ($results3 as $items) {
+                    $data = [
+                        'travelItemId' => isset($travelItemId[$i]) ? $travelItemId[$i] : '',
+                        'optionCategoryId' => isset($optionCategoryId[$i]) ? $optionCategoryId[$i] : ''
+                    ];
+                    $i ++;
+                    $this->_model->updateRecord('salechannelitem', $data, ['sellerTravelItemId' => $items['sellerTravelItemId']]);
+                }
+            }
+        } elseif ($step == 4) {
+            $data = [
+                "ticketType" => "EXTERNAL",
+                "tickets" => []
+            ];
+
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/tickets';
+            $data = json_encode($data);
+            $result = $this->callAPI('POST', $url, $data, $token);
+        } elseif ($step == 5) {
+
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/notice';
+
+            $data = json_encode($data);
+            $result = $this->callAPI('POST', $url, $data, $token);
+        }
+
+        return $result;
+    }
+
+    private function buildData($salechannel = array(), $step) {
+
+        $data = [];
+        if (is_array($salechannel) && count($salechannel)) {
+            $sellerProductId = $salechannel['sellerProductId'];
+            $sellerproduct = $this->_model->loadRecord('sellerproduct', ['sellerProductId' => $sellerProductId]);
+            $locations = $this->_model->loadRecord('locations', ['sellerProductId' => $sellerProductId]);
+            $images = $this->_model->loadRecords('images', ['sellerProductId' => $sellerProductId]);
+            $contacts = $this->_model->loadRecords('contacts1', ['sellerProductId' => $sellerProductId]);
+            $publication = $this->_model->loadRecords('publication', ['sellerProductId' => $sellerProductId]);
+            $cancelPolicy = $this->_model->loadRecord('cancelpolicy', ['sellerProductId' => $sellerProductId]);
+
+            $supplierId = '';
+            if (isset($sellerproduct['supplier'])) {
+                $supplierId = $sellerproduct['supplier'];
+            }
+
+            $supplier = $this->_model->loadRecord('user', ['idx' => $supplierId]);
+            //set data default for all            
+            if ($step == 1) {
+                $data['alerts']['id'] = 36395;
+                $data['alerts']['email'] = isset($supplier['email']) ? $supplier['email'] : '';
+                $data['alerts']['kakaoMobileNum'] = '';
+                $data['alerts']['subject'] = '';
+                $data['alerts']['useEmail'] = false;
+                $data['alerts']['useKakao'] = false;
+
+                $data['changeableProductFee'] = true;
+
+                $data['facility']['address1'] = isset($locations['roadNameAddress']) ? $locations['roadNameAddress'] : '';
+                $data['facility']['address2'] = isset($locations['landNumberAddress']) ? $locations['landNumberAddress'] : '';
+                $data['facility']['latitude'] = isset($locations['latitude']) ? $locations['latitude'] : '';
+                $data['facility']['longitude'] = isset($locations['longitude']) ? $locations['longitude'] : '';
+                $data['facility']['mainPhone'] = isset($supplier['phonetable']) ? $supplier['phonetable'] : '';
+                $data['facility']['name'] = isset($supplier['name']) ? $supplier['name'] : '';
+                $data['facility']['subPhone'] = isset($supplier['phoneadvisory']) ? $supplier['phoneadvisory'] : '';
+                $data['facility']['subPhoneName'] = isset($supplier['phonecancel']) ? $supplier['phonecancel'] : '';
+                $data['facility']['url'] = isset($supplier['website']) ? $supplier['website'] : '';
+
+                $data['mdId'] = "2017120059";
+                $data['mdName'] = "김희재";
+                $data['partnerId'] = 'tbridge1';
+                $data['partnerName'] = '(주)티브리지';
+                $data['productFee']['rateType'] = "PERCENT";
+                $data['productFee']['rateValue'] = $salechannel['type_rate'];
+                ;
+                $data['locationType'] = "DOMESTIC";
+            } elseif ($step == 2) {
+                $data['addInfo'] = $sellerproduct['notice'];
+                $data['agency'] = isset($supplier['name']) ? $supplier['name'] : '';
+                $data['cancelFees'] = [];
+                $data['contactUs'] = '';
+                $data['description'] = $sellerproduct['introduction'];
+                $data['hasCancelFee'] = false;
+                $data['hasRequiredInput'] = false;
+                if (isset($images) && is_array($images) && count($images)) {
+                    $i = 0;
+                    foreach ($images as $k => $v) {
+                        if ($v['type'] === 1) {
+                            $data['images'][$i]['uid'] = '1595836094181';
+                            $data['images'][$i]['order'] = $i;
+                            $data['images'][$i]['url'] = Func::getPathImage($v['sellerUrl'], 460);
+                            $data['images'][$i]['fileUrl'] = Func::getPathImage($v['sellerUrl'], 460);
+                            $i++;
+                        } else {
+                            $data['listingImages']['uid'] = '1595836430344';
+                            $data['listingImages']['order'] = 0;
+                            $data['listingImages']['url'] = Func::getPathImage($v['sellerUrl'], 460);
+                            $data['listingImages']['fileUrl'] = Func::getPathImage($v['sellerUrl'], 460);
+                        }
+                    }
+                }
+
+                $data['information'] = $sellerproduct['csContactInfo'];
+                $data['isCancelable'] = true;
+                $data['isMandatoryReservation'] = false;
+                $data['isPendingReservation'] = false;
+                $data['maxQuantityPerPerson'] = $sellerproduct['maxPurchaseQuantity'];
+                $data['maxQuantityPerPurchase'] = $sellerproduct['maxPurchaseTime'];
+                $data['name'] = $sellerproduct['name'];
+
+                $data['openingHours']['holiday'] = '';
+                $data['openingHours']['weekday'] = [
+                    'end' => '23:30',
+                    'start' => '00:30'
+                ];
+                $data['openingHours']['weekend'] = [
+                    'end' => '',
+                    'start' => ''
+                ];
+
+                $data['parkingInfo']['information'] = isset($contacts['parking']) ? $contacts['parking'] : '';
+                $data['parkingInfo']['parkingType'] = isset($contacts['parking_fee']) ? $contacts['parking_fee'] : 'FREE';
+
+                $data['period'] = '';
+                $data['productCategory1'] = ''; //type wmp
+                $data['productCategory2'] = '';
+                $data['refund'] = isset($cancelPolicy['notice']) ? $cancelPolicy['notice'] : '';
+                $data['refundRuleText'] = '';
+                $data['regionCategory'] = ''; //type khu vuc
+                $data['additional'] = [];
+                $data['saleDeadlineDay'] = null;
+                $data['saleEndAt'] = str_replace(' ', 'T', $sellerproduct['saleEndedAt']);
+                $data['saleStartAt'] = str_replace(' ', 'T', $sellerproduct['saleStartedAt']);
+                $data['scheduleKind'] = "PERIOD";
+                $data['store'] = '';
+                $data['useEndAt'] = str_replace(' ', 'T', $sellerproduct['useEndedAt']);
+                $data['useInfo'] = '';
+                $data['useStartAt'] = str_replace(' ', 'T', $sellerproduct['useStartedAt']);
+                $data['useType'] = "NOW";
+                $data['isIncludeDateOption'] = false;
+                $data['recommendList'] = [];
+                $data['locationType'] = 'DOMESTIC';
+            } elseif ($step == 3) {
+                $salechannelItem = $this->_model->loadRecords('salechannelitem', ['salechannelId' => $salechannel['id']]);
+                $data['categoryInfos']['categoryName'] = 'option name';
+                if (is_array($salechannelItem) && count($salechannelItem)) {
+                    foreach ($salechannelItem as $key => $val) {
+                        $data['categoryInfos']['categoryValues'][] = $val['name'];
+                    }
+                }
+                $data['categoryInfos']['depth'] = 1;
+                $data['optionBase']['basicPrice'] = $sellerproduct['pricebasic'];
+                $data['optionBase']['salePrice'] = $sellerproduct['pricerepresentative'];
+                $data['optionBase']['stockQuantity'] = 333;
+                $data['optionBase']['isDisplay'] = true;
+                $data['removeCategoryValues'] = [];
+                $data = [
+                            "removeCategoryValues" => []
+                        ];
+            } elseif ($step == 4) {
+                $data['ticketType'] = "EXTERNAL";
+                $data['tickets'] = [];
+            } elseif ($step == 5) {
+                $data['basicPrice'] = $sellerproduct['pricebasic'];
+                $data['policy']['cancellation'] = '1.단순변심, 착오구매 등에 따른 청약철회는 재화 구매 계약 체결에 대한 수신확인 통지 받은 날로부터 7일 이내 가능하며 반품비용은 소비자가 부담함\n2.재화 등의 내용이 표시·광고의 내용과 다르거나 계약내용과 다르게 이행된 경우에는 그 재화 등을 공급받은 날부터 3개월 이내, 그 사실을 안 날 또는 알 수 있었던 날부터 30일 이내에 청약철회 등을 할 수 있으며 반품 비용은 판매자가 부담함\n3.단, 상품의 특성과 거래조건에 따라 청약철회가 일부 제한될 수 있으며 청약철회에 소요되는 비용이 다르게 책정될 수 있음(딜 상세페이지 참조)\n4.단순변심, 착오구매 등에 따른 청약철회가 불가능한 경우- 소비자에게 책임 있는 사유로.';
+                $data['policy']['complaints'] = '1.전자상거래 등에서의 소비자보호에 관한 법률 및 관련규정에 부합하는 기준에 따름\n2.마이페이지 내 1:1문의를 통해 문의해주세요.';
+                $data['policy']['conditions'] = '사이트 하단의 위메프 이용약관 참조';
+                $data['policy']['delivery'] = '배송방식 및 출고일 등은 딜 상세페이지 참조';
+                $data['policy']['refunds'] = '1.재화 등의 교환∙반품∙보증 조건 및 품질보증기준​- 전자상거래 등에서의 소비자보호에 관한 법률 및 관련 규정에 부합하는 기준에 따름​- 일부 상품의 경우 구체적인 교환∙반품∙보증 기준을 딜 상세페이지에 안내\n​2.주문취소 및 결제대금 환불 신청 방법​- 배송상품: 주문취소 및 결제대금의 환불은 마이페이지 내 신청 및 확인 가능​- 그 외 상품: 마이페이지>1:1문의를 통해 문의​3.환불의 지연에 따른 배상금 지급의 조건 및 절차​-전자상거래 등에서의 소비자 보호에 관한 법률 규정에 따라 재화 등을 반환 받은 날로부터​\u000b3 영업일 이내에 지급받은 대금의 환급을 정당한 사유 없이 지연하는 경우 연 15%의 ​\u000b지연배상금 청구 가능';
+
+                $data['product']['agency'] = isset($cancelPolicy['usageNotice']) ? $cancelPolicy['usageNotice'] : '';
+                $data['product']['period'] = '';
+                $data['product']['store'] = '';
+                $data['product']['refund'] = isset($cancelPolicy['notice']) ? $cancelPolicy['notice'] : '';
+                $data['product']['contactUs'] = isset($contacts['name']) ? $contacts['name'] : '';
+                
+                $sql = 'SELECT sc.travelProductId,  cp.notice, ct1.hotline, sp.creator, sp.useEndedAt, sp.usageNotice, sp.instantBooking
+                                FROM t_bridge.tb_salechannel sc,   tb_cancelpolicy cp, tb_contacts1 ct1, tb_sellerproduct sp
+                                WHERE sc.sellerProductId = cp.sellerProductId  AND sc.sellerProductId = ct1.sellerProductId 
+                                    AND sc.sellerProductId = sp.sellerProductId AND sc.travelProductId = "' . $goodIds . '"';
+
+                $this->_model->setQuery($sql);
+                $results5 = $this->_model->readAll();
+                if ($results5) {
+                    $data = [
+                        "basicPrice" => "상세 정보 참조",
+                        "policy" => [
+                            "cancellation" => "1.단순변심, 착오구매 등에 따른 청약철회는 재화 구매 계약 체결에 대한 수신확인 통지 받은 날로부터 7일 이내 가능하며 반품비용은 소비자가 부담함
+                                               2.재화 등의 내용이 표시·광고의 내용과 다르거나 계약내용과 다르게 이행된 경우에는 그 재화 등을 공급받은 날부터 3개월 이내, 그 사실을 안 날 또는 알 수 있었던 날부터 30일 이내에 청약철회 등을 할 수 있으며 반품 비용은 판매자가 부담함
+                                               3.단, 상품의 특성과 거래조건에 따라 청약철회가 일부 제한될 수 있으며 청약철회에 소요되는 비용이 다르게 책정될 수 있음(딜 상세페이지 참조)
+                                               4.단순변심, 착오구매 등에 따른 청약철회가 불가능한 경우- 소비자에게 책임 있는 사유로 '재화 등'이 멸실 또는 훼손된 경우- 시간의 경과에 의하여 재판매가 곤란할 정도로 '재화 등'의 가치가 현저히 감소한 경우- 같은 성능을 지닌 '재화 등'으로 복제가 가능한 경우 그 원본인 '재화 등'의 포장을 훼손한 경우- 기타 개별 상품과 관련한 청약철회 기준은 딜 상세페이지 참조
+                                               5.미성년자가 구매계약을 체결하는 경우에는 법정대리인이 동의하지 않으면 미성년자 본인 또는 법정대리인이 계약을 취소할 수 있습니다.",
+                            "complaints" => "1.전자상거래 등에서의 소비자보호에 관한 법률 및 관련규정에 부합하는 기준에 따름
+                                             2.마이페이지 내 1:1문의를 통해 문의해주세요.",
+                            "conditions" => "사이트 하단의 위메프 이용약관 참조",
+                            "delivery" => "재화 등의 공급방법 및 공급시기를 입력해주세요.",
+                            "refunds" => "1.재화 등의 교환∙반품∙보증 조건 및 품질보증기준​- 전자상거래 등에서의 소비자보호에 관한 법률 및 관련 규정에 부합하는 기준에 따름​- 일부 상품의 경우 구체적인 교환∙반품∙보증 기준을 딜 상세페이지에 안내
+​                                              2.주문취소 및 결제대금 환불 신청 방법​- 배송상품: 주문취소 및 결제대금의 환불은 마이페이지 내 신청 및 확인 가능​- 그 외 상품: 마이페이지>1:1문의를 통해 문의​
+                                          3.환불의 지연에 따른 배상금 지급의 조건 및 절차​-전자상거래 등에서의 소비자 보호에 관한 법률 규정에 따라 재화 등을 반환 받은 날로부터​3 영업일 이내에 지급받은 대금의 환급을 정당한 사유 없이 지연하는 경우 연 15%의 ​지연배상금 청구 가능"
+                        ],
+                        "product" => [
+                            "agency" => !empty($results5[0]['creator']) ? $results5[0]['creator'] : "Test",
+                            "period" => !empty($results5[0]['useEndedAt']) ? $results5[0]['useEndedAt'] : "Test",
+                            "store" => ($results5[0]['instantBooking'] == 0) ? 'NO' : 'YES',
+                            "refund" => !empty($results5[0]['notice']) ? $results5[0]['notice'] : "Test",
+                            "contactUs" => !empty($results5[0]['hotline']) ? $results5[0]['hotline'] : "Test"
+                        ]
+                    ];
+                }
+            }//end $results5
+        }
+        return $data;
+    }
+
+    public function autoupdateProductWMPAction() {
+        $token = $this->getTokenLogin();        
+        $sql = 'SELECT * FROM tb_salechannel sc WHERE sc.channelId=2 AND sc.isDelete=0 AND sc.`statusedit`=1';
+        $this->_model->setQuery($sql);
+        $salechannels = $this->_model->readAll();
+        if ($salechannels) {
+            foreach ($salechannels as $sc) {
+                
+                if ($sc['travelProductId'] != "" && $sc['statusedit'] == 1) {
+                    //update lên WMP                    
+                    if ($token) {
+                        $goodIds = $sc['travelProductId'];
+                        for($step=2;$step<6;$step++){
+                            $data = $this->buildData($sc, $step);
+                            //$result = $this->updateProductWMP($token, $goodIds, $data, $step);
+                            $result[$step] = $this->updateProductWMP($token, $goodIds,$data, $step);
+                        }
+                        
+                        if (isset($result) && is_array($result)) {
+                            echo 'Have ' . count($result) + 1 . ' step action successfull';
+                        }
+                        
+                    }
+                    //chuyen statusedit=2
+                    $this->_model->updateRecord('salechannel', ['statusedit' => 2], ['where' => "sellerProductId='" . $sc['sellerProductId'] . "'"]);
+                } else {                    
+                    //get info product
+                    $type_rate=$sc['type_rate'];
+                    $sellerProductId = $sc['sellerProductId'];
+                    $sql = 'SELECT sp.*,ct1.sellerProductId,ct1.name as name_company,ct1.roadNameAddress,ct1.landNumberAddress,ct1.phonetable,ct1.phoneadvisory,ct1.hotline,ct1.website,ct1.email FROM tb_sellerproduct sp,tb_contacts1 ct1 WHERE sp.sellerProductId=' . $sellerProductId . ' AND sp.sellerProductId=ct1.sellerProductId';
+                    $this->_model->setQuery($sql);
+                    $product = $this->_model->read();
+                    if ($product) {
+                        $dataIsert = [
+                            'alerts' => [
+                                [
+                                    'email' => $product['email'],
+                                    "id" => $sellerProductId,
+                                    "kakaoMobileNum" => "testing Kakao36",
+                                    "subject" => $product['hotline'],
+                                    "useEmail" => false,
+                                    "useKakao" => false
+                                ]
+                            ],
+                            "changeableProductFee" => true,
+                            "facility" => [
+                                "address1" => $product['roadNameAddress'],
+                                "address2" => $product['landNumberAddress'],
+                                "latitude" => "33.43333730041634",
+                                "longitude" => "126.38019015260834",
+                                "mainPhone" => $product['phonetable'],
+                                "name" => $product['name'],
+                                "subPhone" => $product['phoneadvisory'],
+                                "subPhoneName" => $product['hotline'],
+                                "url" => $product['website']
+                            ],
+                            "mdId" => "201712005936",
+                            "mdName" => "김희재",
+                            "partnerId" => "tbridge1",
+                            "partnerName" => $product['name_company'],
+                            "productFee" => [
+                                "rateType" => "PERCENT",
+                                "rateValue" => $type_rate.".00"
+                            ],
+                            "locationType" => "DOMESTIC"
+                        ];
+                        $goodIds = $this->insertProductWMP($token, $dataIsert);
+                        if($goodIds){
+                            $this->_model->updateRecord('salechannel',
+                                                        ['statusedit' => 1,'travelProductId' => $goodIds],
+                                                        [ 'where' => "id=". $sc['id']]
+                                                        );
+                        }
+                    }
+                }
+                
+            }
+        }
+        // foreach
+        // nếu có googids và statuedit =1 thì update > WMP và statusedit = 2
+        // nếu ko có goodids thì insert.
+    }
+    /*
+    public function updateProductAction() {
+        $token = $this->getTokenLogin();
+        $step = $this->_params['step'];
+        $goodIds = $this->_params['goodIds'];
+
+        $salechannel = $this->_model->loadRecord('salechannel', ['travelProductId' => $goodIds, 'channelId' => 2]);
+
+        // lấy data của từng step
+        $step = 2;
+
+        $data = $this->buildData($salechannel, $step);
+
+        $sql = 'SELECT sc.travelProductId 
+                FROM t_bridge.tb_salechannel sc, tb_channels c
+                WHERE sc.channelId = c.channel_id AND c.channel_cid="WMAKE" AND sc.sellerProductId = ' . $salechannel['sellerProductId'];
+        $this->_model->setQuery($sql);
+        $salechannels = $this->_model->readAll();
+
+        foreach ($salechannels as $item) {
+            if (!empty($item['travelProductId'])) {
+                $goodIds = trim($item['travelProductId']);
+                switch ($step) {
+                    case 3:
+                        $data = [
+                            "removeCategoryValues" => []
+                        ];
+                        break;
+
+                    case 5:
+                        $sql = 'SELECT sc.travelProductId,  cp.notice, ct1.hotline, sp.creator, sp.useEndedAt, sp.usageNotice, sp.instantBooking
+                                FROM t_bridge.tb_salechannel sc,   tb_cancelpolicy cp, tb_contacts1 ct1, tb_sellerproduct sp
+                                WHERE sc.sellerProductId = cp.sellerProductId  AND sc.sellerProductId = ct1.sellerProductId 
+                                    AND sc.sellerProductId = sp.sellerProductId AND sc.travelProductId = "' . $goodIds . '"';
+
+                        $this->_model->setQuery($sql);
+                        $results5 = $this->_model->readAll();
+                        if ($results5) {
+                            $data = [
+                                "basicPrice" => "상세 정보 참조",
+                                "policy" => [
+                                    "cancellation" => "1.단순변심, 착오구매 등에 따른 청약철회는 재화 구매 계약 체결에 대한 수신확인 통지 받은 날로부터 7일 이내 가능하며 반품비용은 소비자가 부담함
+                                                       2.재화 등의 내용이 표시·광고의 내용과 다르거나 계약내용과 다르게 이행된 경우에는 그 재화 등을 공급받은 날부터 3개월 이내, 그 사실을 안 날 또는 알 수 있었던 날부터 30일 이내에 청약철회 등을 할 수 있으며 반품 비용은 판매자가 부담함
+                                                       3.단, 상품의 특성과 거래조건에 따라 청약철회가 일부 제한될 수 있으며 청약철회에 소요되는 비용이 다르게 책정될 수 있음(딜 상세페이지 참조)
+                                                       4.단순변심, 착오구매 등에 따른 청약철회가 불가능한 경우- 소비자에게 책임 있는 사유로 '재화 등'이 멸실 또는 훼손된 경우- 시간의 경과에 의하여 재판매가 곤란할 정도로 '재화 등'의 가치가 현저히 감소한 경우- 같은 성능을 지닌 '재화 등'으로 복제가 가능한 경우 그 원본인 '재화 등'의 포장을 훼손한 경우- 기타 개별 상품과 관련한 청약철회 기준은 딜 상세페이지 참조
+                                                       5.미성년자가 구매계약을 체결하는 경우에는 법정대리인이 동의하지 않으면 미성년자 본인 또는 법정대리인이 계약을 취소할 수 있습니다.",
+                                    "complaints" => "1.전자상거래 등에서의 소비자보호에 관한 법률 및 관련규정에 부합하는 기준에 따름
+                                                     2.마이페이지 내 1:1문의를 통해 문의해주세요.",
+                                    "conditions" => "사이트 하단의 위메프 이용약관 참조",
+                                    "delivery" => "재화 등의 공급방법 및 공급시기를 입력해주세요.",
+                                    "refunds" => "1.재화 등의 교환∙반품∙보증 조건 및 품질보증기준​- 전자상거래 등에서의 소비자보호에 관한 법률 및 관련 규정에 부합하는 기준에 따름​- 일부 상품의 경우 구체적인 교환∙반품∙보증 기준을 딜 상세페이지에 안내
+    ​                                              2.주문취소 및 결제대금 환불 신청 방법​- 배송상품: 주문취소 및 결제대금의 환불은 마이페이지 내 신청 및 확인 가능​- 그 외 상품: 마이페이지>1:1문의를 통해 문의​
+                                                  3.환불의 지연에 따른 배상금 지급의 조건 및 절차​-전자상거래 등에서의 소비자 보호에 관한 법률 규정에 따라 재화 등을 반환 받은 날로부터​3 영업일 이내에 지급받은 대금의 환급을 정당한 사유 없이 지연하는 경우 연 15%의 ​지연배상금 청구 가능"
+                                ],
+                                "product" => [
+                                    "agency" => !empty($results5[0]['creator']) ? $results5[0]['creator'] : "Test",
+                                    "period" => !empty($results5[0]['useEndedAt']) ? $results5[0]['useEndedAt'] : "Test",
+                                    "store" => ($results5[0]['instantBooking'] == 0) ? 'NO' : 'YES',
+                                    "refund" => !empty($results5[0]['notice']) ? $results5[0]['notice'] : "Test",
+                                    "contactUs" => !empty($results5[0]['hotline']) ? $results5[0]['hotline'] : "Test"
+                                ]
+                            ];
+                        } else {
+                            return "Do not data by goodIds";
+                        }
+
+                        break;
+
+                    default:
+                    // default statements
+                }
+            }
+        }
+
+        if ($token && $data) {
+            $result = $this->updateProductWMP($token, $goodIds, $data, $step);
+            echo "<pre>";
+            print_r($result);
+        }
+    }*/
+
+    public function addProductAction() {
+        $token = $this->getTokenLogin();
+        if ($token) {
+            //step one create product
+            $dataIsert = [
+                'alerts' => [
+                    [
+                        'email' => "testingkakaogv@gmail.com36",
+                        "id" => 0,
+                        "kakaoMobileNum" => "testing Kakao36",
+                        "subject" => "093965756636",
+                        "useEmail" => false,
+                        "useKakao" => false
+                    ]
+                ],
+                "changeableProductFee" => true,
+                "facility" => [
+                    "address1" => "제주특별자치도 제주시 애월읍 장소로 219-1",
+                    "address2" => "testing address detail36",
+                    "latitude" => "33.43333730041634",
+                    "longitude" => "126.38019015260834",
+                    "mainPhone" => "08456611336",
+                    "name" => "testing name36",
+                    "subPhone" => "11435",
+                    "subPhoneName" => "08435",
+                    "url" => "http://24h.com.vn36"
+                ],
+                "mdId" => "201712005936",
+                "mdName" => "김희재",
+                "partnerId" => "tbridge1",
+                "partnerName" => "(주)티브리지",
+                "productFee" => [
+                    "rateType" => "PERCENT",
+                    "rateValue" => "3.00"
+                ],
+                "locationType" => "DOMESTIC"
+            ];
+            $goodIds = $this->insertProductWMP($token, $dataIsert);
+            if (isset($goodIds) && $goodIds) {
+                $step = 4;
+                $result12 = [];
+                for ($step = 2; $step < 6; $step++) {
+                    //$salechannel = $this->_model->loadRecord('salechannel', ['travelProductId' => $goodIds , 'channelId' => 2]);
+                    //$data=$this->buildData($salechannel, $step);
+                    $result[$step] = $this->updateProductWMP($token, $goodIds, $step);
+                }
+                if (isset($result) && is_array($result)) {
+                    echo 'Have ' . count($result) + 1 . ' step action successfull';
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+
+    // Phương thức index
+    public function indexAction() { //tour        
+        $url = "https://tour-partner-api.wonders.app/v1/partner/user/login";
+        $data = '{"loginType":"PARTNER","userId":"tbridge1","userPwd":"dwkez6nivv"}';
+        $result = $this->callAPI("POST", $url, $data, "");
+        $token = "Bearer " . $result['token'];
+        //$token = "Bearer eyJ0eXAiOiJKV1QiLCJyZWdEYXRlIjoxNTk0Nzc5NDQyMjM5LCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJlNmI0NTU5NC1jM2I1LTQwYjUtYWM2MS1lN2YzMjYwYjU1NjMiLCJzdWIiOiJXT05ERVJUT1VSIiwicGFydG5lcl9pZCI6InRicmlkZ2UxIiwic2FwX3BhcnRuZXJfaWQiOiIzNDQyIiwicGFydG5lcl9uYW1lIjoiKOyjvCnti7DruIzrpqzsp4AiLCJidXNpbmVzc19uYW1lIjoiKOyjvCnti7DruIzrpqzsp4AiLCJhdXRob3JpdHlfdHlwZSI6IlBBUlRORVIiLCJhdXRob3JpdHlfZ3JvdXBfY2QiOiJHUDAyMCIsImRvbWFpbl90eXBlIjoiVG91ckFjdGl2aXR5IiwiZGVwYXJ0bWVudF9jZCI6IldTVDAwMDAxNTAiLCJkZXBhcnRtZW50X25hbWUiOiLqta3rgrTslaHti7DruYTti7DtjIztirgiLCJleHAiOjE1OTQ4MjI2NDJ9.GTu-qyPnXHxxs6KRaVnLa45DMm3CctYizssp5UBVIoc";
+        $url = "https://tour-partner-api.wonders.app/v1/partner/activity/reservations/tickets?used=false&reservationTicketStatuses=B,R,F&ticketSearchDateType=PAID_DATE&startDate=2020-01-01&endDate=2020-07-08&partnerType=id&bookerType=name&reservationType=booking&goodsIdType=wid&pageSize=30&pageNumber=1&ticketOrderBy=PAID_DATE&locationType=DOMESTIC";
+        $obj = $this->callAPI("GET", $url, null, $token);
+
+        $totalCount = $obj['totalCount'];
+        for ($i = 0; $i < $totalCount; $i++) {
+            $createdBy = $obj["results"][$i]["createdBy"];
+            $createdAt = $obj["results"][$i]["createdAt"];
+            $updatedBy = $obj["results"][$i]["updatedBy"];
+            $updatedAt = $obj["results"][$i]["updatedAt"];
+            $id = $obj["results"][$i]["id"];
+            $reservationId = $obj["results"][$i]["reservationId"];
+            $optionId = $obj["results"][$i]["optionId"];
+            $optionName = $obj["results"][$i]["optionName"];
+            $ticketCodeId = $obj["results"][$i]["ticketCodeId"];
+            $ticketCode = $obj["results"][$i]["ticketCode"];
+            $price = $obj["results"][$i]["price"];
+            $couponPrice = $obj["results"][$i]["couponPrice"];
+            $cancelFeePrice = $obj["results"][$i]["cancelFeePrice"];
+            $status = $obj["results"][$i]["status"];
+            $statusName = $obj["results"][$i]["statusName"];
+            $useStart = $obj["results"][$i]["useStart"];
+            $useEnd = $obj["results"][$i]["useEnd"];
+            $used = $obj["results"][$i]["used"];
+            $usedAt = $obj["results"][$i]["usedAt"];
+            $unUsedTicketRefundType = $obj["results"][$i]["unUsedTicketRefundType"];
+            $unUsedTicketRefund = $obj["results"][$i]["unUsedTicketRefund"];
+            $unUsedTicketRefundAt = $obj["results"][$i]["unUsedTicketRefundAt"];
+            $canceledAt = $obj["results"][$i]["canceledAt"];
+            $partnerGoodsCode = $obj["results"][$i]["partnerGoodsCode"];
+            $additionalInformation = $obj["results"][$i]["additionalInformation"];
+            $orderNo = $obj["results"][$i]["reservation"]["orderNo"];
+            $goodsId = $obj["results"][$i]["reservation"]["goodsId"];
+            $goodsName = $obj["results"][$i]["reservation"]["goodsName"];
+            $partnerId = $obj["results"][$i]["reservation"]["partnerId"];
+            $partnerName = $obj["results"][$i]["reservation"]["partnerName"];
+            $category1Name = $obj["results"][$i]["reservation"]["category1Name"];
+            $category2Name = $obj["results"][$i]["reservation"]["category2Name"];
+            $category3Name = $obj["results"][$i]["reservation"]["category3Name"];
+            $category4Name = $obj["results"][$i]["reservation"]["category4Name"];
+            $reservationStatus = $obj["results"][$i]["reservation"]["reservationStatus"];
+            $reservationStatusName = $obj["results"][$i]["reservation"]["reservationStatusName"];
+            $bookerName = $obj["results"][$i]["reservation"]["bookerName"];
+            $bookerTel = $obj["results"][$i]["reservation"]["bookerTel"];
+            $bookerEmail = $obj["results"][$i]["reservation"]["bookerEmail"];
+            $mid = $obj["results"][$i]["reservation"]["mid"];
+            $travelersNumber = $obj["results"][$i]["reservation"]["travelersNumber"];
+            $paidAt = $obj["results"][$i]["reservation"]["paidAt"];
+            $scheduleKind = $obj["results"][$i]["reservation"]["scheduleKind"];
+            $reservationType = $obj["results"][$i]["reservation"]["reservationType"];
+            $wid = $obj["results"][$i]["reservation"]["wid"];
+            $ticket = [
+                'useAmount' => 0,
+                'totalAmount' => 1,
+                'ticketNumber' => $ticketCode,
+                'statusType' => 0,
+                'price' => $price,
+                'optionId' => $optionId,
+                'dealId' => $goodsId,
+                'purchasedAt' => $createdAt,
+                'restoreTicket' => 0,
+                'statusTicket' => 1
+            ];
+            //print_r($ticket);
+
+            $result1 = $this->_model->loadRecord('ticket', ['ticketNumber' => $ticketCode]);
+            if ($result1) {
+                $this->_model->updateRecord('ticket', $ticket, ['ticketNumber' => $ticketCode]);
+            } else {
+                $this->_model->insertRecord('ticket', $ticket);
+            }
+            $ticketPurchasers = [
+                'orderNumber' => 0,
+                'ticketNumber' => $ticketCode,
+                'userName' => $bookerName,
+                'phoneNumber' => $bookerTel,
+                'email' => $bookerEmail,
+                'dealId' => $goodsId,
+                'dealName' => $goodsName,
+                'optionId' => $optionId,
+                'optionName' => $optionName,
+                'price' => $price,
+                'purchaseDateTime' => $createdAt,
+                'status' => 0,
+                'channel_name' =>  "WMAKE"
+            ];
+           
+            $result2 = $this->_model->loadRecord('ticketPurchasers', ['ticketNumber' => $ticketCode]); 
+     
+            if ($result2) {
+                $this->_model->updateRecord('ticketPurchasers', $ticketPurchasers, ['ticketNumber' => $ticketCode]);
+            } else {
+                $this->_model->insertRecord('ticketPurchasers', $ticketPurchasers);  
+            }
+        }
+        /*
+          $ticketCode=$obj["results"][0]["ticketCode"];
+          $reservationId=$obj["results"][0]["reservationId"];
+          $goodsName=$obj["results"][0]["reservation"]["goodsName"];
+          $optionName=$obj["results"][0]["optionName"];
+          $useEnd=$obj["results"][0]["useEnd"];
+          $statusName=$obj["results"][0]["statusName"];
+          $price=$obj["results"][0]["price"];
+          $bookerName=$obj["results"][0]["reservation"]["bookerName"];
+          $bookerTel=$obj["results"][0]["reservation"]["bookerTel"];
+          $mid=$obj["results"][0]["reservation"]["mid"];
+          $wid=$obj["results"][0]["reservation"]["wid"];
+          $goodsId=$obj["results"][0]["reservation"]["goodsId"];
+          $createdAt=$obj["results"][0]["createdAt"]; */
+    }
+
+    // Phương thức index
+    public function questionAction() { //question       
+        $url = "https://tour-partner-api.wonders.app/v1/partner/user/login";
+        $data = '{"loginType":"PARTNER","userId":"tbridge1","userPwd":"dwkez6nivv"}';
+        $result = $this->callAPI("POST", $url, $data, "");
+
+        $token = "Bearer " . $result['token'];
+
+        $url = "https://tour-partner-api.wonders.app/v1/partner/activity/products/search?saleStatuses=SALE,READY,HOLD,SOLDOUT,STOP,END,TEMP&dateType=CREATED_DATE&pageNumber=1&pageSize=30&orderBy=CREATED_DATE&locationType=DOMESTIC";
+        $obj = $this->callAPI("GET", $url, null, $token);
+        echo "<pre>";
+        print_r($obj);
+        $obj = $obj["results"];
+        foreach ($obj as $item) {
+            $url = "https://tour-partner-api.wonders.app/v1/partner/activity/qna/products/" . trim($item['goodsId']) . "?pageNumber=1&pageSize=30";
+            $objQuestion = $this->callAPI("GET", $url, null, $token);
+            $objQuestion = $objQuestion["results"];
+
+            foreach ($objQuestion as $itemQuestionAnswer) {
+                if ($itemQuestionAnswer) {
+                    $inquiryId = trim($itemQuestionAnswer['id']);
+                    $result = $this->_model->loadRecords('question', ['inquiryId' => $inquiryId]);
+                    $data = [
+                        'question_name' => trim($itemQuestionAnswer['questionAuthor']),
+                        'question_content' => trim($itemQuestionAnswer['question']),
+                        'question_created' => trim($itemQuestionAnswer['questionCreatedAt']),
+                        'dealId' => $item['goodsId'],
+                        'channel_name' => 'WMAKE',
+                        'inquiryId' => $inquiryId
+                    ];
+
+                    if ($itemQuestionAnswer['answerAuthorName'] != "") {
+                        $data['question_status'] = 2;
+                        $data['reply_name'] = trim($itemQuestionAnswer['answerAuthorName']);
+                        $data['reply_created'] = trim($itemQuestionAnswer['answerCreatedAt']);
+                    }
+
+                    if ($result) {
+                        $this->_model->updateRecord('question', $data, ['inquiryId' => $inquiryId]);
+                    } else {
+                        $this->_model->insertRecord('question', $data);
+                    }
+                }
+            }
+        }
+
+        $url = "https://tour-partner-api.wonders.app/v1/partner/activity/qna/products/GD200000000083618?pageNumber=1&pageSize=30";
+        $obj = $this->callAPI("GET", $url, null, $token);
+        echo "<pre>";
+        print_r($obj);
+      //  die();
+    }
+    public function replyQuestionAction($inquiryId, $goodIds, $content){
+        $url = "https://tour-partner-api.wonders.app/v1/partner/user/login";
+        $data = '{"loginType":"PARTNER","userId":"tbridge1","userPwd":"dwkez6nivv"}';
+        $result = $this->callAPI("POST", $url, $data, "");
+
+        $token = "Bearer " . $result['token'];
+
+        $inquiryId = 5374;
+        $url = "https://tour-partner-api.wonders.app/v1/partner/activity/qna/$inquiryId/answer";
+        $data = [
+            'answer' => $content,
+            'id' => $inquiryId,
+            'goodsId' => $goodIds
+        ];
+        $jsonData =  json_encode($data, JSON_FORCE_OBJECT);
+        $objQuestion = $this->callAPI("POST", $url, $jsonData, $token);
+        echo "<pre>";
+        print_r($objQuestion);
+
+    }
+
+}
+
+
+
+
+
+
+?>

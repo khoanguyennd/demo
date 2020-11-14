@@ -1,0 +1,861 @@
+// Phương thức ajax
+var run = 0;
+function runAjax(method, data, call ){
+	if (call === undefined) {
+		 call = null;
+	}
+	
+	if(run == 0){
+		run = 1;
+		if(typeof(data) == 'object'){
+			if (window.XMLHttpRequest){// code for IE7+, Firefox, Chrome, Opera, Safari
+				xmlhttp=new XMLHttpRequest();
+			}else{// code for IE6, IE5
+				xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			xmlhttp.onreadystatechange=function(){	
+				if (xmlhttp.readyState==4 && xmlhttp.status==200){		
+					run = 0;	
+					if(typeof(call) == 'function'){
+						return call(xmlhttp.responseText);
+					}
+				}
+			}
+			var params = '';
+			$.each(data, function(index, value){
+				params += '&' + index + '=' + value;
+			});	
+			var url ="";
+			if(params != '')
+				url =encodeURI(jsData.urlAjax + method + '?' + (params.substr(1)));
+			else
+				url = encodeURI(jsData.urlAjax + method );
+				
+			console.log(url);
+			xmlhttp.open('GET',url,true);
+			xmlhttp.send();	
+		}
+	}
+}
+// Phương thức change ngôn ngữ
+function changeLangue(value){
+	runAjax('setLanguage', {'lang':value}, function(){
+		window.location.reload();	
+	});
+}
+
+// Kiểm tra email hợp lệ
+function validateEmail(TCode){
+	if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(TCode)){
+	    return 1;
+	 }
+	 return 0;
+}
+
+function validate(evt) {
+	var theEvent = evt || window.event;
+	// Handle paste
+	if (theEvent.type === 'paste') {
+		key = event.clipboardData.getData('text/plain');
+	} else {
+		// Handle key press
+		var key = theEvent.keyCode || theEvent.which;
+		key = String.fromCharCode(key);
+	}
+	var regex = /[0-9]|\./;
+	if( !regex.test(key) ) {
+		theEvent.returnValue = false;
+		if(theEvent.preventDefault) theEvent.preventDefault();
+	}
+}
+
+function validateID(TCode){
+	if(TCode==""){
+		return -1;
+	}
+	var pattern = /^[A-z0-9]{6,20}$/;
+    var match = pattern.exec( TCode );   
+    if(match) {
+    	return 1;
+    }else{
+    	return 0;
+    }   
+}
+
+function validateCodetax(TCode){
+	if(TCode){
+		var pattern = /^[0-9\-]+$/;
+	    if(TCode.match( pattern )){
+	    	var number = TCode.replace(/\-/gi,'');
+	    	if(number.length == 10){
+	    		return 1;
+	    	}
+	    }  
+	}
+    return 0;
+}
+
+
+
+/*==============================XÂY DỰNG HÀM TRONG JQUERY==================================*/
+$(document).ready(function() {  
+
+	$.elt_popup = '#popup';
+  	
+	/*Hàm kiểm tra giá trị tồn tại*/
+	$.fn_isset = function(variable){
+		if( typeof(variable) !== "undefined" && variable !== null && variable !== '' ){
+			return true;
+		}
+		return false;
+	}
+
+	/*Hàm kiểm tra giá trị rỗng*/
+	$.fn_empty = function(str){
+		var str = new String(str);
+		str = $.trim(str);
+		if(str == null){
+			return true;
+		}
+		if(str.length == 0){
+			return true;
+		}
+		if(parseInt(str) == 0){
+			return true;
+		}		
+		return false;
+	}
+
+	/*Hàm trả về số từ một dãi số hoặc chuỗi*/
+	$.fn_getNumeric = function(str){
+		var str = new String(str);
+		var result = str.replace(/[^0-9]/g, '');
+		if(!$.fn_empty(result)){
+			return parseInt(result);
+		}
+		return 0;
+	}
+
+	/*Hàm tính và trả về số ngày từ from đến to*/
+	$.fn_getDay = function(from, to){
+		return Math.ceil((to - from) / 86400);
+	}
+
+	/*Hàm chuyển đổi đối tượng thành 1 chuổi thuộc tính thẻ tag*/
+	$.fn_convertAttr = function(obj){
+		var strAttr = '';
+		if(typeof(obj) == 'object'){
+			$.each(obj, function(name, value){
+				strAttr += name + '="'+ value +'" ';
+			});
+		}
+		return strAttr;
+	}
+
+	$.fn_convertParamsGet = function(obj){
+		var strAttr = '';
+		if(typeof(obj) == 'object'){
+			$.each(obj, function(name, value){
+				strAttr += '&'+name + '='+ value +'';
+			});
+		}
+		return encodeURI('?'+strAttr.substr(1));
+	}
+ 
+	/*Hàm copy nội dung của một đoạn văn bản text*/
+	$.fn_copyText = function(text) {
+		var element = document.createElement('textarea');
+		document.body.appendChild(element);
+		element.value = text;
+		element.focus();
+		element.select();
+		document.execCommand('Copy');
+		element.remove();
+	}
+
+	// Hàm kiểm tra email hợp lệ
+	$.validateEmail = function(email){
+		if(email){
+			if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)){
+		    	return true;
+		  	}
+		}
+		return false;
+	}
+
+	$.validateID = function(strID){
+		if(strID){
+			var pattern = /^[A-z0-9]{6,20}$/;		     
+		    if(pattern.exec(strID)){
+		    	return true;
+		    }
+		}
+		return false;
+	}
+
+	// Hàm kiểm tra mật khẩu hợp lệ
+	$.validatePW = function(password){
+		if(password){
+			if(password.length < 6 ){
+				$('#warnpassword').text("6자 이상 입력하세요."); 
+				return false; 
+			}
+			if(password.length > 20 ){
+				$('#warnpassword').text("20자 미만으로 입력하세요."); 
+				return false; 
+			}
+		    if(password.length > 5 && password.length < 21){
+		    	var dem=0;
+				//var pattern1 = /^[a-zA-Z0-9\!@#$%^&*()_+\-=\[\]{};:\\|,.<>\/?]*$/;
+		        var format =  /[A-Za-z]/;
+		        if( format.test(password) ){
+		        	dem=dem+1;
+		        }
+		        var format = /[0-9]/;
+		        if( format.test(password) ){
+		        	dem=dem+1;
+		        }
+		        var format = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
+		        if( format.test(password) ){
+		        	dem=dem+1;
+		        }
+		        
+		        if(dem==3){
+		        	$('#warnpassword').text(""); 
+		        	return true; 
+		        }else{
+		        	$('#warnpassword').text("숫자/문자/특수기호를 조합하세요."); 
+		        	return false; 
+		        }
+		        
+			}
+		}
+	    return false;     
+	}
+
+	// Hàm kiểm tra mã ĐKKD hợp lệ
+	$.validateCodetax = function(strCode){
+		if(strCode){
+			var pattern = /^[0-9\-]+$/;
+		    if(strCode.match( pattern )){
+		    	var number = strCode.replace(/\-/gi,'');
+		    	if(number.length == 10){
+		    		return true
+		    	}
+		    }  
+		}
+	    return false;
+	}
+
+	// Hàm chỉ cho phép nhập ký tự số
+	$.inputNumeric = function(evt) {
+		var theEvent = evt || window.event;
+		// Handle paste
+		if (theEvent.type === 'paste') {
+		key = event.clipboardData.getData('text/plain');
+		} else {
+		// Handle key press
+		var key = theEvent.keyCode || theEvent.which;
+		key = String.fromCharCode(key);
+		}
+		var regex = /[0-9]|\./;
+		if( !regex.test(key) ) {
+			theEvent.returnValue = false;
+			if(theEvent.preventDefault) theEvent.preventDefault();
+		}
+	}
+
+	/*Hàm kiểm tra trạng thái pupop: true hiển thị, false là không hiển thị*/
+	$.fn_isPopup = function(){
+		if($($.elt_popup).find('.absolute:visible').length > 0){
+			return false;
+		}
+		return true;
+	}
+
+	/*Hàm popup, type = display | none ; popupName là tên của popup, closeAll true đóng tất cả popup đang hiển thị*/
+	$.fn_popup = function(display, popupName, closeAll , bg ){
+		
+		if (closeAll === undefined) {
+			closeAll = false;
+		}
+		if (bg === undefined) {
+			bg = true;
+		}
+		var background = 'none';
+		var element = $($.elt_popup).find('.absolute.' + popupName);
+		if(display == true){
+			$($.elt_popup).show();
+			$(element).show();			
+			if($(element).find('form').length > 0){
+				$(element).find('form').get(0).reset();
+			}
+			$(element).find('.title button').remove();
+			$(element).find('.title').append('<button type="button" class="popupClose"><i class="fas fa-times" aria-hidden="true"></i></button>');			
+			if(bg == true){
+				background = 'rgba(232,232,232, 0.5)';
+			}
+		}
+		if(display == false){
+			if(closeAll == false){	
+				$(element).hide();
+			}else{
+				$($.elt_popup).hide();
+				$(element).hide();			
+			}	
+		}
+		$($.elt_popup).find('.relative').css('background', background);
+	}
+
+	/*Hàm loadding*/
+	$.fn_loading = function(complete, closeAll){
+		if (complete === undefined) {
+			complete = true;
+		}
+		if (closeAll === undefined) {
+			closeAll = true;
+		}
+		var bg = ($($.elt_popup).find('.relative').css("background-color") == 'rgba(0, 0, 0, 0)')?false:true;
+		$.fn_popup(complete, 'loading', closeAll, bg);
+		if(complete == true){			
+			$($.elt_popup).find('.loading img').focus();	
+		}
+	}
+
+	/*Hàm thông báo; type: display | none; content nội dung thông báo*/
+	$.fn_alert = function(display , title, content){	
+		if (display === undefined) {
+			display = true;
+		}
+		if (title === undefined) {
+			title = true;
+		}
+		if (content === undefined) {
+			content = "";
+		}
+		if(display == true){
+			if(title == true){
+				title = '경고';
+			}
+			if(title== false){
+				title = 'Error';
+			}
+			$($.elt_popup).find('.alert .title h3').text(title);
+			$($.elt_popup).find('.alert .content p').html(content);			
+			$.fn_popup(display, 'alert', false, true);	
+			$(document.activeElement).addClass('alert_auto_focus');	
+			$($.elt_popup).find('.alert .control .popupClose').focus();
+		}
+		if(display == false){									
+			if($($.elt_popup).find('.absolute:visible').length > 1){
+				$.fn_popup(display, 'alert', false);				
+			}else{
+				$.fn_popup(display, 'alert', true);
+			}		
+			$($.elt_popup).find('.relative').css('background', 'none');
+			$('.alert_auto_focus').removeClass('alert_auto_focus').focus();
+		}		
+	}
+
+	/*Hàm thông báo; type: display | none; content nội dung thông báo*/
+	$.fn_confirm = function(display, attrObj, content,title){	
+		if (attrObj === undefined) {
+			attrObj = {};
+		}
+		if (title === undefined) {
+			title = "";
+		}
+		if (content === undefined) {
+			content = "";
+		}
+		if(display == true){
+			$($.elt_popup).find('.confirm .title p').html(title);
+			$($.elt_popup).find('.confirm .content p').html(content);
+			$($.elt_popup).find('.relative').css('background', 'rgba(232,232,232, 0.5)');
+			$.fn_popup(display, 'confirm');
+			if(Object.keys(attrObj).length > 0){
+				if($.fn_isset(attrObj.class)){
+					attrObj.class = 'control ' + attrObj.class;
+					$($.elt_popup).find('.confirm .control').attr('class', attrObj.class);
+					delete attrObj.class;
+				}				
+				if(Object.keys(attrObj).length > 0){
+					$($.elt_popup).find('.confirm .control .continue').attr(attrObj).focus();
+				}else{
+					$($.elt_popup).find('.confirm .control .continue').focus();
+				}
+			}			
+		}
+		if(display == false){
+			if($($.elt_popup).find('.absolute:visible').length > 1){
+				$.fn_popup(display, 'confirm', false);				
+			}else{
+				$.fn_popup(display, 'confirm', true);
+			}
+			$($.elt_popup).find('.relative').css('background', 'none');
+		}		
+	}
+
+	// editticket confirm
+	$.fn_ticketconfirm = function(display, content, href){
+		if(display == true){
+			$($.elt_popup).find('.ticketconfirm .content p').html(content);
+			$($.elt_popup).find('.relative').css('background', 'rgba(232,232,232, 0.5)');
+			$.fn_popup(display, 'ticketconfirm');
+			if(href!="")
+			$($.elt_popup+' .ticketconfirm .control').find('.cancel').attr('onclick', 'location.href="'+href+'"');	
+			$($.elt_popup+' .ticketconfirm .control').find('.continue').focus();		
+		}
+		if(display == false){
+			if($($.elt_popup).find('.absolute:visible').length > 1){
+				$.fn_popup(display, 'ticketconfirm', false);				
+			}else{
+				$.fn_popup(display, 'ticketconfirm', true);
+			}
+			$($.elt_popup).find('.relative').css('background', 'none');
+		}		
+	}
+
+	/*Hàm hiển thị form nhập giá tiền tùy chọn*/
+	$.fn_special = function(display, attrObj, title){
+		if (attrObj === undefined) {
+			attrObj = {};
+		}
+		if (title === undefined) {
+			title = "";
+		}
+		$.fn_popup(display, 'special');
+		if(display == true){			
+			$($.elt_popup).find('.special .title h3').text(title);			
+			if(Object.keys(attrObj).length > 0){
+				$($.elt_popup).find('.special form').attr(attrObj).find('.content input[type="text"]').focus();				
+			}else{
+				$($.elt_popup).find('.special .content input[type="text"]').focus();
+			}
+		}
+	}	
+	/*Hàm chọn 1 hoặc nhiều phần tử Element, bỏ chọn một hoặc nhiều phần tử Element*/
+	$.fn_select = function(tagElement, multiple){		
+		if (multiple === undefined) {
+			multiple = false;
+		}
+		if($(tagElement).attr('class') != 'empty'){
+			if(multiple == false){
+				var offsetParent = tagElement.offsetParent.className;
+				offsetParent = '.' + offsetParent.replace(' ', '.');
+				$(offsetParent + ' ' + $(tagElement).prop("tagName")).removeClass('selected');
+			}
+  			if( $(tagElement).attr('class') == 'selected' ){
+				$(tagElement).removeClass('selected');
+			}else{
+				$(tagElement).addClass('selected');
+			}
+  		}  	
+	}
+	// Hàm định dạng số tiền
+	$.fn_PriceNumberFormat = function(number){
+		if(number){
+			return number.replace(/\./g,'');
+		}
+		return '';
+	}
+	/*
+	 Hàm xử lý ajax	 
+	 data: đối tường giá trị
+	 call: hàm xử lý khi có kết quả
+	 popupHiden: true ẩn tất cả popup, false không ẩn	 
+	*/
+	$.fn_ajax = function(method, data, call, hidenPopupAll, loading){
+		if (call === undefined) {
+			call = null;
+		}
+		if (hidenPopupAll === undefined) {
+			hidenPopupAll = false;
+		}
+		if (loading === undefined) {
+			loading = true;
+		}
+		
+		if($($.elt_popup).find('.loading:visible').length > 0){
+			return false;
+		}
+		$.ajax({
+			url: jsData.urlAjax + method,
+			cache: false,
+			type: "post",
+			data: data,
+			dataType: 'json',
+			beforeSend: function() {
+				if(loading == true){
+					$.fn_loading(true);
+				}
+			},
+			complete: function() {
+				if(loading == true){
+					$.fn_loading(false, hidenPopupAll);
+				}
+			},
+			success:function(result){
+				console.log(result);
+				if(typeof(call) == 'function'){
+					return call(result);
+				}
+			}
+		});	
+	}
+
+	$.fn_ajax_upload_file = function(method, data, call , hidenPopupAll, loading ){
+		
+		if (call === undefined) {
+			call = null;
+		}
+		if (hidenPopupAll === undefined) {
+			hidenPopupAll = false;
+		}
+		if (loading === undefined) {
+			loading = true;
+		}
+		if($($.elt_popup).find('.loading:visible').length > 0){
+			return false;
+		}
+		$.ajax({
+			url: jsData.urlAjax + method,
+			cache: false,
+			type: "post",
+			data: data,
+			dataType: 'json',
+			contentType: !1,
+            processData: !1,
+			beforeSend: function() {
+				if(loading == true){
+					$.fn_loading(true);
+				}
+			},
+			complete: function() {
+				if(loading == true){
+					$.fn_loading(false, hidenPopupAll);
+				}
+			},
+			success:function(result){		
+				console.log(result);		
+				if(typeof(call) == 'function'){
+					return call(result);
+				}
+			}
+		});	
+	}
+
+	// Hàm thêm ký tự check
+	$.fn_check = function(event, check){
+		var eltParent = $(event).closest('div');
+		$(eltParent).find('i').remove();
+		if(check == true){		
+			$(event).attr('data-check', true);	
+			$(eltParent).append('<i class="fas fa-check" aria-hidden="true"></i>');
+		}else{
+			$(event).attr('data-check', false);	
+			$(eltParent).append('<i class="fas fa-times" aria-hidden="true" style="color:red;"></i>');
+		}
+	}
+
+	// Hàm active menu left
+	$.activeMenuLeft = function(clsname) {
+        if (!clsname) {
+            clsname = jsData.control+'.'+jsData.action;
+        }
+        var selector = '#container .menu .nav > ul > li ';
+        $(selector + 'ul').slideUp();  
+        $(selector + 'a').removeClass('active');
+        $(selector).find('.fa-chevron-down').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        $(selector + 'a.' + clsname).addClass('active').find('.fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        $(selector + 'a.' + clsname).next().slideToggle()
+    }
+
+	// Đóng popup
+	$($.elt_popup).on('click','.popupClose, input.back',function(){		
+		if($("#tempUser").val()==1)
+			window.location.href = 'logout.html';
+		
+		if($($.elt_popup).find('.loading:visible').length < 1){
+			if($($.elt_popup).find('.autologin:visible').length > 0){
+				$('input.btn.login').click();
+			}else if($($.elt_popup).find('.autoreload:visible').length > 0){
+				window.location.reload();
+			}else{
+				if($($.elt_popup).find('.absolute.alert:visible').length > 0){
+					//$.fn_alert(false);
+					$($.elt_popup).hide().find('.absolute').hide();
+				}else{
+					$($.elt_popup).hide().find('.absolute').hide();
+				}				
+			}			
+		}
+	});
+
+	// Kiểm tra email hợp lệ
+	$('form').on('keyup', 'input.checkEmail', function(){
+		$('.login_form').find('.findid').removeAttr("disabled");
+		var aemail = $(this).val();
+		if(aemail){
+			$.fn_check(this, $.validateEmail(aemail));
+		}
+	});
+
+	// Kiểm tra mã ĐKKD hợp lệ
+	$('form').on('keyup', 'input.checkCodetax', function(){
+		$('.login_form').find('.findid').removeAttr("disabled");
+		var codetax = $(this).val();
+		if(codetax){
+			$.fn_check(this, $.validateCodetax(codetax));
+		}
+	});
+
+	// Kiểm tra ID hợp lệ
+	$('form').on('keyup','input.checkIDLogin', function(){
+		$('.login_form').find('.login').removeAttr("disabled");
+		
+	});
+	$('form').on('keyup','input.checkID', function(){
+		//$('.login_form').find('.findpw').removeAttr("disabled");
+		var input = this;
+		var aid = $(this).val();
+		if(aid){
+			if($(this).attr('data-true')){
+				$.fn_check(input, $.validateID(aid));
+			}else{
+				if($.validateID(aid)){					
+					$.fn_ajax('checkID', {aid:aid}, function(result){
+						$.fn_check(input, result.flag);
+					}, true, false);
+				}else{
+					$.fn_check(this, false);
+				}
+			}
+		}
+	});
+
+	// Kiểm tra PW hợp lệ
+	$('form').on('keyup','input.checkPW', function(){
+		var pwd = $(this).val();
+		if(pwd){
+			$.fn_check(this, $.validatePW($(this).val()));			
+		}
+	});
+
+	// Kiểm tra password trùng khớp
+	$('form').on('keyup','input.confirmPW', function(){
+		var flag = false;
+		var pw = $('input.checkPW').val();
+		//if($.validatePW(pw)){
+		var cpw = $(this).val();
+		if(pw == cpw){
+			flag = true;
+			$('#warncpassword').text(""); 
+			$('.password').find('.changepassword').removeAttr("disabled");
+		}else{
+			$('#warncpassword').text("불일치"); 
+			$('.password').find('.changepassword').attr("disabled", "disabled");
+		}
+		//}
+		$.fn_check(this, flag);
+	});
+
+	// Kiểm tra dữ liệu không được rỗng
+	$('form').on('keyup','input.checkEmpty', function(){
+		var strVal = $(this).val();
+		$.fn_check(this, (strVal)?true:false);
+	});
+
+	// Active menu left
+	$.activeMenuLeft();
+	$('#container .menu .nav > ul > li > a').click(function() { 		
+		if($(this).attr('href').length < 3){
+			var clss = $(this).attr('class');		
+	        if(clss.indexOf('active') == -1) {        
+	            $.activeMenuLeft(clss.substr(0, clss.indexOf(' ')));
+	        }  
+	        return false;
+		} 
+    });
+
+	// Select row table
+    $('table.table.allowselect').on('click', 'tbody tr', function(){
+    	$.fn_select(this, true);    	
+    })
+
+    // Multipe Select Option
+    $('.multipleselect .selectinput').click(function(){
+    	$('.multipleselect .selectlist').hide();
+		$(this).closest('.multipleselect').find('.selectlist').slideDown();
+		return false;
+	});
+	$('.multipleselect .selectlist li').click(function(){		
+		var checked = $(this).find('input').get(0).checked;		
+		checked = (checked)?false:true;
+		var idChecked = $(this).find('input').val();
+		var strChecked = '';	
+		var countChecked = 0;
+		var condition = 'all';
+		var ditance = ', ';
+		var element = $(this).closest('.multipleselect');	
+		var multiple = $(element).find('.selectlist.multiple').length;		
+		// Set
+		$(this).find('input').get(0).checked = checked;
+		$(element).find('select option[value="'+idChecked+'"]').get(0).selected = checked;		
+		// Each
+		$(this).closest('ul').find('input').each(function(){	
+			var ival = $(this).val();			
+			if(multiple>0){
+				// Multiple Select All	
+				if(idChecked == condition){
+					if(ival != idChecked){
+						countChecked += (checked)?1:0;
+						$(this).get(0).checked = checked;		
+						$(element).find('select option[value="'+ival+'"]').get(0).selected = checked;
+					}else{
+						if(checked)strChecked = ditance+$(this).find('+label').text();
+					}
+				}else{
+					if(ival == condition){
+						$(this).get(0).checked = false;
+					}else if($(this).get(0).checked){
+						strChecked += ditance+$(this).find('+label').text();
+						countChecked++;
+					}	
+				}			
+			}else{
+				// Select	
+				countChecked = (checked)?1:0;		
+				if(ival != idChecked){						
+					$(this).get(0).checked = false;
+					$(element).find('select option[value="'+ival+'"]').get(0).selected = false;						
+				}else{						
+					strChecked += ditance+$(this).find('+label').text();
+				}
+			}						
+		});
+		$(element).find('.selectinput input').val(strChecked.substr(ditance.length));
+		$(element).find('.selectinput .item').text(countChecked);
+		return false;		
+	});
+	$('body').click(function(){
+		var element = '.multipleselect .selectlist';
+		if($(element).is(':visible')){
+			$(element).slideUp();
+		}
+	});
+	// End Multipe Select Option
+
+	// Kiểm tra độ dài của input hoặc texteara
+	$('body').on('keyup', '.checkMaxLength', function(){
+		$.fn_checkMaxLength(this);
+	});
+	$.fn_checkMaxLength = function(event, classView){
+		if (classView === undefined) {
+			classView = 'checkMaxLengthView';
+		}
+		var inmax = $(event).attr('maxlength');
+		var text = $(event).attr('data-text');
+		var inval = $(event).val();
+		if(inmax){
+			$(event).closest('.form_group').find('.'+classView).text(((inval)?inval.length:0) +'/'+ inmax +' '+ (text?text:''));
+		}
+	}
+	$('body').on('keyup', '.checkMaxLength1', function(){
+		$.fn_checkMaxLength(this, 'checkMaxLengthView1');
+	});
+	$('body').on('keyup', '.checkMaxLength2', function(){
+		$.fn_checkMaxLength(this, 'checkMaxLengthView2');
+	});
+	
+	// Hàm chỉ cho nhập số
+	$.fn_inputnumber = function(event){
+		var theEvent = event || window.event;
+		var keycode = String.fromCharCode(event.keyCode ? event.keyCode : event.which);	
+		var regex = /[0-9]|\,/;
+		if( !regex.test(keycode) ) {
+			theEvent.returnValue = false;			
+			theEvent.preventDefault();			
+		}	
+		return keycode;	
+	}
+	// Hàm chỉ cho nhập số và khoảng cách
+	$.fn_inputformatprice = function(numeric, ditance){	
+		if(numeric){			
+			numeric = numeric.toString();
+			numeric = numeric.replace(/[^0-9]/g, '');	
+			numeric = parseFloat(numeric);	
+			numeric = numeric.toString();
+			if(numeric.length<12){
+				var pattern = /(-?\d+)(\d{3})/;
+			    while (pattern.test(numeric)){
+			    	numeric = numeric.replace(pattern, "$1" + ditance + "$2");
+			    }
+			    return numeric;
+			}		    
+		}
+	    return '';
+	}
+
+	// Hàm chỉ cho nhập số và dấu nối
+	$.fn_inputformatdash = function(event){	
+		var theEvent = event || window.event;
+		var keycode = String.fromCharCode(event.keyCode ? event.keyCode : event.which);	
+		var regex = /[0-9\-]/;
+		//var pattern = [A-Za-z0-9_~\-!@#\$%\^&\*\(\)]+$
+		if( !regex.test(keycode) ) {
+			theEvent.returnValue = false;			
+			theEvent.preventDefault();			
+		}	
+		return keycode;	
+	}
+	$.validateHhMm = function(inputField){	
+        var isValid = /^([0-1]?[0-9]|2[0-4]):([0-5][0-9]):([0-5][0-9])?$/.test(inputField);
+        return isValid;
+    }
+	// Chỉ cho nhập số
+	$('body').on('keypress', '.v-numeric', function(event){
+		$.fn_inputnumber(event);
+	});
+
+	// Chỉ cho nhập số và gạch nối
+	$('body').on('keypress', '.v-numericphone', function(event){
+		$.fn_inputformatdash(event);
+	});
+
+	// Chỉ cho nhập số và ""
+	$('body').on('keypress', '.conditionTime', function(event){
+		
+		var theEvent = event || window.event;
+		var keycode = String.fromCharCode(event.keyCode ? event.keyCode : event.which);	
+		var regex = /[0-9\:]/;
+		//var pattern = [A-Za-z0-9_~\-!@#\$%\^&\*\(\)]+$
+		if( !regex.test(keycode) ) {
+			theEvent.returnValue = false;			
+			theEvent.preventDefault();			
+		}	
+		
+	});
+
+	// Định dạng số tiền
+	$('body').on('keypress', '.v-numericprice', function(event){
+		var keycode = $.fn_inputnumber(event);
+		if($.isNumeric(keycode)){			
+			var result = $.fn_inputformatprice($(event.target).val() + keycode, ',');
+			if(result){
+				$(this).val(result.substr(0,(result.length-1)));
+			}else{
+				event.returnValue = false;			
+				event.preventDefault();
+			}
+		}
+	});
+	// Định dạng số tiền
+	$('body').on('keyup', '.v-numericprice', function(event){		
+		if((event.keyCode ? event.keyCode : event.which)==8){			
+			$(this).val($.fn_inputformatprice($(this).val(), ','));
+		}		
+	});
+
+});
+

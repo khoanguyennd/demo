@@ -1,0 +1,777 @@
+<?php
+$sellerProductId = $this->getData('sellerProductId');
+$list_images = $this->getData('list_images');
+$list_contents = $this->getData('list_contents');
+$format = $this->getData('format');
+// unset($_SESSION['searchtags']);
+function getUrlUpload($url_upload)
+{
+    $upload_url = URL_BASE . "/ajax.html/ticket4/" . $url_upload;
+    return $upload_url;
+}
+
+$upload_url = getUrlUpload("uploadImage");
+$upload_url1 = getUrlUpload("uploadImage1");
+$upload_url10 = getUrlUpload("uploadImage10");
+$upload_url2 = getUrlUpload("uploadImage2");
+?>
+<script type="text/javascript" src="<?=URL_BASE?>/highslide/highslide-with-gallery.js"></script>
+<link rel="stylesheet" type="text/css" href="<?=URL_BASE?>/highslide/highslide.css">
+<script src="<?=URL_BASE?>/ckeditor/ckeditor.js"></script>
+<script src="<?=URL_BASE?>/ckeditor/samples/js/sample.js"></script>
+
+<script type="text/javascript">
+    var notifyUpload = "<?=$this->language('l_warnimage4')?>";
+    function checkAllImage(source) {
+        var ids1=document.getElementsByName("checkbox[]");
+        for (var j = 0; j< ids1.length; j++) {
+            ids1[j].checked=source.checked;
+        }
+    }
+
+    function doubleupOption() {
+        var ids1=document.getElementsByName("checkbox[]");
+        var dem=0;
+        var co=1;
+        var checkbox = [];
+        for (var j = 0; j< ids1.length; j++) {
+            if(ids1[j].checked){
+                checkbox.push(ids1[j].value);
+                dem++;
+            }
+        }
+        if(dem==0){
+            $.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+            return;
+        }
+        var tr=[];
+        $('#feedback tr').each(function(index){
+            tr[parseInt(index)]='<tr id="'+$(this).attr('id')+'">'+$(this).html()+'</tr>';
+        });
+        var k=0;
+        for (var j = checkbox.length-1; j>=0 ; j--) {
+            var seq = parseInt($('input[name = "seq'+checkbox[j]+'" ]').val())-1 +k;
+            var temp=tr[seq];
+            for (var i = seq; i>0 ; i--) {
+                tr[i]=tr[i-1];
+            }
+            tr[0]=temp;
+            k++;
+        }
+        $('#feedback').html('');
+
+        console.log(tr);
+        $.each( tr, function( index, value ) {
+            console.log(index);
+            $('#feedback').append(value);
+        });
+        $.fn_loadseq();
+    }
+
+    function upOption($valueCheckbox) {
+        var ids1=document.getElementsByName("checkbox[]");
+        var dem=0;
+        var co=1;
+        var checkbox = [];
+        var idCheckbox = '';
+
+        if (parseInt($valueCheckbox) > 0) {
+            checkbox.push($valueCheckbox);
+            flagChanges();
+            $('input[name = "checkbox[]"]').removeAttr("checked");
+            $('#checkbox' + $valueCheckbox).attr("checked",'checked');
+            dem++;
+        }else {
+            for (var j = 0; j< ids1.length; j++) {
+                if(ids1[j].checked){
+                    checkbox.push(ids1[j].value);
+                    dem++;
+                }
+            }
+        }
+
+        if(dem==0){
+            $.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+            return;
+        }
+        var tr=[];
+        $('#feedback tr').each(function(index){
+            tr[parseInt(index)]='<tr id="'+$(this).attr('id')+'">'+$(this).html()+'</tr>';
+        });
+
+        for (var j =0 ; j<checkbox.length ; j++) {
+            var seq = parseInt($('input[name = "seq'+checkbox[j]+'" ]').val())-1;
+            var newseq=parseInt(seq-1);
+            if(newseq>=j){
+                var temp=tr[seq];
+                tr[seq]=tr[newseq];
+                tr[newseq]=temp;
+            }
+        }
+        $('#feedback').html('');
+        for (var j = 0; j< tr.length; j++) {
+            $('#feedback').append(tr[j]);
+        }
+
+        $.fn_loadseq();
+    }
+
+    function doubledownOption() {
+        var ids1=document.getElementsByName("checkbox[]");
+        var dem=0;
+        var co=1;
+        var checkbox = [];
+        for (var j = 0; j< ids1.length; j++) {
+            if(ids1[j].checked){
+                checkbox.push(ids1[j].value);
+                dem++;
+            }
+        }
+        if(dem==0){
+            $.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+            return;
+        }
+        var tr=[];
+        $('#feedback tr').each(function(index){
+            tr[parseInt(index)]='<tr id="'+$(this).attr('id')+'">'+$(this).html()+'</tr>';
+        });
+
+        for (var j =0 ; j<checkbox.length ; j++) {
+            var seq = parseInt($('input[name = "seq'+checkbox[j]+'" ]').val())-1;
+            var newseq=tr.length+j+1;
+            var temp=tr[seq];
+            tr[seq]=tr[newseq];
+            tr[newseq]=temp;
+            delete  tr[seq];
+        }
+
+        $('#feedback').html('');
+        $.each( tr, function( index, value ) {
+            $('#feedback').append(value);
+        });
+
+        $.fn_loadseq();
+    }
+
+    function downOption($valueCheckbox) {
+        var ids1=document.getElementsByName("checkbox[]");
+        var dem=0;
+        var co=1;
+        var checkbox = [];
+
+        if (parseInt($valueCheckbox) > 0) {
+            checkbox.push($valueCheckbox);
+            dem++;
+            flagChanges();
+            $('input[name = "checkbox[]"]').removeAttr("checked");
+            $('#checkbox' + $valueCheckbox).attr("checked",'checked');
+        }else {
+            for (var j = 0; j< ids1.length; j++) {
+                if(ids1[j].checked){
+                    checkbox.push(ids1[j].value);
+                    dem++;
+                }
+            }
+        }
+
+        if(dem==0){
+            $.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+            return;
+        }
+        var tr=[];
+        $('#feedback tr').each(function(index){
+            tr[parseInt(index)]='<tr id="'+$(this).attr('id')+'">'+$(this).html()+'</tr>';
+            console.log(tr[parseInt(index)]);
+        });
+
+        for (var j = checkbox.length-1; j>=0 ; j--) {
+            var seq = parseInt($('input[name = "seq'+checkbox[j]+'" ]').val())-1;
+            var newseq=seq+1;
+            var temp=tr[seq];
+            tr[seq]=tr[newseq];
+            tr[newseq]=temp;
+        }
+        $('#feedback').html('');
+        $.each( tr, function( index, value ) {
+            $('#feedback').append(value);
+        });
+
+        $.fn_loadseq();
+    }
+
+    function flagChanges(){
+        localStorage.setItem("flagChange", "1");
+    }
+
+    hs.graphicsDir = '<?=URL_BASE?>/highslide/graphics/';
+    hs.align = 'center';
+    hs.transitions = ['expand', 'crossfade'];
+    hs.outlineType = 'rounded-white';
+    hs.fadeInOut = true;
+    hs.dimmingOpacity = 0.75;
+
+    // Add the controlbar
+    hs.addSlideshow({
+        //slideshowGroup: 'group1',
+        interval: 5000,
+        repeat: true,
+        useControls: true,
+        fixedControls: 'fit',
+        overlayOptions: {
+            opacity: .75,
+            position: 'bottom center',
+            hideOnMouseOut: true
+        }
+    });
+    $(document).ready(function(){
+
+        $('#saveTemp').on('click', function(){
+            var ff = document.nf;
+            var step = $(this).attr('data-step');
+            document.getElementById("step").value=step;
+
+            if( !$.trim( $('#uploadresult').html() ).length ) {
+                $.fn_alert(true, true, "<?=$this->language('l_warnimage')?>");
+                return false;
+            }
+            var count = $("#uploadresult div").length;
+            if(count>30){ // 1sp = 3div
+                $.fn_alert(true, true, "<?=$this->language('l_warnimage3')?>");
+                return false;
+            }
+
+            var count1 = $("#uploadresult1 div").length;
+            if(count1>30){ // 1sp = 3div
+                $.fn_alert(true, true, "<?=$this->language('l_warnimage4')?>");
+                return false;
+            }
+
+            var radioValue= $("input[name='representativeimage']:checked").val();
+            if(radioValue==undefined){
+                $.fn_alert(true, true, "<?=$this->language('l_warnimage1')?>");
+                return false;
+            }
+
+            var radioValue2 = $("input[name='pformat']:checked").val();
+            if( !$.trim( $('#feedback').html() ).length && radioValue2=="IMAGE") {
+                $.fn_alert(true, true, "<?=$this->language('l_warncontent')?>");
+                return false;
+            }
+
+            ff.submit();
+        });
+        // Tiếp tục | Trở lại
+        $('#continuelink, #backlink').on('click', function(){
+            var step = $(this).attr('data-step');
+            if(step){
+                $('#step').val(step);
+                $.fn_ticketcontinue(step);
+            }
+        });
+        // Tiếp tục | Trở lại
+        $($.elt_popup).on('click', '.ticketconfirm .continue', function(){
+            $.fn_ticketconfirm(false);
+            if( !$.trim( $('#uploadresult').html() ).length ) {
+                $.fn_alert(true, true, "<?=$this->language('l_warnimage')?>");
+                return false;
+            }
+            var count = $("#uploadresult div").length;
+            if(count>30){ // 1sp = 3div
+                $.fn_alert(true, true, "<?=$this->language('l_warnimage3')?>");
+                return false;
+            }
+
+            var count1 = $("#uploadresult1 div").length;
+            if(count1>30){ // 1sp = 3div
+                $.fn_alert(true, true, "<?=$this->language('l_warnimage4')?>");
+                return false;
+            }
+            var radioValue= $("input[name='representativeimage']:checked").val();
+            if(radioValue==undefined){
+                $.fn_alert(true, true, "<?=$this->language('l_warnimage1')?>");
+                return false;
+            }
+
+            var radioValue2 = $("input[name='pformat']:checked").val();
+            if( !$.trim( $('#feedback').html() ).length && radioValue2=="IMAGE") {
+                $.fn_alert(true, true, "<?=$this->language('l_warncontent')?>");
+                return false;
+            }
+
+            $('#nf').submit();
+        });
+    });
+    function continuelink(step){
+        window.location.assign("<?php echo $this->route('editticket5')."/".$sellerProductId;?>");
+    }
+    function saveTemp(step){
+        var ff = document.nf;
+        document.getElementById("step").value=step;
+        ff.submit();
+    }
+
+    function backlink(step){
+        window.location.assign("<?php echo $this->route('editticket3')."/".$sellerProductId;?>");
+    }
+
+    function addContent(){
+        localStorage.setItem("flagChange", "1");
+        runAjax('addContent', {}, function(result){
+            $('#feedback').append(result);
+            //document.getElementById('divContents').insertAdjacentHTML("beforeend",result);
+        });
+    }
+    function delContent(id){
+        localStorage.setItem("flagChange", "1");
+        document.getElementById("tbContent"+id).remove();
+    }
+</script>
+<!-- attach -->
+<script type="text/javascript" src="<?=URL_BASE?>/attach/js/webtoolkit.aim.js"></script>
+<script type="text/javascript" src="<?=URL_BASE?>/attach/js/myattach.js"></script>
+<link href="<?=URL_BASE?>/attach/css/myattach.css" rel="stylesheet" type="text/css" />
+<!-- end attach -->
+
+<script type="text/javascript">
+    function startCallback() {
+        // viết code khi click nút upload và bắt đầu upload.
+        $('#attachloading').append ('Uploading');
+        return true;
+    }
+    function startCallback1() {
+        // viết code khi click nút upload và bắt đầu upload.
+        $('#attachloading1').append ('Uploading');
+        return true;
+    }
+
+    function startCallback10() {
+        // viết code khi click nút upload và bắt đầu upload.
+        $('#attachloading10').append ('Uploading');
+        return true;
+    }
+    function startCallback2() {
+        // viết code khi click nút upload và bắt đầu upload.
+        $('#attachloading'+contentId1).append ('Uploading');
+        return true;
+    }
+    function delImages(type,id){
+        flagChanges();
+        if(type==1){
+            var seq=$('#formattach input#seq').val();
+            $('#formattach input#seq').val(seq-1);
+        }
+        document.getElementById("tbImages"+id).remove();
+    }
+    // Chuyển hướng khi lưu thành công
+    setTimeout(function(){
+        var urlstep = $('#locationurlstep').attr('data-urlstep');
+        if(urlstep){
+            $.fn_alert(true, true,  "임시저장 되었습니다.");
+        }
+    },500);
+</script>
+<style type="text/css">
+    .highslide img {
+        cursor: url(<?=URL_BASE?>/highslide/graphics/zoomin.cur), pointer
+        !important;
+    }
+
+    .highslide-viewport-size {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0
+    }
+
+    .seq {
+        display: block;
+        height: 20px;
+        position:relative;
+        text-align: center;
+    }
+
+    .seq #upOption {
+        position:absolute;
+        top: -2px;
+        right: 35px;
+        font-weight: 400;
+    }
+
+    #downOption {
+        position:absolute;
+        top: 10px;
+        right:35px;
+    }
+</style>
+
+
+<div class="ct_head" id="locationurlstep"
+     data-urlstep="<?=$this->getData('urlstep')?>" data-step="4">
+
+    <?php require PATH_INCLUDES . 'top.php';?>
+</div>
+<div class="ct_content">
+    <div class="forminput">
+        <form name="nf" method="POST"
+              action="<?=$this->route('editticket4')?>/<?=$sellerProductId?>"
+              id="nf">
+            <div class="form_group clearfix frrow">
+
+                <h3><?=$this->language( 'l_imageproduct')?></h3>
+                <div class="row rmclass" data-action="viewperson" data-perid="14"
+                     style="margin-bottom: 30px;">
+
+                    <div class="form_group clearfix" style="display: none;">
+                        <div class="form_item col-xs-2">
+                            <h3><?=$this->language( 'l_codeproduct')?></h3>
+                        </div>
+                        <div class="form_item col-xs-3">
+                            <input type="text" name="sellerProductId" id="sellerProductId" value="<?=$sellerProductId?>" readonly="readonly" class="input full" autocomplete="off">
+                            <input name="btnSumit" id="btnSumit" type="hidden" value="editticket4" />
+                        </div>
+                        <div class="form_item col-xs-7 align-left"></div>
+                    </div>
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><span class="spanred">*</span>정방향</h3>
+                        </div>
+                        <div class="form_item col-xs-10" style="text-align: left;">
+                            <div id="uploadresult" style="clear: both">
+                                <?php
+                                $demImage=0;
+                                foreach ($list_images as $value1 => $giatri1) {
+                                    if ($giatri1[8] == 1) { $demImage++;
+                                        $image_url = Func::getPathImage($giatri1[1], 460); // localhost
+                                        ?>
+                                        <div style="display: inline-block; padding: 5px"
+                                             id="tbImages<?=$giatri1[0]?>">
+                                            <div>
+                                                <a href="<?=$image_url?>" class="highslide" onclick="return hs.expand(this)">
+                                                    <img src="<?=$image_url?>" style="margin: 5px 0px; width: 120px; height: 120px; border: 1px solid;">
+                                                </a>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <input type="radio" onchange="checkAttach(this)" name="representativeimage" style="margin: -2px 0px 0px 0px;vertical-align: middle;"
+                                                       id="checkrepresentativeimage<?=$giatri1[0]?>" <?php if($giatri1[3]==1) echo 'checked="checked"'; ?>>
+                                                <label for="checkrepresentativeimage<?=$giatri1[0]?>" style="vertical-align: middle;"><?=$this->language( 'l_imagerepresentative')?></label>
+                                                <input type="hidden" id="flagattach" name="representative[]" <?php if($giatri1[3]==1) echo 'value="true"'; else 'value="false"';?>>
+                                                <a onclick="delImages(<?=$giatri1[8]?>,<?=$giatri1[0]?>);" class="btn hover small" style="padding: 5px;"> X </a>
+                                                <input type="hidden" name="imageId[]" value="<?=$giatri1[0]?>" />
+                                                <input type="hidden" name="imageuri[]" value="<?=$giatri1[1]?>" />
+                                                <input type="hidden" name="imagepath[]" value="<?=$giatri1[1]?>">
+
+                                            </div>
+                                        </div>
+                                    <?php } } ?>
+                            </div>
+                            <div id='myattach' style="padding-top: 10px;">
+                                <!--input type="button" value="Attach file"  class="buttonProject" id='myfileavatar'/-->
+                                <div id='appendbrowser' style="float: left" class="inputWrapper">
+                                    <div class="btnupload">
+                                        <button type="button" class="btn hover small">추가하기</button>
+                                    </div>
+                                    <input type="file" name="file[]" title="browserfile" id='myfile' multiple="multiple" class="fileInput" accept="image/*" onchange="changeBrowsers(this,'browserfile')" />
+                                    <br> 권장사이즈 : 460X460 / 최대 10개까지 등록 가능
+                                </div>
+                                <div id='attachloading'></div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="form_group clearfix">
+                        <div class="form_item col-xs-2">
+                            <h3><span class="spanred">*</span>가로형</h3>
+                        </div>
+                        <div class="form_item col-xs-10" style="text-align: left;">
+                            <div id="uploadresult1" style="clear: both">
+                                <?php
+                                foreach ($list_images as $value1 => $giatri1) {
+                                    if ($giatri1[8] == 2) {
+                                        $image_url = Func::getPathImage($giatri1[1], 1080); // localhost
+                                        ?>
+                                        <div style="display: inline-block; padding: 5px"
+                                             id="tbImages<?=$giatri1[0]?>">
+                                            <div>
+                                                <a href="<?=$image_url?>" class="highslide" onclick="return hs.expand(this)">
+                                                    <img src="<?=$image_url?>" style="margin: 5px 0px; width: 120px; height: 120px; border: 1px solid;">
+                                                </a>
+                                            </div>
+                                            <div style="text-align: center;">
+                                                <input type="radio" onchange="checkAttach1(this)" name="representativeimage1" style="margin: -2px 0px 0px 0px;vertical-align: middle; display: none;"
+                                                       id="checkrepresentativeimage<?=$giatri1[0]?>" <?php if($giatri1[3]==1) echo 'checked="checked"'; ?>>
+                                                <label for="checkrepresentativeimage<?=$giatri1[0]?>" style="vertical-align: middle;display: none;"><?=$this->language( 'l_imagerepresentative')?></label>
+                                                <input type="hidden" id="flagattach1" name="representative1[]" <?php if($giatri1[3]==1) echo 'value="true"'; else 'value="false"';?>>
+                                                <a onclick="delImages(<?=$giatri1[8]?>,<?=$giatri1[0]?>);" class="btn hover small" style="padding: 5px;"> X </a>
+                                                <input type="hidden" name="imageId1[]" value="<?=$giatri1[0]?>" />
+                                                <input type="hidden" name="imageuri1[]" value="<?=$giatri1[1]?>" />
+                                                <input type="hidden" name="imagepath1[]" value="<?=$giatri1[1]?>">
+
+                                            </div>
+                                        </div>
+                                        <?php
+                                    }
+                                }
+                                ?>
+                            </div>
+                            <div id='myattach1' style="padding-top: 10px;">
+                                <!--input type="button" value="Attach file"  class="buttonProject" id='myfileavatar'/-->
+                                <div id='appendbrowser1' style="float: left"
+                                     class="inputWrapper">
+                                    <div class="btnupload">
+                                        <button type="button" class="btn hover small">추가하기</button>
+                                    </div>
+                                    <input type="file" name="file1[]" title="browserfile" id='myfile1' multiple="multiple" class="fileInput" accept="image/*" onchange="changeBrowsers1(this,'browserfile')" />
+                                    <br> 권장사이즈 : 1080X720 / 최대 10개까지 등록 가능
+                                </div>
+                                <div id='attachloading1'></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h3><?=$this->language( 'l_contentdetail')?></h3>
+                <div class="form_tab">
+                    <div class="tab_head">
+                        <ul class="clearfix">
+                            <li>
+                                <a  data-tab="tab1" title="" class="<?php if($format=="IMAGE") echo 'active'; ?>">
+                                    <input name="pformat" type="radio" value="IMAGE" id="checkformattab1" <?php if($format=="IMAGE") echo 'checked="checked"'; ?>>
+                                    <label for="checkformattab1">이미지로 등록</label></a>
+                            </li>
+                            <li><a  data-tab="tab2" title="" class="<?php if($format=="TEXT") echo 'active'; ?>">
+                                    <input name="pformat" type="radio" value="TEXT" id="checkformattab2" <?php if($format=="TEXT") echo 'checked="checked"'; ?>>
+                                    <label for="checkformattab2">HTML</label></a>
+                            </li>
+                        </ul>
+                        <script type="text/javascript">
+                            $(document).ready(function(){
+                                // 					if(location.hash){
+                                // 						$('.tab_head a').removeClass('active');
+                                // 						$('.tab_head a[href='+location.hash+']').addClass('active');
+                                // 						$('.tab_content > div').hide();
+                                // 						$(location.hash+'a').show();
+                                // 					}
+                                $(".form_tab .tab_head").on('click', 'a', function(){
+                                    flagChanges();
+                                    var id = $(this).attr('data-tab');
+                                    if(id){
+                                        $(this).closest('ul').find('a').removeClass('active');
+                                        $(this).addClass('active');
+                                        if(id=="tab1"){
+                                            $("#checkformattab1").prop("checked", true);
+                                            $("#checkformattab2").prop("checked", false);
+                                        }
+                                        if(id=="tab2"){
+                                            $("#checkformattab1").prop("checked", false);
+                                            $("#checkformattab2").prop("checked", true);
+                                        }
+                                        $('.tab_content > div').hide();
+                                        $('#'+id+'a').show();
+                                    }
+                                });
+                            });
+                        </script>
+                    </div>
+                    <div class="tab_content">
+                        <div id="tab1a" style="display: <?php if($format=="IMAGE") echo 'block'; else echo 'none'?>">
+                            <div class="contBox" id="divContents">
+                                <table class="table">
+                                    <tr>
+                                        <td colspan="4">
+                                            <?=$this->language( 'l_image3')?>
+                                        </td>
+                                        <td>
+                                            <div class="btnupload" style="float: right;margin: -5px 0px -5px 0px;">
+                                                <div id='myattach10' >
+                                                    <div id='appendbrowser10' style="float: left" class="inputWrapper">
+                                                        <div class="btnupload">
+                                                            <button type="button" class="btn hover small btnupload">추가하기</button>
+                                                        </div>
+                                                        <input type="file" name="file10[]" title="browserfile" id='myfile10' multiple="multiple" class="fileInput" accept="image/*"
+                                                               onchange="changeBrowsers10(this,'browserfile')" />
+                                                    </div>
+                                                    <div id='attachloading10'></div>
+                                                </div>
+                                                <!-- <button type="button" class="btn hover small " onclick="addContent()">추가</button> -->
+                                            </div>
+                                            <div style="float: right; margin: -5px 10px -15px 0px;">
+                                                <button type="button" class="btn hover small " id="deleteOption"><?=$this->language('l_delete')?></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <thead>
+                                    <tr>
+                                        <th>연락 순서</th>
+                                        <th>삭제</th>
+                                        <th><input type="checkbox" onclick="checkAllImage(this)" value="all" id="checkall"></th>
+                                        <!--											<th>노출순서</th>-->
+                                        <th>이미지</th>
+                                        <th>파일명</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="feedback">
+                                    <?php
+                                    $countImageOption = 0;
+                                    if($format=="IMAGE")
+                                        foreach ($list_contents as $value1 => $giatri1) {
+                                            $countImageOption ++;
+                                            $image_url = Func::getPathImage($giatri1[5], 460); // localhost
+                                            ?>
+                                            <tr id="tbContent<?=$giatri1[0]?>" class="contBox" style="padding: 10px;">
+                                                <td>
+                                                    <input type="hidden" name="seq<?= $giatri1[0] ?>" id="seq<?= $giatri1[0] ?>" value="<?=$giatri1[7] + 1 ?>"/>
+                                                    <div class="seq">
+                                                        <input  type="text" style="width:70px;" disabled="disabled" value="<?= $giatri1[7] + 1 ?>">
+                                                        <div id="upOption">
+                                                            <a onclick="upOption('<?=$giatri1[0]?>');"><i class="fa fa-angle-up fa-6" title="up" aria-hidden="true" style="font-size:14px;"></i><span class="sr-only">up</span></a>
+                                                        </div>
+                                                        <div id="downOption">
+                                                            <a onclick="downOption('<?=$giatri1[0]?>');"><i class="fa fa-angle-down" title="down" aria-hidden="true" style="font-size:14px;"></i><span class="sr-only">down</span></a>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div style="display: inline-block; vertical-align: top; padding-top: 5px; display: none;"><textarea onchange="flagChanges();" name="pcontent[]" id="pcontent<?=$giatri1[0]?>" style="width: 650px; height: 100px; line-height: 24px; resize: none;"><?=$giatri1[3]?></textarea>
+                                                    </div>
+                                                    <div style="display: inline-block; vertical-align: top; padding-top: 5px;">
+                                                        <a onclick="delContent('<?=$giatri1[0]?>');" class="btn hover small" style="padding: 5px;" title="Delete"> X </a>
+                                                    </div>
+                                                    <input onchange="flagChanges();" name="contentId[]" id="contentId<?=$giatri1[0]?>" type="hidden" value="<?=$giatri1[0]?>" />
+                                                    <input name="ptitle[]" id="ptitle<?=$giatri1[0]?>" type="text" value="<?=$giatri1[1]?>" style="display: none;">
+                                                </td>
+                                                <td><input type="checkbox" name="checkbox[]" id="checkbox<?= $giatri1[0] ?>" value="<?= $giatri1[0] ?>" class="checkboxOption" /></td>
+                                                <td>
+                                                    <div style="display: inline-block; width: 165px; text-align: center;">
+                                                        <div id="uploadresult<?=$giatri1[0]?>" style="clear: both">
+                                                            <a href="<?=$image_url?>" class="highslide" onclick="return hs.expand(this)">
+                                                                <img src="<?=$image_url?>" style="margin: 5px 0px; width: 120px; height: 50px; border: 1px solid;">
+                                                            </a>
+                                                            <input type="hidden" name="imagecontentpath[]" value="<?=$giatri1[5]?>" />
+                                                        </div>
+
+                                                        <div id='appendbrowser<?=$giatri1[0]?>' class="inputWrapper">
+                                                            <div class="btnupload">
+                                                                <button type="button" class="btn hover small">등록하기</button>
+                                                            </div>
+                                                            <input type="file" name="ppic_detail" title="browserfile<?=$giatri1[0]?>" id='myfile<?=$giatri1[0]?>' class="fileInput" accept="image/*"
+                                                                   onchange="changeBrowsers2(this,'browserfile<?=$giatri1[0]?>',<?=$giatri1[0]?>)" />
+                                                            <br>
+                                                        </div>
+                                                        <div id='attachloading<?=$giatri1[0]?>'></div>
+                                                    </div>
+                                                </td>
+                                                <td><?=$giatri1[5]?></td>
+                                            </tr>
+                                        <?php }?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="tab2a" style="display: <?php if($format=="TEXT") echo 'block'; else echo 'none'?>" >
+							<textarea onchange="flagChanges();" id="htmlContent" name="htmlContent">
+							<?php if($format=="TEXT")
+                                foreach ($list_contents as $value1 => $giatri1) {
+                                    echo $giatri1[3];
+                                }
+                            ?>
+            				</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table_content">
+                    <table class="table" style="float: right;">
+                        <tr>
+                            <td colspan="8">
+                                <input type="hidden" name="step" id="step" value="4">
+                                <div class="btnupload">
+                                    <button type="button" style="width: 100px; float: right;" class="btn hover"  id="continuelink" data-step="5" ><?=$this->language( 'l_continue')?></button>
+                                    <button type="button" style="width: 100px; float: right;margin-right: 5px" class="btn hover"  id="saveTemp" data-step="4"><?=$this->language( 'l_savedraft')?></button>
+                                    <button type="button" style="width: 100px; float: right;margin-right: 5px" class="btn hover"  id="backlink" data-step="3"><?=$this->language( 'l_back')?></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+        </form>
+
+    </div>
+
+    <div style="diplay: none">
+        <form action="<?=$upload_url?>" method="post" id='formattach' style="display: none" enctype="multipart/form-data"
+              onsubmit="return AIM.submit(this, {'onStart': startCallback, 'onComplete': completeCallback})">
+            <input type="hidden" id="sizes" name="sizes" value="0" />
+            <input type="hidden" id="seq" name="seq" value="<?=$demImage?>" />
+        </form>
+        <form action="<?=$upload_url1?>" method="post" id='formattach1' style="display: none" enctype="multipart/form-data"
+              onsubmit="return AIM.submit(this, {'onStart': startCallback1, 'onComplete': completeCallback1})">
+            <input type="hidden" id="sizes1" name="sizes" value="0" />
+            <input type="hidden" id="seq1" name="seq1" value="0" />
+        </form>
+        <form action="<?=$upload_url10?>" method="post" id='formattach10' style="display: none" enctype="multipart/form-data"
+              onsubmit="return AIM.submit(this, {'onStart': startCallback10, 'onComplete': completeCallback10 })">
+            <input type="hidden" id="sizes10" name="sizes" value="0" />
+            <input type="hidden" id="seq10" name="seq10" value="0" />
+            <input type="hidden" id="countImageOption" name="countImageOption" value="<?=$countImageOption?>" />
+        </form>
+        <form action="<?=$upload_url2?>" method="post" id='formattach2' style="display: none" enctype="multipart/form-data"
+              onsubmit="return AIM.submit(this, {'onStart': startCallback2, 'onComplete': completeCallback2})">
+            <input type="hidden" id="sizes2" name="sizes" value="0" />
+            <input type="hidden" id="seq2" name="seq2" value="0" />
+        </form>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    //editor
+    initSample();
+    $(document).ready(function(){
+        // Delete option
+        $('#deleteOption').on('click', function(){
+            var ids1=document.getElementsByName("checkbox[]");
+            var dem=0;
+
+            for (var j = 0; j< ids1.length; j++) {
+                if(ids1[j].checked){
+                    dem++;
+                    localStorage.setItem("flagChange", "1");
+                    document.getElementById("tbContent"+ids1[j].value).remove();
+                    j--;
+                }
+            }
+
+            if(dem==0){
+                $.fn_alert(true, true, "<?=$this->language('l_listproduct7')?>");
+                return;
+            }
+
+        });
+
+        $('.checkboxOption').change(function() {
+            flagChanges();
+            if($(this).is(":checked")) {
+                $(this).attr("checked",'checked');
+            }else{
+                $(this).removeAttr("checked");
+            }
+        });
+
+        $.fn_loadseq = function(){
+            $('#feedback tr').each(function(index){
+                $(this).find('td:first p').html(index+1);
+                $(this).find('td:first input').val(index+1);
+            });
+            $('.checkboxOption').change(function() {
+                if($(this).is(":checked")) {
+                    $(this).attr("checked",'checked');
+                }else{
+                    $(this).removeAttr("checked");
+                }
+            });
+        }
+    });
+</script>

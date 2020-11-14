@@ -1,0 +1,128 @@
+<?php 
+
+class DashboardModel extends Model{
+	
+	// Phương thức khới tạo
+	public function __construct(){
+		parent::__construct();
+	}
+		
+	// Phương thức load product
+	public function loadProduct(){
+		$sql  = 'SELECT sc.`status`, DATE_FORMAT(sc.`useEndedAt`,"%Y-%m-%d") as useEndedAt 
+                 FROM tb_sellerproduct sp, tb_salechannel sc 
+                 WHERE sp.sellerProductId=sc.sellerProductId ';
+		$sql .= ' AND sc.isDelete=0 AND sc.`status` IN("2","3")';
+		$account = $_SESSION['accountshopping'];
+		if($account['role']==0){
+		    //$sql.= " ";
+		}else{
+		    $sql .= ' AND (sp.creator="'.$account['ID'].'" OR sp.creator IN (SELECT u2.ID
+                                                                         FROM tb_user u1 ,tb_user u2
+		                                                                 WHERE u1.ID = "'.$account['ID'].'" AND u2.idx_parent=u1.idx) ) ';
+		}
+		$this->setQuery($sql);
+		return $this->readAll();
+		
+	}
+	
+	// Phương thức count ticket
+	public function countTicketsToday($created){
+		$sql  = ' SELECT COUNT(tp.ticketNumber) amount 
+                  FROM tb_ticket t,tb_ticketPurchasers tp 
+                                LEFT JOIN tb_salechannel sc ON tp.dealId=sc.vendorItemPackageId 
+                                LEFT JOIN tb_sellerproduct sp ON sc.sellerProductId=sp.sellerProductId ';
+        $sql .=' WHERE t.ticketNumber=tp.ticketNumber AND DATE_FORMAT(t.purchasedAt,"%Y-%m-%d")="'.$created.'" AND ( t.`statusTicket`=1 OR t.`statusTicket`=2) ';
+        $account = $_SESSION['accountshopping'];
+		if($account['role']==0){
+		}else{
+		    $sql .= ' AND (sp.creator="'.$account['ID'].'" OR sp.creator IN (SELECT u2.ID
+                                                                         FROM tb_user u1 ,tb_user u2
+		                                                                 WHERE u1.ID = "'.$account['ID'].'" AND u2.idx_parent=u1.idx) ) ';
+		}
+		$this->setQuery($sql);
+		return $this->read();
+	}
+	
+	// Phương thức count Ticket
+	public function countTicketsUnuse(){
+	    $sql  = ' SELECT COUNT(tp.ticketNumber) amount
+                  FROM tb_ticket t,tb_ticketPurchasers tp 
+                                LEFT JOIN tb_salechannel sc ON tp.dealId=sc.vendorItemPackageId 
+                                LEFT JOIN tb_sellerproduct sp ON sc.sellerProductId=sp.sellerProductId ';
+        $sql .=' WHERE t.ticketNumber=tp.ticketNumber AND t.statusTicket=1 ';
+        $account = $_SESSION['accountshopping'];
+        if($account['role']==0){
+        }else{
+            $sql .= ' AND (sp.creator="'.$account['ID'].'" OR sp.creator IN (SELECT u2.ID
+                                                                         FROM tb_user u1 ,tb_user u2
+		                                                                 WHERE u1.ID = "'.$account['ID'].'" AND u2.idx_parent=u1.idx) ) ';
+        }
+        //echo $sql;
+		$this->setQuery($sql);
+		return $this->read();
+	}
+	
+	// Phương thức load question
+	public function countQuestion(){
+		$sql  = 'SELECT COUNT(question_id) amount 
+                FROM tb_question 
+                WHERE `question_status`=1 AND isDelete=0 ';
+		$this->setQuery($sql);
+		return $this->read();
+	}
+	//
+	public function countRevenue(){
+	    $m_start = date('Y-m-d', strtotime('-7 day'));
+	    $m_end = date("Y-m-d");
+		$sql = 'SELECT COUNT(sp.id) as amount 
+                FROM tb_sellerproduct sp,tb_salechannel sc
+                WHERE sp.sellerProductId=sc.sellerProductId 
+                			AND sc.vendorItemPackageId NOT IN( SELECT tp.dealId 
+															   FROM tb_ticketPurchasers tp,tb_ticket t
+														       WHERE tp.ticketNumber = t.ticketNumber  
+                                                                    AND ( tp.purchaseDateTime >="'.$m_start.' 00:00:00" AND tp.purchaseDateTime <="'.$m_end.' 23:59:59" ) )
+                			AND sc.`status`=3 ';	
+		
+		$account = $_SESSION['accountshopping'];
+		if($account['role']==0){
+		}else{
+		    $sql .= ' AND (sp.creator="'.$account['ID'].'" OR sp.creator IN (SELECT u2.ID
+                                                                         FROM tb_user u1 ,tb_user u2
+		                                                                 WHERE u1.ID = "'.$account['ID'].'" AND u2.idx_parent=u1.idx) ) ';
+		}
+		
+		
+		$this->setQuery($sql);
+		return $this->read();
+	}
+        public function loadOrder( $sql, $sql1 , $length, $begin = 0, $fetch = true){
+	    
+	    $sql .= $this->createOptions([
+	        'sort'=>[
+	            'column'=>'tp.purchaseDateTime',
+	            'order'=>'DESC'
+	        ],
+	        'limit'=>[
+	            'position'=>$begin,
+	            'length'=>$length
+	        ]
+	    ]);	   
+	    //echo $sql;
+	    // count
+	    $this->setQuery($sql1);
+	    $count = $this->read($fetch);
+	    $data = [];
+	    if($count){
+	        // data
+	        $this->setQuery($sql);
+	        $data= $this->readAll($fetch);
+	    }
+	    return [
+	        'count'=>($count['record'])?$count['record']:0,
+	        'data'=>$data
+	    ];	    
+	}
+}
+
+?>

@@ -1,0 +1,229 @@
+
+<html><body>
+<tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch0" value="6597398130" class="chk"> <label for="ch0">[리조트] 강원_티브리지_객실_휘닉스평창_콘도_룸온리(0411)/2020-07-04(토)|A. 콘도 스탠다드 66㎡</label>
+                    <input type="hidden" id="reserveStatus_6597398130" value="DC">
+                    <input type="hidden" id="originReserveStatus_6597398130" value="WT">
+                    <input type="hidden" id="deal_6597398130" value="3275061118">
+                    <input type="hidden" id="buy_6597398130" value="2605850638">
+                </div>
+            </td>
+            <td>TPDB0045631494</td>
+            <td>이정화<br>(이정화)</td>
+            <td>010-8950-7895</td>
+            <td><em>2020-06-15 <span>(18:27:32)</span></em></td>
+            <td>예약확정 <dummmy><br>(이전 예약대기)</dummmy> </td>
+            <td><em>2020-06-15 <span>(18:27:34)</span></em></td>
+            <td><em>2020-07-04</em></td>
+            <td><em>2020-06-16 <span>(16:13:23)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+        <tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch1" value="6448127014" class="chk"> <label for="ch1">[리조트]강원_티브리지_휘닉스평창 연박 패키지_블랙딜(0421)/2020-07-11(토)|A. 콘도 스탠다드 66㎡(+40,000원 현장결제)</label>
+                    <input type="hidden" id="reserveStatus_6448127014" value="DC">
+                    <input type="hidden" id="originReserveStatus_6448127014" value="DC">
+                    <input type="hidden" id="deal_6448127014" value="3429916526">
+                    <input type="hidden" id="buy_6448127014" value="2542605958">
+                </div>
+            </td>
+            <td>TPLS0008978135</td>
+            <td>임수민<br>(임수민)</td>
+            <td>010-6308-7880</td>
+            <td><em>2020-04-23 <span>(22:59:45)</span></em></td>
+            <td>예약확정 </td>
+            <td><em>2020-04-23 <span>(22:59:46)</span></em></td>
+            <td><em>2020-07-11</em></td>
+            <td><em>2020-04-23 <span>(22:59:46)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+        <tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch2" value="6448026778" class="chk"> <label for="ch2">[리조트]강원_티브리지_휘닉스평창 연박 패키지_블랙딜(0421)/2020-07-10(금)|A. 콘도 스탠다드 66㎡(+40,000원 현장결제)</label>
+                    <input type="hidden" id="reserveStatus_6448026778" value="DC">
+                    <input type="hidden" id="originReserveStatus_6448026778" value="DC">
+                    <input type="hidden" id="deal_6448026778" value="3429916506">
+                    <input type="hidden" id="buy_6448026778" value="2542564710">
+                </div>
+            </td>
+            <td>TPLA0057817733</td>
+            <td>김형근<br>(김형근)</td>
+            <td>010-5596-9072</td>
+            <td><em>2020-04-23 <span>(22:18:48)</span></em></td>
+            <td>예약확정 </td>
+            <td><em>2020-04-23 <span>(22:18:49)</span></em></td>
+            <td><em>2020-07-10</em></td>
+            <td><em>2020-04-23 <span>(22:18:49)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+        <tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch3" value="6447511346" class="chk"> <label for="ch3">[리조트]강원_티브리지_휘닉스평창 연박 패키지_블랙딜(0421)/2020-07-11(토)|A. 콘도 스탠다드 66㎡(+40,000원 현장결제)</label>
+                    <input type="hidden" id="reserveStatus_6447511346" value="DC">
+                    <input type="hidden" id="originReserveStatus_6447511346" value="DC">
+                    <input type="hidden" id="deal_6447511346" value="3429916526">
+                    <input type="hidden" id="buy_6447511346" value="2542376458">
+                </div>
+            </td>
+            <td>TPGL0192379598</td>
+            <td>고영희<br>(고영희)</td>
+            <td>010-6822-2865</td>
+            <td><em>2020-04-23 <span>(19:18:38)</span></em></td>
+            <td>예약확정 </td>
+            <td><em>2020-04-23 <span>(19:18:40)</span></em></td>
+            <td><em>2020-07-11</em></td>
+            <td><em>2020-04-23 <span>(19:18:40)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+        <tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch4" value="6446983078" class="chk"> <label for="ch4">[리조트]강원_티브리지_휘닉스평창 연박 패키지_블랙딜(0421)/2020-07-10(금)|A. 콘도 스탠다드 66㎡(+40,000원 현장결제)</label>
+                    <input type="hidden" id="reserveStatus_6446983078" value="DC">
+                    <input type="hidden" id="originReserveStatus_6446983078" value="DC">
+                    <input type="hidden" id="deal_6446983078" value="3429916506">
+                    <input type="hidden" id="buy_6446983078" value="2542261538">
+                </div>
+            </td>
+            <td>TPDB0103856480</td>
+            <td>한영채<br>(한영채)</td>
+            <td>010-2737-8282</td>
+            <td><em>2020-04-23 <span>(17:49:20)</span></em></td>
+            <td>예약확정 </td>
+            <td><em>2020-04-23 <span>(17:49:22)</span></em></td>
+            <td><em>2020-07-10</em></td>
+            <td><em>2020-04-23 <span>(17:49:22)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+        <tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch5" value="6446980682" class="chk"> <label for="ch5">[리조트]강원_티브리지_휘닉스평창 연박 패키지_블랙딜(0421)/2020-07-10(금)|B. 콘도 스위트 99㎡(+90,000원 현장결제)</label>
+                    <input type="hidden" id="reserveStatus_6446980682" value="DC">
+                    <input type="hidden" id="originReserveStatus_6446980682" value="DC">
+                    <input type="hidden" id="deal_6446980682" value="3429918186">
+                    <input type="hidden" id="buy_6446980682" value="2542260314">
+                </div>
+            </td>
+            <td>TPLS0164787920</td>
+            <td>한영채<br>(한영채)</td>
+            <td>010-2737-8282</td>
+            <td><em>2020-04-23 <span>(17:47:36)</span></em></td>
+            <td>예약확정 </td>
+            <td><em>2020-04-23 <span>(17:47:37)</span></em></td>
+            <td><em>2020-07-10</em></td>
+            <td><em>2020-04-23 <span>(17:47:37)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+        <tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch6" value="6446870294" class="chk"> <label for="ch6">[리조트]강원_티브리지_휘닉스평창 연박 패키지_블랙딜(0421)/2020-07-10(금)|A. 콘도 스탠다드 66㎡(+40,000원 현장결제)</label>
+                    <input type="hidden" id="reserveStatus_6446870294" value="DC">
+                    <input type="hidden" id="originReserveStatus_6446870294" value="DC">
+                    <input type="hidden" id="deal_6446870294" value="3429916506">
+                    <input type="hidden" id="buy_6446870294" value="2542210342">
+                </div>
+            </td>
+            <td>TPPT0197819864</td>
+            <td>한덕수<br>(한덕수)</td>
+            <td>010-5729-0049</td>
+            <td><em>2020-04-23 <span>(16:37:45)</span></em></td>
+            <td>예약확정 </td>
+            <td><em>2020-04-23 <span>(16:37:46)</span></em></td>
+            <td><em>2020-07-10</em></td>
+            <td><em>2020-04-23 <span>(16:37:46)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+        <tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch7" value="6446761358" class="chk"> <label for="ch7">[리조트]강원_티브리지_휘닉스평창 연박 패키지_블랙딜(0421)/2020-07-11(토)|A. 콘도 스탠다드 66㎡(+40,000원 현장결제)</label>
+                    <input type="hidden" id="reserveStatus_6446761358" value="DC">
+                    <input type="hidden" id="originReserveStatus_6446761358" value="DC">
+                    <input type="hidden" id="deal_6446761358" value="3429916526">
+                    <input type="hidden" id="buy_6446761358" value="2542162202">
+                </div>
+            </td>
+            <td>TPCX0201098243</td>
+            <td>김혜경<br>(김혜경)</td>
+            <td>010-4929-9075</td>
+            <td><em>2020-04-23 <span>(15:37:02)</span></em></td>
+            <td>예약확정 </td>
+            <td><em>2020-04-23 <span>(15:37:05)</span></em></td>
+            <td><em>2020-07-11</em></td>
+            <td><em>2020-04-23 <span>(15:37:05)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+        <tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch8" value="6446663178" class="chk"> <label for="ch8">[리조트]강원_티브리지_휘닉스평창 연박 패키지_블랙딜(0421)/2020-07-10(금)|A. 콘도 스탠다드 66㎡(+40,000원 현장결제)</label>
+                    <input type="hidden" id="reserveStatus_6446663178" value="DC">
+                    <input type="hidden" id="originReserveStatus_6446663178" value="DC">
+                    <input type="hidden" id="deal_6446663178" value="3429916506">
+                    <input type="hidden" id="buy_6446663178" value="2542115502">
+                </div>
+            </td>
+            <td>TPKQ0051681231</td>
+            <td>서예은<br>(서예은)</td>
+            <td>010-4362-0112</td>
+            <td><em>2020-04-23 <span>(14:39:01)</span></em></td>
+            <td>예약확정 </td>
+            <td><em>2020-04-23 <span>(14:39:03)</span></em></td>
+            <td><em>2020-07-10</em></td>
+            <td><em>2020-04-23 <span>(14:39:03)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+        <tr class="frst">
+            <td>
+                <div class="chk_ip">
+                    <input type="checkbox" id="ch9" value="6446626558" class="chk"> <label for="ch9">[리조트]강원_티브리지_휘닉스평창 연박 패키지_블랙딜(0421)/2020-07-11(토)|A. 콘도 스탠다드 66㎡(+40,000원 현장결제)</label>
+                    <input type="hidden" id="reserveStatus_6446626558" value="DC">
+                    <input type="hidden" id="originReserveStatus_6446626558" value="DC">
+                    <input type="hidden" id="deal_6446626558" value="3429916526">
+                    <input type="hidden" id="buy_6446626558" value="2542099814">
+                </div>
+            </td>
+            <td>TPAM0110513536</td>
+            <td>이민예<br>(이민예)</td>
+            <td>010-5541-3411</td>
+            <td><em>2020-04-23 <span>(14:18:29)</span></em></td>
+            <td>예약확정 </td>
+            <td><em>2020-04-23 <span>(14:18:31)</span></em></td>
+            <td><em>2020-07-11</em></td>
+            <td><em>2020-04-23 <span>(14:18:31)</span></em></td>
+            <td></td>
+        </tr>
+    
+
+<tr style="display:none;">
+    <td>
+        <input type="hidden" id="reserveCount" name="reserveCount" value="40">
+        <input type="hidden" id="error" value="">
+    </td>
+</tr>
+</body></html>

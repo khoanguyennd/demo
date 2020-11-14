@@ -1,0 +1,57 @@
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+use Google\Cloud\Storage\StorageClient;
+
+class NaverController extends Controller {
+    
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    public function register_stream_wrapper($projectId)
+    {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+    
+    // Phương thức index
+    public function indexAction() {
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+        //https://nid.naver.com/nidlogin.login
+        $crawler = $client->request('POST', 'https://nid.naver.com/nidlogin.login');
+        
+        $form = $crawler->filter('#frmNIDLogin')->form();
+        $crawler = $client->submit($form, array(
+                                    'id' => '0604057',
+                                    'pw' => 'yakeun87!@',
+            'encpw' => 'yakeun87!@',
+            'pw' => 'yakeun87!@'
+        ));
+//         http://localhost:8000/testNaver/index1.php?
+//         localechange=
+//         &encpw=19cf41905750bfb111cb69f1acc784062efb294c81ce62e01f350c27c53c3e128a1cfd5d2cfae2720378804714abe4e40f143374dd21a28a878eabe2cedbf92059680268165eb8cb8c399397968cdd626eac064b960501448af9782df07a2ac7853405792b069decd3b58d65bc9cdab66856d5188f49a27366e6274f9b3f117f
+//         &enctp=1
+//         &svctype=1
+//         &smart_LEVEL=-1
+//         &bvsd=%7B%22uuid%22%3A%2240941d41-76bb-4ddb-8959-838af11c408f-0%22%2C%22encData%22%3A%22N4IghiBcICwAwE4YEYAmKC0B2AbAIzwxlVUIA4EBWBDMgZjLADNlkBjeMpjOEAGhB4oIZADo6omPxBsoTMABsAzgFMBqKAG1QAS2E6NAiJE0g4fVHwDCAFQBKAGT7Is0gEwwsFvjvNkc0shwMHwArj5%2BAQIu5uG2js6uALoCQpCgxqbmcDjBcJTJqVBwAL4CstDSGtA5eQXSKnKKqgJMTcoqZbrCAA4A7tKZZt7xTu6UON6%2BAtHIdGERMyIIbgujS0EwCFPIG6wLOrsgKYJQGVrDx0WQpeXCVfcCjZAALgBOoWogbZDyHSUnZ7ndLgKAIcHXcHbGRg8FlU4g4xQyEQmGQKEleE-YE40Ho1FpZFojHXYFEwmoioY%2BFpXFIgmw6FUuGkvHkxl3fEITHwgDmZzxWQAPnRkELckLeAI4CK3EKCpLpDLPEK3AhFdKhcg3DgtWKMFEzCKxR4hRhkAglUKVerzVJNSq5ebAlqYJRJRqQHLkBKZVKjW5qB7kFakB66FbRR63JG5TKQ5q6Ag-VqrTBde7nYnvTAzRHs-L3f7lbq3D7VfmjXQ5VgTbGtVh1W4Y5qsFsnaxKGL0y6U-65UXPTKy%2BqyHm01hVZnK8rJzA6EPrZPKAvDTKo2qhWR62XxZHhwugmmx3Rcy5I2LkGeE0b09b3ZRKBP7%2BKZ7KK1OL1rvU%2BHZPAyKb4qsg7pzF%2Bj7WpamoeFgC4eLq5pQbe-5mvayFCpO2DPkWX4WiKa4YUg3ZYJhlAwNuf5mm4cALmR9YGrqBF3gaY4treY4YLurD7maeFIeuuacTK-EvpxZ5obOebeiJUYGqqVoWjKRCpgWnHyZqFodipIgen67iunGi46lpv5VmKwn1sOTGZpej70SBW4SUuvHumQbHrk6k6ila1GCUEe6Jgu5qHm%2BIHkUFlBOqe9b%2BUQN6SZhbZfradCmZJV5mvQaa6kpSbPrlaXvkphVBOqxUKVQHpZjp5mejmtXFvKcCTvq8XOXWDq6uZVqNqqIrZdGx7Bo1OrBm1ubrpZWpvlGyr5epRpBHAKbjS1LWFSqJ4KRMIqqgRUZ0Ku7nOQwIpOVG5YbS1E0xfqx10AeZoiSqK68ftcq7hgG26nQmFtRuQWuNB1FURhaa-ZBebnZetrcQ6Y5BE6KDgU6FHoUmVG4U6V2qkpcNmbtnHPq1PUcV1M02XKWzPuaco4ND8rWvWQU%2BsTUVAV1%2BrRYm3a8eNJ68Y1D1arxoawaDcz7UpflwKtZqZlghXVqhVHPZhHGUGjkkYClTEIQhHiRhFgsDWpRM87xouamRHEIH9Qspm5yWFvNv1fnJR6URgC7wF%2Bw5y-7Q3xg7g3w7tz2lv10TWn2%2BkgQ1PlhmKoVkGQy65s2G2CbDPHYEZHEZd79Gnlbt76029EAf9%2BqUHpXvwG9NMdgpiBmn9NMwHKbsaTgdtI2QGda6qubptjOBDxKGPBW1cw%2BnjGXj05o2sLaXYDQgQUPc%2Bbj2-NTG2jguqwQpMDzlRJdiQNeOHWmMqYSsz6CQw83BVfvEM7loaDkX0Gy39AVVg7Cec6nlDyIFNtqM8yYrSPjcqreUMCFx0AQv4Hy7o3ARRxsrc0cB7qXiUhg3CLMh7ATxkDKsyp5ZDUzO9a0VDOoYUyl%2BQSTEWql3XJeTGlE7ougmGOOuXpXRlUVCcNIgYmRQAoJQdQUBfqrBAM8IIZBkD%2BFaMUeEAArKAOovAgAABbCDwGAVAyimB4DcCofwCAOB0DAIfMAWALFMAKHgFQwQ3BkFkAIPQiJhAAFkAD2AAvHQCgFBgAAPSUFEHAAABAACgAOo6AAHaoACX0JQsSAByNhYlBBiQAblicklJ9NikAA9ymxLeAAN0gCRGJABKWJABxFQbAADWASInUSWkEZAsSABiOg3gqCYAEipETGn%2BjSCAbpGAADSdhpAVA8DIyA5onhQCOD8I4-ITCaXMEouAJwDGHJWMcvIJwfFfXgAILRkAjidJ2QIBQryQAAFthChBSZ0lJGSUnSCBdAUp1ZpABJ%2BSkpQPQOk6CYDoFQhhwCZBOD0YQTAcBmLciOWuFjkBgEoCQVAbAfRYBYHQFQQQVBuOkAAR2EKnPAblnFuJpSoJMzA2CctFHgZAeATGUBUAgMx0g3jCFaQEgJvIFAqFiQASRSWwUQAA-AAgtk1pDgACiCS-E6DYG8AJSgAlMBeLEgAQmAJQBrYl2BUGklQbxYkABE3g6FqU611oyOkvDoC61gsTalKAAPqUBDXEnoobw1wCadIJQ7QWggBeImr4oRU0CFqRmkAAxfjNC%2BBUrQ5g-gtBLSoE4ABPC4ar3WKGkDWnQihLXhK6dIKwigdB4HdW2sAnyu2Np7X22tsS-FgBeAYgQVgAmfNtQAZTANCkds620BOhQE8JCbJ0BNCO6p1K6d2IuddklQAwBDtICW8XkA6BAAAkVAKE9S8A1EABDys%2BT0MAbAU0CAcKENgBgwCxKnWu2V0hf3-tQIB%2Bdi6ACqKSDUBNQI0AQ%2BrDXGtNea6DWTZ1OvhdIPxs62kBPHQa-DhGAAKkqSNeJAAR2JWH6O4baChwjOH3XMZAORxQY7UkBNiQ4XjLwK2wukDh3kAS5XkfdSk79IAxMSfo4anQPRZPyblTB%2BVomVDifU-K-jOheR6NU9phTGnGMzrwOu5FanYlmdnRWvt67pA2DAHo6dL6QA2B0J8lQm7PPed8zkk9dr3NAoEDYMZeA-16JUOagj0gABqTrIMpI86U3kqBUm8gTUkTEQA%22%7D
+//         &encnm=100015589
+//         &locale=ko_KR
+//         &url=https%3A%2F%2Fwww.naver.com
+//         &id=
+//         &pw=
+        
+       
+        $crawler = $client->request('GET', 'https://partner.booking.naver.com/booking-list-view');
+        echo '<pre>';
+        print_r($crawler);
+        echo '</pre>';
+    }
+}
+
+?>

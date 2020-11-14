@@ -1,0 +1,704 @@
+<?php
+
+require PATH_ROOT . '/vendor1/autoload.php';
+
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\BrowserKit\HttpBrowser;
+use Symfony\Component\DomCrawler\Crawler;
+
+require PATH_ROOT . '/vendor/autoload.php';
+
+use Google\Cloud\Storage\StorageClient;
+
+class WemakepriceController extends Controller {
+
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);        
+    }
+
+    public function register_stream_wrapper($projectId) {
+        $client = new StorageClient(['projectId' => $projectId]);
+        $client->registerStreamWrapper();
+    }
+
+    function callAPI($method, $url, $data,$token) {
+        
+        $curl = curl_init();
+        switch ($method) {
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
+        // OPTIONS:
+        //echo $url;
+        curl_setopt($curl, CURLOPT_URL, $url);
+        if($token==""){
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json;charset=UTF-8'
+            ));
+        }else{
+            curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+                'Content-Type: application/json;charset=UTF-8',
+                'Authorization: ' . $token
+            ));
+        }
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if (!$result) {
+            //die("Connection Failure");
+        }
+        curl_close($curl);
+        return json_decode($result,true);
+    }
+
+    private function getTokenLogin($data='', $url=''){
+        if($data =='' || !isset($data)){
+            $data = '{"loginType":"PARTNER","userId":"tbridge1","userPwd":"dwkez6nivv"}';
+        }
+        if($url== '' || !isset($url)){
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/user/login';
+        }
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+
+        $header = array(
+            'Accept: application/json',
+            'Content-Type: application/json'
+        );
+
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+        $results = curl_exec($curl);
+
+        if (!$results) {
+            return false;
+        }
+        curl_close($curl);
+        $result = json_decode($results,true);
+        $token = "Bearer " . $result['token'];
+        return $token;
+    }
+
+    private function insertProduct($token, $dataInsert){        
+        if(is_array($dataInsert) && count($dataInsert)){
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/base';
+            $data = json_encode($dataInsert);
+            $result = $this->callAPI('POST', $url, $data,$token);
+            if(isset($result['goodsId'])) return $result['goodsId'];
+        }   
+        return false;
+    }
+
+    private function updateProduct($token, $goodIds, $step){
+        
+        if($step == 1){
+            $data = [
+                        'alerts' => [
+                            [
+                                "id" => 36395,
+                                "email" => "testingkakaogv@gmail.com12",
+                                "kakaoMobileNum" => "testing Kakao12",
+                                "subject" => "093965756612",
+                                "useEmail" => false,
+                                "useKakao" => false
+                            ]        
+                        ],
+                        "changeableProductFee" => true,
+                        "facility" => [
+                            "address1" => "제주특별자치도 제주시 애월읍 장소로 219-112",
+                            "address2" => "testing address detail12",
+                            "latitude" => "33.43333730041612",
+                            "longitude" => "126.38019015260812",
+                            "mainPhone" => "08456611312",
+                            "name" => "testing name12",
+                            "subPhone" => "11412",
+                            "subPhoneName" => "08412",
+                            "url" => "http://24h.com.vn12"
+                        ],
+                        "mdId" => "201712005912",
+                        "mdName" => "김희재",
+                        "partnerId" => "tbridge1",
+                        "partnerName" => "(주)티브리지",
+                        "productFee" => [
+                            "rateType" => "PERCENT",
+                            "rateValue" => "33.00"
+                        ],                                
+                        "locationType" => "DOMESTIC"
+                    ];
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/'. $goodIds .'/base';
+
+            $data = json_encode($data);
+            $result = $this->callAPI('PUT', $url, $data,$token);
+        } elseif($step == 2){
+            $data = [
+                "addInfo" => "other info testing",
+                "agency" => "",
+                "cancelFees" => [],
+                "contactUs" => "",
+                "description" => "",
+                "hasCancelFee" => false,
+                "hasRequiredInput" => false,
+                "images" => [
+                    [
+                        "uid" => "1595836094181",
+                        "order" => 0,
+                        "url" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/googledrive.PNG",
+                        "fileUrl" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/googledrive.PNG"
+                    ]
+                ],
+                "listingImages" => [
+                    [
+                        "uid"=> "1595836430344",
+                        "order" => 0,
+                        "url" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/greentower.PNG",
+                        "fileUrl" => "https://klkim-project.appspot.com.storage.googleapis.com/upload/greentower.PNG"
+                    ]
+                ],
+                "information" => "description call testing",
+                "isCancelable" => true,
+                "isMandatoryReservation" => false,
+                "isPendingReservation" => false,
+                "maxQuantityPerPerson" => 0,
+                "maxQuantityPerPurchase" => 0,
+                "name" => "call api add product",
+                "openingHours" => [
+                    "holiday" => "",
+                    "weekday" => ["end" => "23:30","start"=>"01:30"],
+                    "weekend"=> ["end" => "","start" => ""]
+                ],
+                "parkingInfo" => [
+                    "information" => "",
+                    "parkingType" => "FREE"
+                ],
+                "period" => "",
+                "productCategory1" => "CT000003",
+                "productCategory2" => "CT000082",
+                "refund" => "",
+                "refundRuleText"=> "info Refund money testing",
+                "regionCategory" => "CR000004",
+                "additional" =>[],
+                "saleDeadlineDay" => null,
+                "saleEndAt" => "2021-07-23T02:00:00",
+                "saleStartAt" => "2020-07-28T01:00:00",
+                "scheduleKind" => "PERIOD",
+                "store" => "",
+                "useEndAt" => "2020-08-21T02:00:00",
+                "useInfo" => "use infomation 123",
+                "useStartAt" => "2020-07-28T01:30:00",
+                "useType" => "NOW",
+                "useTypeStartAt" => "",
+                "isIncludeDateOption" => false,
+                "recommendList" => [],
+                "locationType" => "DOMESTIC"
+            ];
+
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/'. $goodIds .'/detail';
+
+            $data = json_encode($data);
+            $result = $this->callAPI('POST', $url, $data,$token);
+
+        } elseif ($step == 3){
+            $data = [
+                "categoryInfos" => [
+                    [
+                        "categoryName" => "option name",
+                        "categoryValues" => ["option1","option2","option3"],
+                        "depth" => 1
+                    ]
+                ],
+                "optionBase" => [
+                    "basicPrice" => 999,
+                    "salePrice" => 222,
+                    "stockQuantity" => 333,
+                    "isDisplay" => true
+                ],
+                "removeCategoryValues" => []
+            ];
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/'. $goodIds .'/options/base';
+
+            $data = json_encode($data);
+            $result = $this->callAPI('POST', $url, $data,$token);
+
+            // Options
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/options/base';
+            $obj = $this->callAPI("GET", $url, null, $token); // Get optionBaseId and optionCategoryId
+
+            $urlOptions = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/options/base';
+            $objOptions = $this->callAPI("GET", $urlOptions, null, $token);
+
+            $optionCategoryId = 0;
+            // Get last $optionCategoryId
+            foreach ($objOptions['optionCategoryMap'] as $item) {
+                $optionCategoryId =  $item['optionCategoryId'];
+            }
+
+            // Add options
+            $options = 'EDIT';
+            $id = '5589102';
+            if ($options === 'ADD') {
+                $data = [
+                    'optionBaseId' => $obj['optionBase']['id'],
+                    "options" => [
+                        [
+                            'basicPrice'=> 800,
+                            'isDisplay'=> true,
+                            'optionCategoryId'=> (int)$optionCategoryId + 1,
+                            'optionCategoryValues'=> "option3",
+                            'partnerGoodsCode'=> null,
+                            'rateValue'=> null,
+                            'saleEndDate'=> null,
+                            'salePrice'=> 800,
+                            'stockQuantity'=> 800,
+                            'useDate'=> null
+                        ]
+                    ]
+                ];
+
+                $data = json_encode($data);
+                $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/options';
+                $result = $this->callAPI('POST', $url, $data,$token);
+
+            }elseif ($options === 'EDIT') {
+                // Edit options
+                $data = [
+                    'optionBaseId' => $obj['optionBase']['id'],
+                    "options" => [
+                        [
+                            'basicPrice' => 100,
+                            'id' => (int)$id,
+                            'isDisplay' => true,
+                            'optionCategoryId' => $obj['optionCategoryMap'][0]['optionCategoryId'],
+                            'optionCategoryValues' => "option3",
+                            'partnerGoodsCode' => null,
+                            'rateValue' => null,
+                            'saleEndDate' => null,
+                            'salePrice' => 100,
+                            'stockQuantity' => 200,
+                            'useDate' => null
+                        ]
+                    ]
+                ];
+
+                $data = json_encode($data);
+                $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/' . $goodIds . '/options';
+                $result = $this->callAPI('PUT', $url, $data, $token);
+            }
+
+        } elseif($step == 4){
+            $data = [
+                "ticketType" => "EXTERNAL",
+                "tickets" => []
+            ];
+
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/'. $goodIds .'/tickets';
+
+            $data = json_encode($data);
+            $result = $this->callAPI('POST', $url, $data,$token);
+        } elseif($step == 5) {
+            $data = [
+                "basicPrice" => "Thông tin giá tiêu chuẩn me50",
+                "policy" => [
+                    "cancellation" => "testing cancellation me505",
+                    "complaints" => "testing complaints me50",
+                    "conditions" => "testing conditions me50",
+                    "delivery" => "testing delivery me50",
+                    "refunds" => "testing refunds me50"
+                ],
+                "product" => [
+                    "agency" => "nhà xuất bản me50",
+                    "period" => "Thời hạn hiệu lực, điều khoản sử dụng me505",
+                    "store" => "Cửa hàng có sẵn me50",
+                    "refund" => "Điều kiện hoàn tiền và phương pháp me50",
+                    "contactUs" => "Tư vấn tiêu dùng me50"
+                ]
+            ];
+            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/'. $goodIds .'/notice';
+
+            $data = json_encode($data);
+            $result = $this->callAPI('POST', $url, $data,$token);
+        }
+//        if($step == 3){
+//            $data = [
+//                "optionBaseId" => (int)$result['optionBaseId'],
+//                "options" => [
+//                    [
+//                        "basicPrice" => 999,
+//                        "isDisplay" => false,
+//                        "partnerGoodsCode" => null,
+//                        "optionCategoryId" => 3318093,
+//                        "optionCategoryValues" => "option1",
+//                        "rateValue" => null,
+//                        "salePrice" => 333,
+//                        "stockQuantity" => 555,
+//                        "saleEndDate" => "2021-07-23T02:00:00",
+//                        "displaySaleEndDate" => "2021-07-23T02:00:00",
+//                        "useDate" => null
+//                    ],
+//                    [
+//                        "basicPrice" => 999,
+//                        "isDisplay" => false,
+//                        "partnerGoodsCode" => null,
+//                        "optionCategoryId" => 3318094,
+//                        "optionCategoryValues" => "option2",
+//                        "rateValue" => null,
+//                        "salePrice" => 333,
+//                        "stockQuantity" => 555,
+//                        "saleEndDate" => "2021-07-23T02:00:00",
+//                        "displaySaleEndDate" => "2021-07-23T02:00:00",
+//                        "useDate" => null
+//                    ],
+//                    [
+//                        "basicPrice" => 999,
+//                        "isDisplay" => false,
+//                        "partnerGoodsCode" => null,
+//                        "optionCategoryId" => 3318094,
+//                        "optionCategoryValues" => "option3",
+//                        "rateValue" => null,
+//                        "salePrice" => 333,
+//                        "stockQuantity" => 555,
+//                        "saleEndDate" => "2021-07-23T02:00:00",
+//                        "displaySaleEndDate" => "2021-07-23T02:00:00",
+//                        "useDate" => null
+//                    ]
+//                ]
+//            ];
+//
+//
+//
+//            $url = 'https://tour-partner-api.wonders.app/v1/partner/activity/products/'. $goodIds .'/options';
+//
+//            $data = json_encode($data);
+//            $result = $this->callAPI('POST', $url, $data,$token);
+//        }
+        return $result;
+    }
+    public function updateProductAction(){
+        $token = $this->getTokenLogin();
+
+        //$goodIds=$this->_params['goodIds'];
+        $step=$this->_params['step'];
+        echo $goodIds.$step;
+        if($token){
+            $result = $this->updateProduct($token, $goodIds, $step);
+            echo "<pre>";
+            print_r($result);
+        }
+    }
+    public function addProductAction(){
+        $token = $this->getTokenLogin();
+        if($token){
+            //step one create product
+            $dataIsert = [
+                            'alerts' => [
+                                [
+                                    'email' => "testingkakaogv@gmail.com34",
+                                    "id" =>0,
+                                    "kakaoMobileNum" => "testing Kakao34",
+                                    "subject" => "093965756634",
+                                    "useEmail" => false,
+                                    "useKakao" => false
+                                ]        
+                            ],
+                            "changeableProductFee" => true,
+                            "facility" => [
+                                "address1" => "제주특별자치도 제주시 애월읍 장소로 219-1",
+                                "address2" => "testing address detail34",
+                                "latitude" => "33.43333730041634",
+                                "longitude" => "126.38019015260834",
+                                "mainPhone" => "08456611334",
+                                "name" => "testing name34",
+                                "subPhone" => "11434",
+                                "subPhoneName" => "08434",
+                                "url" => "http://24h.com.vn34"
+                            ],
+                            "mdId" => "201712005934",
+                            "mdName" => "김희재",
+                            "partnerId" => "tbridge1",
+                            "partnerName" => "(주)티브리지",
+                            "productFee" => [
+                                "rateType" => "PERCENT",
+                                "rateValue" => "3.00"
+                            ],                                
+                            "locationType" => "DOMESTIC"
+                        ];                        
+           $goodIds = $this->insertProduct($token, $dataIsert);
+           //$goodIds = 'GD200000000091348';
+           if(isset($goodIds) && $goodIds){
+               $step =4;$result12 = [];
+               for($step=2; $step < 6; $step++){
+                   $result[$step] = $this->updateProduct($token, $goodIds, $step);
+               }
+               if(isset($result) && is_array($result)){
+                   echo 'Have ' . count($result) + 1 .' step action successfull';
+               }
+           }
+        } else {
+            return false;
+        }
+    }
+
+    public function updateMyProductAction(){
+        
+    }
+    // Phương thức index
+    public function indexAction() { //tour        
+        $url = "https://tour-partner-api.wonders.app/v1/partner/user/login";
+        $data= '{"loginType":"PARTNER","userId":"tbridge1","userPwd":"dwkez6nivv"}';
+        $result = $this->callAPI("POST", $url, $data,"");
+        $token="Bearer ".$result['token'];
+        //$token = "Bearer eyJ0eXAiOiJKV1QiLCJyZWdEYXRlIjoxNTk0Nzc5NDQyMjM5LCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJlNmI0NTU5NC1jM2I1LTQwYjUtYWM2MS1lN2YzMjYwYjU1NjMiLCJzdWIiOiJXT05ERVJUT1VSIiwicGFydG5lcl9pZCI6InRicmlkZ2UxIiwic2FwX3BhcnRuZXJfaWQiOiIzNDQyIiwicGFydG5lcl9uYW1lIjoiKOyjvCnti7DruIzrpqzsp4AiLCJidXNpbmVzc19uYW1lIjoiKOyjvCnti7DruIzrpqzsp4AiLCJhdXRob3JpdHlfdHlwZSI6IlBBUlRORVIiLCJhdXRob3JpdHlfZ3JvdXBfY2QiOiJHUDAyMCIsImRvbWFpbl90eXBlIjoiVG91ckFjdGl2aXR5IiwiZGVwYXJ0bWVudF9jZCI6IldTVDAwMDAxNTAiLCJkZXBhcnRtZW50X25hbWUiOiLqta3rgrTslaHti7DruYTti7DtjIztirgiLCJleHAiOjE1OTQ4MjI2NDJ9.GTu-qyPnXHxxs6KRaVnLa45DMm3CctYizssp5UBVIoc";
+        $url = "https://tour-partner-api.wonders.app/v1/partner/activity/reservations/tickets?used=false&reservationTicketStatuses=B,R,F&ticketSearchDateType=PAID_DATE&startDate=2020-01-01&endDate=2020-07-08&partnerType=id&bookerType=name&reservationType=booking&goodsIdType=wid&pageSize=30&pageNumber=1&ticketOrderBy=PAID_DATE&locationType=DOMESTIC";
+        $obj = $this->callAPI("GET", $url, null, $token);        
+      
+        $totalCount = $obj['totalCount'];
+        for ($i = 0; $i < $totalCount; $i++) {
+            $createdBy = $obj["results"][$i]["createdBy"];
+            $createdAt = $obj["results"][$i]["createdAt"];
+            $updatedBy = $obj["results"][$i]["updatedBy"];
+            $updatedAt = $obj["results"][$i]["updatedAt"];
+            $id = $obj["results"][$i]["id"];
+            $reservationId = $obj["results"][$i]["reservationId"];
+            $optionId = $obj["results"][$i]["optionId"];
+            $optionName = $obj["results"][$i]["optionName"];
+            $ticketCodeId = $obj["results"][$i]["ticketCodeId"];
+            $ticketCode = $obj["results"][$i]["ticketCode"];
+            $price = $obj["results"][$i]["price"];
+            $couponPrice = $obj["results"][$i]["couponPrice"];
+            $cancelFeePrice = $obj["results"][$i]["cancelFeePrice"];
+            $status = $obj["results"][$i]["status"];
+            $statusName = $obj["results"][$i]["statusName"];
+            $useStart = $obj["results"][$i]["useStart"];
+            $useEnd = $obj["results"][$i]["useEnd"];
+            $used = $obj["results"][$i]["used"];
+            $usedAt = $obj["results"][$i]["usedAt"];
+            $unUsedTicketRefundType = $obj["results"][$i]["unUsedTicketRefundType"];
+            $unUsedTicketRefund = $obj["results"][$i]["unUsedTicketRefund"];
+            $unUsedTicketRefundAt = $obj["results"][$i]["unUsedTicketRefundAt"];
+            $canceledAt = $obj["results"][$i]["canceledAt"];
+            $partnerGoodsCode = $obj["results"][$i]["partnerGoodsCode"];
+            $additionalInformation = $obj["results"][$i]["additionalInformation"];
+            $orderNo = $obj["results"][$i]["reservation"]["orderNo"];
+            $goodsId = $obj["results"][$i]["reservation"]["goodsId"];
+            $goodsName = $obj["results"][$i]["reservation"]["goodsName"];
+            $partnerId = $obj["results"][$i]["reservation"]["partnerId"];
+            $partnerName = $obj["results"][$i]["reservation"]["partnerName"];
+            $category1Name = $obj["results"][$i]["reservation"]["category1Name"];
+            $category2Name = $obj["results"][$i]["reservation"]["category2Name"];
+            $category3Name = $obj["results"][$i]["reservation"]["category3Name"];
+            $category4Name = $obj["results"][$i]["reservation"]["category4Name"];
+            $reservationStatus = $obj["results"][$i]["reservation"]["reservationStatus"];
+            $reservationStatusName = $obj["results"][$i]["reservation"]["reservationStatusName"];
+            $bookerName = $obj["results"][$i]["reservation"]["bookerName"];
+            $bookerTel = $obj["results"][$i]["reservation"]["bookerTel"];
+            $bookerEmail = $obj["results"][$i]["reservation"]["bookerEmail"];
+            $mid = $obj["results"][$i]["reservation"]["mid"];
+            $travelersNumber = $obj["results"][$i]["reservation"]["travelersNumber"];
+            $paidAt = $obj["results"][$i]["reservation"]["paidAt"];
+            $scheduleKind = $obj["results"][$i]["reservation"]["scheduleKind"];
+            $reservationType = $obj["results"][$i]["reservation"]["reservationType"];
+            $wid = $obj["results"][$i]["reservation"]["wid"];            
+            $ticket = [
+                'useAmount' => 0,
+                'totalAmount' => 1,
+                'ticketNumber' => $ticketCode,
+                'statusType' =>0,
+                'price' => $price,
+                'optionId' => $optionId,
+                'dealId' => $goodsId,
+                'purchasedAt' => $createdAt,
+                'restoreTicket' => 0,
+                'statusTicket' => 1
+            ];
+            //print_r($ticket);
+            
+            $result1 = $this->_model->loadRecord('ticket', ['ticketNumber' => $ticketCode]);
+            if ($result1) {
+                $this->_model->updateRecord('ticket', $ticket, ['ticketNumber' => $ticketCode]);
+            } else {
+                $this->_model->insertRecord('ticket', $ticket);
+            }
+            $ticketPurchasers = [
+                'orderNumber' => 0,
+                'ticketNumber' => $ticketCode,
+                'userName' => $bookerName, 
+                'phoneNumber' => $bookerTel,
+                'email' => $bookerEmail,
+                'dealId' => $goodsId,
+                'dealName' => $goodsName,
+                'optionId' => $optionId,
+                'optionName' => $optionName,
+                'price' => $price,
+                'purchaseDateTime' => $createdAt,
+                'status' => 0
+            ];
+            //print_r($ticketPurchasers);
+            $result2 = $this->_model->loadRecord('ticketPurchasers', ['ticketNumber' => $ticketCode]);
+            if ($result2) {
+                $this->_model->updateRecord('ticketPurchasers', $ticketPurchasers, ['ticketNumber' =>$ticketCode]);
+            } else {
+                $this->_model->insertRecord('ticketPurchasers', $ticketPurchasers);
+            }
+        }
+
+        /*
+          $ticketCode=$obj["results"][0]["ticketCode"];
+          $reservationId=$obj["results"][0]["reservationId"];
+          $goodsName=$obj["results"][0]["reservation"]["goodsName"];
+          $optionName=$obj["results"][0]["optionName"];
+          $useEnd=$obj["results"][0]["useEnd"];
+          $statusName=$obj["results"][0]["statusName"];
+          $price=$obj["results"][0]["price"];
+          $bookerName=$obj["results"][0]["reservation"]["bookerName"];
+          $bookerTel=$obj["results"][0]["reservation"]["bookerTel"];
+          $mid=$obj["results"][0]["reservation"]["mid"];
+          $wid=$obj["results"][0]["reservation"]["wid"];
+          $goodsId=$obj["results"][0]["reservation"]["goodsId"];
+          $createdAt=$obj["results"][0]["createdAt"]; */
+    }
+    // Phương thức index
+    public function questionAction() { //question       
+        $url = "https://tour-partner-api.wonders.app/v1/partner/user/login";
+        $data= '{"loginType":"PARTNER","userId":"tbridge1","userPwd":"dwkez6nivv"}';
+        $result = $this->callAPI("POST", $url, $data,"");
+
+        $token="Bearer ".$result['token'];
+
+        $url = "https://tour-partner-api.wonders.app/v1/partner/activity/products/search?saleStatuses=SALE,READY,HOLD,SOLDOUT,STOP,END,TEMP&dateType=CREATED_DATE&pageNumber=1&pageSize=30&orderBy=CREATED_DATE&locationType=DOMESTIC";
+        $obj = $this->callAPI("GET", $url, null, $token);
+        echo "<pre>";
+        print_r($obj);
+        $obj = $obj["results"];
+        foreach ($obj as $item) {
+            $url = "https://tour-partner-api.wonders.app/v1/partner/activity/qna/products/" . trim($item['goodsId']) . "?pageNumber=1&pageSize=30";
+            $objQuestion = $this->callAPI("GET", $url, null, $token);
+            $objQuestion = $objQuestion["results"];
+
+            foreach ($objQuestion as $itemQuestionAnswer) {
+                if ($itemQuestionAnswer) {
+                    $inquiryId = trim($itemQuestionAnswer['id']);
+                    $result = $this->_model->loadRecords('question', ['inquiryId' => $inquiryId]);
+                    $data = [
+                        'question_name' => trim($itemQuestionAnswer['questionAuthor']),
+                        'question_content' => trim($itemQuestionAnswer['question']),
+                        'question_created' => trim($itemQuestionAnswer['questionCreatedAt']),
+                        'dealId' => $item['goodsId'],
+                        'channel_name' => 'WMAKE',
+                        'inquiryId' => $inquiryId
+                    ];
+
+                    if ($itemQuestionAnswer['answerAuthorName'] != "") {
+                        $data['question_status'] = 2;
+                        $data['reply_name'] = trim($itemQuestionAnswer['answerAuthorName']);
+                        $data['reply_created'] = trim($itemQuestionAnswer['answerCreatedAt']);
+                    }
+
+                    if ($result) {
+                        $this->_model->updateRecord('question', $data, ['inquiryId' => $inquiryId]);
+                    } else {
+                        $this->_model->insertRecord('question', $data);
+                    }
+                }
+            }
+
+        }
+
+        $url = "https://tour-partner-api.wonders.app/v1/partner/activity/qna/products/GD200000000083618?pageNumber=1&pageSize=30";
+        $obj = $this->callAPI("GET", $url, null, $token);
+        echo "<pre>";
+        print_r($obj);die();
+        
+    }
+    public function index1Action() {   //biz
+        $client = new Client(HttpClient::create(['timeout' => 60]));
+
+        //$data=[ "u_id" => "tbridge1"];
+        //$crawler = $client->request('POST', 'https://biz.wemakeprice.com/member/login/salt/',$data); =>login_salt
+        //         login_salts = login_salt.substr(1,1) + login_salt.substr(4,1) + login_salt.substr(8,1) + login_salt.substr(12,1);
+        //         loginProcess = 0;
+        //         => $('#uhs').val($.sha1(login_salts+$.sha1(upw))+login_salts);
+        //         =>upw = login_salt.substr(3,1) + login_salt.substr(5,2) + login_salt.substr(10,2) + login_salt.substr(15,1);
+        $data = ["u_id" => "tbridge1",
+            "u_pw" => '227632',
+            "u_idsave" => 'undefined',
+            "u_hs" => '766c657dd3759946ee054f5e33ee56706a354ebb2010'];
+        //login
+        $crawler = $client->request('POST', 'https://biz.wemakeprice.com//member/login/result/', $data);
+
+        $crawler = $client->request('GET', 'https://biz.wemakeprice.com/svc_settle/ticket_list/retrieved');
+
+        echo '<pre>';
+        print_r($crawler);
+        echo '</pre>';
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/base  POST
+        //{"alerts":[{"email":"test3","id":0,"kakaoMobileNum":"test2","subject":"test1","useEmail":false,"useKakao":false}],"changeableProductFee":true,"facility":{"address1":"경기 남양주시 조안면 북한강로727번길 91","address2":"test5","latitude":"37.5883381505005","longitude":"127.323603517841","mainPhone":"test6","name":"test4","subPhone":"test8","subPhoneName":"test7","url":"http://test9"},"mdId":"2017120059","mdName":"김희재","partnerId":"tbridge1","partnerName":"(주)티브리지","productFee":{"rateType":"PERCENT","rateValue":"13.00"},"locationType":"DOMESTIC"}
+        //{"goodsId":"GD200000000090243"}
+        
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/agreements/status GET
+        //{"id":null,"status":"READY","requestFee":null}
+        
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/options/exists GET
+        //{"isExists":false}
+        
+        //back,
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/base
+        //{"locationType":null,"partnerId":"tbridge1","partnerName":"(주)티브리지","mdId":"2017120059","mdName":"김희재","productFee":{"rateValue":13.00},"facility":{"name":"test4","address1":"경기 남양주시 조안면 북한강로727번길 91","address2":"test5","longitude":127.323603517841,"latitude":37.5883381505005,"mainPhone":"test6","subPhone":"test8","subPhoneName":"test7","url":"http://test9"},"alerts":[{"id":35490,"subject":"test1","useKakao":false,"kakaoMobileNum":"test2","useEmail":false,"email":"test3"}],"changeableProductFee":true}
+        //{"locationType":null,"partnerId":"tbridge1","partnerName":"(주)티브리지","mdId":"2017120059","mdName":"김희재","productFee":{"rateValue":13.00},"facility":{"name":"test4","address1":"경기 남양주시 조안면 북한강로727번길 91","address2":"test5","longitude":127.323603517841,"latitude":37.5883381505005,"mainPhone":"test6","subPhone":"test8","subPhoneName":"test7","url":"http://test9"},"alerts":[{"id":35490,"subject":"test1","useKakao":false,"kakaoMobileNum":"test2","useEmail":false,"email":"test3"}],"changeableProductFee":true}
+        
+        //upload hình
+        //https://tour-partner-api.wonders.app/v1/partner/common/upload/image POST     
+        //https://tourimg.wonderscdn.app/admin/20200727/3/dca183be-d304-4c04-b01c-de0ffb9e7bdc.png
+        
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/detail POST
+        //{"addInfo":"test6","agency":"","cancelFees":[],"contactUs":"","description":"","hasCancelFee":false,"hasRequiredInput":false,"images":[{"uid":1595816482482,"order":0,"url":"https://tourimg.wonderscdn.app/admin/20200727/3/dca183be-d304-4c04-b01c-de0ffb9e7bdc.png","fileUrl":"https://tourimg.wonderscdn.app/admin/20200727/3/dca183be-d304-4c04-b01c-de0ffb9e7bdc.png"}],"listingImages":[{"uid":1595816605302,"order":0,"url":"https://tourimg.wonderscdn.app/admin/20200727/0/95518c93-c1d6-4f60-b0bb-e6ed50aa638d.png","fileUrl":"https://tourimg.wonderscdn.app/admin/20200727/0/95518c93-c1d6-4f60-b0bb-e6ed50aa638d.png"}],"information":"test2","isCancelable":true,"isMandatoryReservation":false,"isPendingReservation":false,"maxQuantityPerPerson":0,"maxQuantityPerPurchase":0,"name":"test1","openingHours":{"holiday":"","weekday":{"end":"","start":""},"weekend":{"end":"","start":""}},"parkingInfo":{"information":"","parkingType":"FREE"},"period":"","productCategory1":"CT000002","productCategory2":"CT000073","refund":"","refundRuleText":"test4","regionCategory":"CR000002","additional":[],"saleDeadlineDay":null,"saleEndAt":"2020-07-31T00:00:00","saleStartAt":"2020-07-27T00:00:00","scheduleKind":"PERIOD","store":"","useEndAt":"2020-07-31T00:00:00","useInfo":"test5","useStartAt":"2020-07-27T00:00:00","useType":"NOW","useTypeStartAt":"","isIncludeDateOption":true,"recommendList":[],"locationType":"DOMESTIC"}
+        //{"goodsId":"GD200000000090243"}
+        //{"locationType":"DOMESTIC","regionCategory":"CR000002","productCategory1":"CT000002","productCategory2":"CT000073","regionCategoryName":"서울특별시","productCategory1Name":"테마파크","productCategory2Name":"놀이동산","name":"test1","information":"test2","description":"","saleStartAt":"2020-07-27T00:00:00","saleEndAt":"2020-07-31T00:00:00","scheduleKind":"PERIOD","useStartAt":"2020-07-27T00:00:00","useEndAt":"2020-07-31T00:00:00","isIncludeDateOption":true,"saleDeadlineDay":null,"images":[{"url":"https://tourimg.wonderscdn.app/admin/20200727/3/dca183be-d304-4c04-b01c-de0ffb9e7bdc.png"}],"listingImages":[{"url":"https://tourimg.wonderscdn.app/admin/20200727/0/95518c93-c1d6-4f60-b0bb-e6ed50aa638d.png"}],"maxQuantityPerPerson":0,"maxQuantityPerPurchase":0,"isPendingReservation":false,"isMandatoryReservation":false,"mandatoryReservationInfo":null,"isCancelable":true,"refundRuleText":"test4","hasCancelFee":false,"cancelFees":[],"hasRequiredInput":false,"additional":[],"useType":"NOW","useTypeStartAt":null,"useInfo":"test5","openingHours":{"weekday":{"start":"","end":""},"weekend":{"start":"","end":""},"holiday":""},"parkingInfo":{"parkingType":"FREE","information":""},"addInfo":"test6","recommendList":[]}
+        
+        //search
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/options/search
+        //{"results":[],"totalCount":0}
+        
+        //add option
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/options/base POST
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/options/base PUT
+        //{"categoryInfos":[{"categoryName":"날짜 옵션","categoryValues":["2020-07-27"],"depth":1},{"categoryName":"test1","categoryValues":["test2"],"depth":2}],"optionBase":{"basicPrice":5000,"salePrice":1000,"stockQuantity":1000,"isDisplay":true,"partnerGoodsCode":""},"removeCategoryValues":[]}
+        //{"optionBaseId":5881}
+        ///https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/options/base
+        
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/options POST
+        //{"optionBaseId":5881,"options":[{"basicPrice":10000,"isDisplay":true,"partnerGoodsCode":null,"optionCategoryId":3299950,"optionCategoryValues":"2020-07-28|OPTION3","rateValue":null,"salePrice":500,"stockQuantity":100,"saleEndDate":"2020-07-29T00:00:00","displaySaleEndDate":"2020-07-29T00:00:00","useDate":null},{"basicPrice":10000,"isDisplay":true,"partnerGoodsCode":null,"optionCategoryId":3299949,"optionCategoryValues":"2020-07-28|OPTION1","rateValue":null,"salePrice":500,"stockQuantity":100,"saleEndDate":"2020-07-29T00:00:00","displaySaleEndDate":"2020-07-29T00:00:00","useDate":null}]}
+        
+        
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/options/search  POST
+        //{"pageNumber":1,"pageSize":100,"showSoldOut":false}
+        
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/tickets?pageNumber=1&pageSize=30
+        
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/tickets POST 
+        //{"ticketType":"WMP","tickets":[]}
+        
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/agreements/status GET
+        
+        //https://tour-partner-api.wonders.app/v1/partner/activity/products/GD200000000090243/notice PUT
+        //{"basicPrice":"상세 정보 참조 test11","policy":{"delivery":"배송방식 및 출고일 등은 딜 상세페이지 참조","cancellation":"1.단순변심, 착오구매 등에 따른 청약철회는 재화 구매 계약 체결에 대한 수신확인 통지 받은 날로부터 7일 이내 가능하며 반품비용은 소비자가 부담함\n2.재화 등의 내용이 표시·광고의 내용과 다르거나 계약내용과 다르게 이행된 경우에는 그 재화 등을 공급받은 날부터 3개월 이내, 그 사실을 안 날 또는 알 수 있었던 날부터 30일 이내에 청약철회 등을 할 수 있으며 반품 비용은 판매자가 부담함\n3.단, 상품의 특성과 거래조건에 따라 청약철회가 일부 제한될 수 있으며 청약철회에 소요되는 비용이 다르게 책정될 수 있음(딜 상세페이지 참조)\n4.단순변심, 착오구매 등에 따른 청약철회가 불가능한 경우- 소비자에게 책임 있는 사유로 '재화 등'이 멸실 또는 훼손된 경우- 시간의 경과에 의하여 재판매가 곤란할 정도로 '재화 등'의 가치가 현저히 감소한 경우- 같은 성능을 지닌 '재화 등'으로 복제가 가능한 경우 그 원본인 '재화 등'의 포장을 훼손한 경우- 기타 개별 상품과 관련한 청약철회 기준은 딜 상세페이지 참조\n5.미성년자가 구매계약을 체결하는 경우에는 법정대리인이 동의하지 않으면 미성년자 본인 또는 법정대리인이 계약을 취소할 수 있습니다.","refunds":"1.재화 등의 교환∙반품∙보증 조건 및 품질보증기준​- 전자상거래 등에서의 소비자보호에 관한 법률 및 관련 규정에 부합하는 기준에 따름​- 일부 상품의 경우 구체적인 교환∙반품∙보증 기준을 딜 상세페이지에 안내\n​2.주문취소 및 결제대금 환불 신청 방법​- 배송상품: 주문취소 및 결제대금의 환불은 마이페이지 내 신청 및 확인 가능​- 그 외 상품: 마이페이지>1:1문의를 통해 문의​3.환불의 지연에 따른 배상금 지급의 조건 및 절차​-전자상거래 등에서의 소비자 보호에 관한 법률 규정에 따라 재화 등을 반환 받은 날로부터​\u000b3 영업일 이내에 지급받은 대금의 환급을 정당한 사유 없이 지연하는 경우 연 15%의 ​\u000b지연배상금 청구 가능","complaints":"1.전자상거래 등에서의 소비자보호에 관한 법률 및 관련규정에 부합하는 기준에 따름\n2.마이페이지 내 1:1문의를 통해 문의해주세요.","conditions":"사이트 하단의 위메프 이용약관 참조"},"product":{"agency":"상세 정보 참조 test222","period":"상세 정보 참조 test33","store":"상세 정보 참조 test44","refund":"상세 정보 참조 test555","contactUs":"test666"}}
+    }
+
+}
+
+?>

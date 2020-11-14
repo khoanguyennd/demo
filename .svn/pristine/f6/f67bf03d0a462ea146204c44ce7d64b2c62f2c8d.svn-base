@@ -1,0 +1,1365 @@
+<?php
+require PATH_ROOT . '/vendor1/autoload.php';
+use Goutte\Client;
+use Symfony\Component\HttpClient\HttpClient;
+
+class CoupangController extends Controller {
+
+    private $_vendorid = 'A00183931'; // 
+    public $client; 
+    public $authToken="";
+    // Phương thức khởi tạo
+    public function __construct($params) {
+        parent::__construct($params);
+    }
+    // Phương thức index
+    public function autoupdateAction() { //tour // chưa xong     
+        $this->loginCoupang();
+        $sql  = 'SELECT c.channel_cid, sp.sellerProductId, sc.travelProductId,sc.channelTypeId, sc.`status`, sc.isDelete, sc.statusedit ';
+        $sql .= 'FROM tb_sellerproduct sp, tb_salechannel sc, tb_channeltypes ct, tb_channels c ';
+        $sql .= 'WHERE sp.sellerProductId=sc.sellerProductId AND sc.channelTypeId=ct.type_id AND ct.channelid=c.channel_id
+                        AND sc.isDelete=0  AND sc.statusedit=1 AND c.channel_cid="COUPANG" AND sc.`status`>1 '; //
+        $sql .= 'ORDER BY c.channel_cid ASC';	
+        $this->_model->setQuery($sql);
+        $results = $this->_model->readAll();
+        
+        foreach ($results as $key => $item){
+            if($item['status'] == 2 || $item['status'] == 3 || $item['status'] == 4){   
+                
+                if($item['travelProductId']){
+                    // Cập nhật sản phẩm
+                    $action = 'UPDATE';
+                    echo $action;
+                    $sellerProductId= $item['sellerProductId'];
+                    $travelProductId= $item['travelProductId'];
+                    $channelTypeId=$item['channelTypeId'];
+                    $this->updateTicketAction($sellerProductId,$travelProductId,$channelTypeId);
+                    
+                    $this->_model->updateRecord('salechannel',['statusedit'=>2],['travelProductId'=>$travelProductId]);
+                  
+                }else{
+                    // Thêm sản phẩm
+                    $sellerProductId= $item['sellerProductId'];
+                    $channelTypeId=$item['channelTypeId'];
+                    $action = 'INSERT';
+                    echo $action;
+                    $this->insertTicketAction($sellerProductId,"",$channelTypeId);
+                    
+                }
+                
+            }
+            
+        }
+    }
+    public $dem=0;
+    public function loginCoupang() {
+        $this->dem++;
+        $this->client = new Client(HttpClient::create(['headers' => ['User-Agent' => 'My Fancy App', ],'timeout' => 60]));
+        $data =[ 'username' => 'VENDOR,orrchipro',
+                 'password' => 'tuananhA123'];
+        $this->client->setServerParameters(['Accept' => 'application/json, text/javascript, */*; q=0.01', 'Content-Type' => 'application/x-www-form-urlencoded; charset=UTF-8']);
+        $this->client->xmlHttpRequest('POST', 'https://with.coupang.com/login?returnUrl=https%3A%2F%2Fwith.coupang.com%2Fdashboard%3FproductType%3DTICKET',$data);
+        
+        $strdata=$this->client->getResponse()->getContent();
+        echo $this->dem ."<br>";
+        //echo $strdata."<br>";
+        $str='{"userId":null,"vendorId":null,"locale":null,"requestId":null,"authToken":null,"email":null,"phone":null,"confirmed2FAInfo":true,"need2FAAuth":false,"blocked2FA":false,"invalid2FA":false,"errorMessage":""}';
+            //{"userId":null,"vendorId":null,"locale":null,"requestId":null,"authToken":null,"email":null,"phone":null,"confirmed2FAInfo":true,"need2FAAuth":true,"blocked2FA":false,"invalid2FA":true,"errorMessage":"로그인을 할 수 없습니다. 관리자에게 문의해주세요."}
+        
+        if($this->dem==100)
+            die();
+        if($strdata==$str){
+            // login thành công
+        }else{
+            $data=json_decode($strdata,true);
+            $this->authToken=$data["authToken"];
+            
+            $this->loginCoupang();
+        }
+        //$this->client->xmlHttpRequest("GET", 'https://with.coupang.com/dashboard?productType=TICKET');
+    }
+    
+    public function insertTicketAction($sellerProductId = '',$travelProductId="",$channelTypeId) {
+
+        $this->_model->setQuery('SELECT ct.type_apivalue1,ct.type_apivalue2
+                                    FROM tb_salechannel sc , tb_channeltypes ct
+                                    WHERE sc.channelTypeId=ct.type_id AND sc.sellerProductId="'.$sellerProductId.'" AND sc.channelTypeId="'.$channelTypeId.'"');
+        $item1=$this->_model->read();
+        
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/basic?productTypeUrl=tickets&productType=TICKET&travelType=DOMESTIC&productDetailType=WATER_PARK');
+        $dataTicket =  $this->getdataTicket_1($sellerProductId,"",$channelTypeId);
+        
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/basic/save?vendorId=A00183931',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($dataTicket));
+        $result=json_decode($this->client->getResponse()->getContent(),true);
+        
+        echo "Bước 1";
+        echo $this->client->getResponse()->getContent();
+        
+        $travelProductId=$result['data'];
+        if($result && $result['message'] == 'SUCCESS'){
+            $travelProductId=$result['data'];
+            $this->_model->updateRecord('salechannel',['travelProductId'=>$travelProductId],['sellerProductId'=>$sellerProductId,'channelTypeId' => $channelTypeId] );
+        }
+        
+        
+//         $dataTicket =  $this->getdataTicket_11($sellerProductId,$travelProductId,$channelTypeId);
+//         $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+//         $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/basic/save?vendorId=A00183931',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($dataTicket));
+//         $result=json_decode($this->client->getResponse()->getContent(),true);
+        
+//         $travelProductId=$result['data'];
+//         if($result && $result['message'] == 'SUCCESS'){
+//             $travelProductId=$result['data'];
+//             $this->_model->updateRecord('salechannel',['travelProductId'=>$travelProductId],['sellerProductId'=>$sellerProductId]);
+//         }
+        
+        $data=[ 'domain' => "TSP",
+            'eventName' => "next_phase",
+            'logCategory' => "event",
+            'logType' => "click",
+            'pageName' => "product_registration",
+            'productDetailType' => $item1['type_apivalue2'],
+            'productType' => "TICKET",
+            'registerStep' => 1,
+            'registerStepString' => "basic",
+            'temporalId' => $travelProductId,
+            'vendorId' => "A00183931" ,
+        ];
+        $this->wingCoupang($data);
+        
+        // Bước 2
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/'.$travelProductId.'/usage-terms');
+        
+        $data = $this->getdataTicket_2($sellerProductId,$travelProductId);
+        // request payload
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/'.$travelProductId.'/usage-terms/save',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        echo "Bước 2";
+        echo $this->client->getResponse()->getContent();
+        
+        $data=[ 'domain' => "TSP",
+            'eventName' => "next_phase",
+            'logCategory' => "event",
+            'logType' => "click",
+            'pageName' => "product_registration",
+            'productDetailType' => $item1['type_apivalue2'],
+            'productType' => "TICKET",
+            'registerStep' => 2,
+            'registerStepString' => "usageterm",
+            'temporalId' => $travelProductId,
+            'vendorId' => "A00183931" ,
+        ];
+        $this->wingCoupang($data);
+        // Bước 3
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/'.$travelProductId.'/images');
+        $data = $this->getdataTicket_3($sellerProductId,$travelProductId);
+        // request payload
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/'.$travelProductId.'/image-content/request',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        echo "Bước 3";
+        echo $this->client->getResponse()->getContent();
+        
+        $data=[ 'domain' => "TSP",
+            'eventName' => "next_phase",
+            'logCategory' => "event",
+            'logType' => "click",
+            'pageName' => "product_registration",
+            'productDetailType' => $item1['type_apivalue2'],
+            'productType' => "TICKET",
+            'registerStep' => 3,
+            'registerStepString' => "image",
+            'temporalId' => $travelProductId,
+            'vendorId' => "A00183931" ,
+        ];
+        $this->wingCoupang($data);
+        
+        
+        
+        
+        // Bước 4
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/'.$travelProductId.'/interlocking');
+        echo "Bước 31";
+        echo $this->client->getResponse()->getContent();
+        
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/'.$travelProductId.'/approval/complete');
+        echo "Bước 32";
+        echo $this->client->getResponse()->getContent();
+        
+        
+       // return $result;
+    }
+    
+    public function updateTicketAction($sellerProductId="",$travelProductId ="",$channelTypeId) {
+       
+        
+        $this->_model->setQuery('SELECT ct.type_apivalue1,ct.type_apivalue2
+                                    FROM tb_salechannel sc , tb_channeltypes ct
+                                    WHERE sc.channelTypeId=ct.type_id AND sc.sellerProductId="'.$sellerProductId.'" AND sc.channelTypeId="'.$channelTypeId.'"');
+        $item1=$this->_model->read();
+        
+        //mã sản phẩm trên kênh
+        if(isset($this->_params['travelProductId']))
+            $travelProductId=$this->_params['travelProductId'];
+        
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/'.$travelProductId.'/basic');
+            //$sellerProductId,$travelProductId,$channelTypeId
+        // Bước 1
+            $data = $this->getdataTicket_11($sellerProductId,$travelProductId ,$channelTypeId);
+        // request payload
+        
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/basic/save?vendorId='.$this->_vendorid,[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        echo "Bước 1";
+        echo $this->client->getResponse()->getContent();
+        
+        
+        $data=[ 'domain' => "TSP",
+            'eventName' => "next_phase",
+            'logCategory' => "event",
+            'logType' => "click",
+            'pageName' => "product_registration",
+            'productDetailType' => $item1['type_apivalue2'],
+            'productType' => "TICKET",
+            'registerStep' => 1,
+            'registerStepString' => "basic",
+            'temporalId' => $travelProductId,
+            'vendorId' => "A00183931" ,
+        ];
+
+        $this->wingCoupang($data);
+        
+        // Bước 2
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/'.$travelProductId.'/usage-terms');
+        $data = $this->getdataTicket_2($sellerProductId,$travelProductId);
+        // request payload
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/'.$travelProductId.'/usage-terms/save',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        echo "Bước 2";
+        echo $this->client->getResponse()->getContent();   
+        
+        $data=[ 'domain' => "TSP",
+            'eventName' => "next_phase",
+            'logCategory' => "event",
+            'logType' => "click",
+            'pageName' => "product_registration",
+            'productDetailType' => $item1['type_apivalue2'],
+            'productType' => "TICKET",
+            'registerStep' => 2,
+            'registerStepString' => "usageterm",
+            'temporalId' => $travelProductId,
+            'vendorId' => "A00183931" ,
+        ];
+        $this->wingCoupang($data);
+        
+        
+        // Bước 3
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/'.$travelProductId.'/images');
+        $data = $this->getdataTicket_3($sellerProductId,$travelProductId);
+        // request payload
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/'.$travelProductId.'/image-content/request',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        echo "Bước 3";
+        echo $this->client->getResponse()->getContent();
+        
+        $data=[ 'domain' => "TSP",
+            'eventName' => "next_phase",
+            'logCategory' => "event",
+            'logType' => "click",
+            'pageName' => "product_registration",
+            'productDetailType' => $item1['type_apivalue2'],
+            'productType' => "TICKET",
+            'registerStep' => 3,
+            'registerStepString' => "image",
+            'temporalId' => $travelProductId,
+            'vendorId' => "A00183931" ,
+        ];
+        $this->wingCoupang($data);
+        
+     
+        
+        //Bước 4
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/'.$travelProductId.'/interlocking');
+        echo "Bước 31";
+        echo $this->client->getResponse()->getContent();
+        
+        $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/tickets/'.$travelProductId.'/approval/complete');
+        echo "Bước 32";
+        echo $this->client->getResponse()->getContent();
+        
+//         
+//         https://with.coupang.com/travel/inventory/period/_update
+         //{"stockWrapperDto":[{"periodId":"310355545888403456","travelItemId":"310355545867423744","prices":[{"vendorItemId":"70000005887494","travelItemId":"310355545867423744","rateCategoryId":"310355545880002560","periodId":"310355545888403456","validPrice":"true","maxPriceStockCount":"99","salePrice":"100"}]}],"interlockingId":"310353180246417408","productType":"TICKET"}
+         
+       // $salechannelitem=$this->_model->loadRecord('salechannelitem',['sellerVendorItemId'=>$sellerVendorItemId]);
+//          $data=array (
+//         'stockWrapperDto' =>
+//         array (
+//             0 =>
+//             array (
+//                 'periodId' => '310355545888403456',
+//                 'travelItemId' => '310355545867423744',
+//                 'prices' =>
+//                 array (
+//                     0 =>
+//                     array (
+//                         'vendorItemId' => '70000005887494',
+//                         'travelItemId' => '310355545867423744',
+//                         'rateCategoryId' => '310355545880002560',
+//                         'periodId' => '310355545888403456',
+//                         'validPrice' => 'true',
+//                         'maxPriceStockCount' => '99',
+//                         'salePrice' => '100',
+//                     ),
+//                 ),
+//             ),
+//         ),
+//         'interlockingId' => $travelProductId,
+//         'productType' => 'TICKET',
+//         );
+         
+//          // Bước 5
+//          $this->client->xmlHttpRequest("GET", 'https://with.coupang.com/travel/inventory/period?sellerTravelId='.$travelProductId.'&productType=TICKET');
+//          // request payload
+//          $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+//          $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/travel/inventory/period/_update',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+//          echo "Bước 5";
+//          echo $this->client->getResponse()->getContent();
+    }
+    
+    public function getdataTicket_1($sellerProductId,$travelProductId,$channelTypeId){
+        $travelItems= [];
+        $pitem=$this->_model->loadRecord('sellerproduct',['sellerProductId'=>$sellerProductId]);
+        
+        $this->_model->setQuery('SELECT ct.type_apivalue1,ct.type_apivalue2
+                                    FROM tb_salechannel sc , tb_channeltypes ct
+                                    WHERE sc.channelTypeId=ct.type_id AND sc.sellerProductId="'.$sellerProductId.'" AND sc.channelTypeId="'.$channelTypeId.'"');
+        $item1=$this->_model->read();
+        
+        $this->_model->setQuery('SELECT ti.* FROM tb_travelitems ti, tb_salechannelitem sti
+        WHERE ti.sellerTravelItemId= sti.sellerTravelItemId AND ti.sellerProductId='.$sellerProductId.' ');
+        $datatravelitems=$this->_model->readAll();
+        
+        foreach ($datatravelitems as $key => $value) {
+            
+            $data= [
+                "productDetailType"=> $item1['type_apivalue2'],
+                "rows" => [ "product"=> $value['name'] ]
+            ];
+            
+            $data='{"productDetailType":"'.$item1['type_apivalue2'].'","rows":[{"product":"'.$value['name'].'"}]}';
+        
+            $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+            $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/registration/travel/buildTravelItems',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], $data);
+ 
+            $travelItemBuilds=json_decode($this->client->getResponse()->getContent(), true, 512, JSON_BIGINT_AS_STRING);
+           
+            
+            $travelItem =$travelItemBuilds['travelItemBuilds'][0];
+            $vendorItem = $travelItem['vendorItems'];
+            
+            $items2 = $this->_model->loadRecords('rates', ['sellerTravelItemId' => $value['sellerTravelItemId']]);
+            if($items2){
+                foreach ($items2 as $key2 => $value2){   
+                    $vendorItems=array (
+                        'id_'.$vendorItem[0]['vendorItemId'] =>
+                        array (
+                            'rateName' => '기본',
+                            'vendorItemId' => $vendorItem[0]['vendorItemId'],
+                            'featureValueId' => $value2['rateType'],
+                            'originalPrice' => (int)$value2['price'],
+                            'originalPriceType' => $value2['priceType'],
+                            'originalPriceTypeName' => '<font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Coupang</font></font>',
+                            'maximumTicketCountOnDay' => (int)$value2['maxPurchaseQtyPerPerson'],
+                            'maximumTicketCountOnItem' => (int)$value2['maxPurchaseQtyPeriod'],
+                            'order' => '0',
+                            'saleStartedAt' => $value2['saleStartedAt'],
+                            'saleEndedAt' => $value2['saleEndedAt']
+                        ),
+                    );
+                    $this->_model->updateRecord('rates',[ 'sellerRateId'=>$vendorItem[0]['vendorItemId'] ],['sellerTravelItemId'=>$value['sellerTravelItemId'] ]);
+                    $this->_model->updateRecord('salechannelitem',[ 'sellerVendorItemId'=>$vendorItem[0]['vendorItemId'] ],['sellerTravelItemId'=>$value['sellerTravelItemId'] ]);
+                }
+            }
+            $usePeriods=[];
+            if($pitem['inventoryType']=='PERIOD'){
+                $items1 = $this->_model->loadRecord('useperiod', ['sellerTravelItemId' => $value['sellerTravelItemId']]);
+                if($items1){
+                    $usePeriods=  [ [
+                                        'useStartedAt' =>  $items1['useStartedAt'],
+                                        'useEndedAt'   =>  $items1['useEndedAt'],
+                                        'periodId'     =>  ''
+                                        ]
+                                ];
+                    
+                    
+                }
+            }
+            
+            $this->_model->updateRecord('salechannelitem',[ 'travelItemId'=>$travelItem['travelItemId'] ],['sellerTravelItemId'=>$value['sellerTravelItemId'] ]);
+            
+            $onSale='false';
+            if($value['onSale']==1) $onSale='true';
+            if($value['isDelete']==1) $onSale='false';
+                    
+            $travelItems['id_'.$travelItem['travelItemId']]=[
+
+                            'travelItemNames' => $travelItem['travelItemNames'],
+                            'name' => $travelItem['name'],
+                            'originName' => $travelItem['name'],
+                            'travelItemId' => $travelItem['travelItemId'],
+                            'description' => '',
+                            'commissionType' => 'FIXED_RATE',
+                            'taxType' => $value['taxType'],
+                            'order' => 0,
+                            'onSale' => $onSale,
+                            'availableTime' => $travelItem['availableTime'],
+                            'vendorItems' => $vendorItems,
+                            'usePeriods' => $usePeriods
+                ];
+                
+        }
+        
+        $publications= $this->_model->loadRecord('publication', ['sellerProductId' => $sellerProductId]);
+        
+        $cancelpolicy = $this->_model->loadRecord('cancelpolicy', ['sellerProductId' => $sellerProductId]);
+        
+     
+        
+        $properties=[
+            'CONVENIENT_FACILITIES' => [ 'values' => [ 'FREE_SHUTTLE_BUS','FEEDING_ROOM','DISABLED_FACILITY', 'ACCOMMODATION_LEISURE_59','ACCOMMODATION_LEISURE_49','LOST_AND_FOUND','LUGGAGE_STORAGE','LOST_CHILDREN_CENTER', 'CHILDREN_FACILITY','ATM', 'ACCOMMODATION_LEISURE_46','INFORMATION_TICKET_COUNTER','SAFTY_EQUIPMENT','ROOM_AMENITY_GENERAL_14'],
+                'description' => 'ádasd',
+            ],
+            'UTILITY_FACILITIES' => [ 'values' => [  'INDOOR_SWIMMING_POOL', 'OUTDOOR_SWIMMING_POOL', 'HEATED_POOL', 'SHOWER_FACILITY', 'SIMPLE_SAUNA', 'FOOD_AND_BEVERAGE', 'EQUIPMENT_CLOTHES_RENTAL_SHOP' ],
+                'description' => 'ádas',
+            ],
+        ];
+        
+        $locations= $this->_model->loadRecord('locations', ['sellerProductId' => $sellerProductId]);
+
+        $reservationNotifications =[
+            [
+                'type' => 'EMAIL',
+                'contactInfo' => 'orchipro@gmail.com',
+                'contactDescription' => 'orchipro@gmail.com',
+            ],
+        ];
+        
+        $displayCategories=[
+            [
+                'representative' => 'true',
+                'displayItemCategoryCode' => '107815',
+                'displaySubCategoryCode' => '',
+                'categoryText' => '[1차]: 여행/티켓 > 티켓/패스 > 테마파크 > 테마파크 > 서울 [2차]: 없음',
+            ]
+        ];
+        //[1차]: Travel/Ticket > Ticket/pass > Waterpark > Waterpark > Seoul [2차]: 없음
+        
+        $this->_model->setQuery('SELECT `searchTags` FROM tb_searchtags WHERE `sellerProductId`='.$sellerProductId);
+        $searchtags= $this->_model->readAll();
+        $newSearchtags[]="string";
+        if($searchtags){
+            $newSearchtags=[];
+            foreach ($searchtags as $value){
+                $newSearchtags[] = $value['searchTags'];
+            }
+        }
+
+        
+        $this->_model->setQuery('SELECT `contact`, `contactType`, `contactUseType`
+                                    FROM tb_contacts
+                                    WHERE `sellerProductId`='.$sellerProductId);
+        $contacts = $this->_model->readAll();
+        $newContacts=[];
+        foreach ($contacts as $key => $value){
+            $newContacts[$value['contactType'].'-'.$value['contactUseType']] = $value['contact'];
+        }
+        
+        $data= $this->_model->loadRecords('informationuse', ['sellerProductId' => $sellerProductId]);
+        $introduction="introduction";
+        $csContactInfo="csContactInfo";
+        if($data){
+            foreach ($data as $value){
+                if($value['type']=='introduction' && trim($value['content'])!="") $introduction=$value['content'];
+                if($value['type']=='csContactInfo' && trim($value['content'])!="")  $csContactInfo=$value['content'];
+            }
+        }
+        
+        $district= $this->_model->loadRecord('district', ['id' => $pitem['productDetailTypeId']]);
+        $data= [
+            'travelId' => $travelProductId,
+            'productTypeUrl' => 'tickets',
+            'categoryId' => '7420',
+            'productType' => 'TICKET',
+            'travelType' => $item1['type_apivalue1'],
+            'isEmployee' => 'true',
+            'productDetailType' => $item1['type_apivalue2'],
+            'name' => $pitem['name'],
+            'inventoryType' => $pitem['inventoryType'],
+            'bookingConfirmed' => (($pitem['inventoryType'] == 'PERIOD')?true:false),
+            'bookingEstimatedTime' => '72',
+            'subordinateIds' => '',
+            
+            'travelItems' => $travelItems,
+            
+            'introduce' => $introduction,
+            'notice' => $csContactInfo,
+            'specialBenefits' => [ $pitem['benefits'] ],
+            
+            'properties' => $properties,
+                
+            //'roadNameAddress' => $locations['landNumberAddress'],
+            //'landNumberAddress' => $locations['landNumberAddress'],
+            'nation' => '대한민국',
+//             'province' => $locations['landNumberAddress'],
+//             'city' => $locations['landNumberAddress'],
+//             'district' => $locations['landNumberAddress'],
+//             'town' => $locations['landNumberAddress'],
+//             'zipCode' =>  $locations['zipCode'],
+            'longitude' => '37.374077',
+            'latitude' => '127.11326',
+            'roadNameAddress' => "경기도 성남시 분당구 내정로129번길 38-1 ",
+            'landNumberAddress' => "경기도 성남시 분당구 정자동 30-1 ",
+            'province' => "",
+            'city' => "경기도",
+            'district' => "성남시 분당구",
+            'town' => $locations['landNumberAddress'],
+            'zipCode' =>  "13609",
+            'homePageUrl' => (isset($newContacts['WEBSITE-REPRESENTATIVE'])?$newContacts['WEBSITE-REPRESENTATIVE']:"") ,
+            'representativeCall' => (isset($newContacts['PHONE-REPRESENTATIVE'])?$newContacts['PHONE-REPRESENTATIVE']:""),
+            'emergencyCall' => (isset($newContacts['PHONE-EMERGENCY'])?$newContacts['PHONE-EMERGENCY']:"") ,
+            'reservationCall' => (isset($newContacts['PHONE-BOOKING_INQUIRY'])?$newContacts['PHONE-BOOKING_INQUIRY']:"") ,
+            'cancelInquireCall' => (isset($newContacts['PHONE-CANCEL_INQUIRY'])?$newContacts['PHONE-CANCEL_INQUIRY']:"") ,
+            'customerCenterContact' => '평일 09:00~18:00(단, 토/일, 공휴일은 휴무)',
+                
+            'reservationNotifications' => $reservationNotifications,
+            'oldScheduleJson' => '',
+            'directionInfo' => 'Directions ',
+            'subwayInfo' => 'Landmark',
+            'categorySelect' => 108804,
+            'representative' => 'on',
+            'displayCategories' => $displayCategories,
+            'displayKeyword' => $district['name'],
+            'searchTags' => $newSearchtags
+        ];
+        
+        return $data;
+    }
+    public function getdataTicket_11($sellerProductId,$travelProductId ,$channelTypeId){
+        
+        $travelItems= [];
+        $pitem=$this->_model->loadRecord('sellerproduct',['sellerProductId'=>$sellerProductId]);
+        
+        $this->_model->setQuery('SELECT ct.type_apivalue1,ct.type_apivalue2
+                                    FROM tb_salechannel sc , tb_channeltypes ct
+                                    WHERE sc.channelTypeId=ct.type_id AND sc.sellerProductId="'.$sellerProductId.'" AND sc.channelTypeId="'.$channelTypeId.'"');
+        $item1=$this->_model->read();
+        
+        $this->_model->setQuery('SELECT ti.*, sti.travelItemId FROM tb_travelitems ti, tb_salechannelitem sti
+        WHERE ti.sellerTravelItemId= sti.sellerTravelItemId AND ti.sellerProductId='.$sellerProductId.' ');
+        $datatravelitems=$this->_model->readAll();
+        
+        foreach ($datatravelitems as $key => $value) {
+            if($value['travelItemId']==""){
+                $data= [
+                    "productDetailType"=> $item1['type_apivalue2'],
+                    "rows" => [ "product"=> $value['name'] ]
+                ];
+                
+                $data='{"productDetailType":"'.$item1['type_apivalue2'].'","rows":[{"product":"'.$value['name'].'"}]}';
+                
+                $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+                $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/registration/travel/buildTravelItems',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], $data);
+                
+                $travelItemBuilds=json_decode($this->client->getResponse()->getContent(), true, 512, JSON_BIGINT_AS_STRING);
+                
+                
+                $travelItem =$travelItemBuilds['travelItemBuilds'][0];
+                $vendorItem = $travelItem['vendorItems'];
+                
+                $items2 = $this->_model->loadRecords('rates', ['sellerTravelItemId' => $value['sellerTravelItemId']]);
+                if($items2){
+                    foreach ($items2 as $key2 => $value2){
+                        $vendorItems=array (
+                            'id_'.$vendorItem[0]['vendorItemId'] =>
+                            array (
+                                'rateName' => '기본',
+                                'vendorItemId' => $vendorItem[0]['vendorItemId'],
+                                'featureValueId' => $value2['rateType'],
+                                'originalPrice' => (int)$value2['price'],
+                                'originalPriceType' => $value2['priceType'],
+                                'originalPriceTypeName' => '<font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Coupang</font></font>',
+                                'maximumTicketCountOnDay' => (int)$value2['maxPurchaseQtyPerPerson'],
+                                'maximumTicketCountOnItem' => (int)$value2['maxPurchaseQtyPeriod'],
+                                'order' => '0',
+                                'saleStartedAt' => $value2['saleStartedAt'],
+                                'saleEndedAt' => $value2['saleEndedAt']
+                            ),
+                        );
+                        $this->_model->updateRecord('rates',[ 'sellerRateId'=>$vendorItem[0]['vendorItemId'] ],['sellerTravelItemId'=>$value['sellerTravelItemId'] ]);
+                        $this->_model->updateRecord('salechannelitem',[ 'sellerVendorItemId'=>$vendorItem[0]['vendorItemId'] ],['sellerTravelItemId'=>$value['sellerTravelItemId'] ]);
+                    }
+                }
+                $usePeriods=[];
+                if($pitem['inventoryType']=='PERIOD'){
+                    $items1 = $this->_model->loadRecord('useperiod', ['sellerTravelItemId' => $value['sellerTravelItemId']]);
+                    if($items1){
+                        $usePeriods=  [ [
+                            'useStartedAt' =>  $items1['useStartedAt'],
+                            'useEndedAt'   =>  $items1['useEndedAt'],
+                            'periodId'     =>  ''
+                        ]
+                        ];
+                        
+                        
+                    }
+                }
+                
+                $this->_model->updateRecord('salechannelitem',[ 'travelItemId'=>$travelItem['travelItemId'] ],['sellerTravelItemId'=>$value['sellerTravelItemId'] ]);
+                
+                $onSale='false';
+                //if($value['onSale']==1) $onSale='true';
+                //if($value['isDelete']==1) $onSale='false';
+                
+                $travelItems['id_'.$travelItem['travelItemId']]=[
+                    
+                    'travelItemNames' => $travelItem['travelItemNames'],
+                    'name' => $travelItem['name'],
+                    'originName' => '',
+                    'travelItemId' => $travelItem['travelItemId'],
+                    'description' => '',
+                    'commissionType' => 'FIXED_RATE',
+                    'taxType' => $value['taxType'],
+                    'order' => 0,
+                    'onSale' => $onSale,
+                    'availableTime' => $travelItem['availableTime'],
+                    'vendorItems' => $vendorItems,
+                    'usePeriods' => $usePeriods
+                ];
+            }else{
+                $items2 = $this->_model->loadRecords('rates', ['sellerTravelItemId' => $value['sellerTravelItemId']]);
+                if($items2){
+                    foreach ($items2 as $key2 => $value2){
+                        $vendorItems=array (
+                            'id_'.$value2['sellerRateId'] =>
+                            array (
+                                'rateName' => '기본',
+                                'vendorItemId' => $value2['sellerRateId'],
+                                'featureValueId' => $value2['rateType'],
+                                'originalPrice' => '',
+                                'originalPriceType' => $value2['priceType'],
+                                'originalPriceTypeName' => '<font style="vertical-align: inherit;"><font style="vertical-align: inherit;">쿠팡가</font></font>',
+                                'maximumTicketCountOnDay' => '',
+                                'maximumTicketCountOnItem' => '',
+                                'order' => '0',
+                                'saleStartedAt' => $value2['saleStartedAt'],
+                                'saleEndedAt' => $value2['saleEndedAt']
+                            ),
+                        );
+                    }
+                }
+                $usePeriods=[];
+                if($pitem['inventoryType']=='PERIOD'){
+                    $items1 = $this->_model->loadRecord('useperiod', ['sellerTravelItemId' => $value['sellerTravelItemId']]);
+                    if($items1){
+                        $usePeriods=  [ [
+                            'useStartedAt' =>  $items1['useStartedAt'],
+                            'useEndedAt'   =>  $items1['useEndedAt'],
+                            'periodId'     =>  ''
+                        ]
+                        ];
+                        
+                        
+                    }
+                }
+                
+                $onSale='false';
+                //if($value['onSale']==1) $onSale='true';
+                //if($value['isDelete']==1) $onSale='false';
+                
+                $travelItems['id_'.$value['travelItemId']]=[
+                    'travelItemNames' => [ $value['name'] ],
+                    'name' => $value['name'],
+                    'originName' => $value['name'],
+                    'travelItemId' => $value['travelItemId'],
+                    'description' => '',
+                    'commissionType' => 'FIXED_RATE',
+                    'taxType' => $value['taxType'],
+                    'order' => 0,
+                    'onSale' => $onSale,
+                    'availableTime' => "",
+                    'vendorItems' => $vendorItems,
+                    'usePeriods' => $usePeriods
+                ];
+            }
+            
+        }
+        
+        echo "<pre>"; 
+        print_r($travelItems);
+        
+        $publications= $this->_model->loadRecord('publication', ['sellerProductId' => $sellerProductId]);
+        $cancelpolicy = $this->_model->loadRecord('cancelpolicy', ['sellerProductId' => $sellerProductId]);
+        
+        $properties=[
+            'CONVENIENT_FACILITIES' => [ 'values' => [ 'FREE_SHUTTLE_BUS','FEEDING_ROOM','DISABLED_FACILITY', 'ACCOMMODATION_LEISURE_59','ACCOMMODATION_LEISURE_49','LOST_AND_FOUND','LUGGAGE_STORAGE','LOST_CHILDREN_CENTER', 'CHILDREN_FACILITY','ATM', 'ACCOMMODATION_LEISURE_46','INFORMATION_TICKET_COUNTER','SAFTY_EQUIPMENT','ROOM_AMENITY_GENERAL_14'],
+                'description' => 'ádasd',
+            ],
+            'UTILITY_FACILITIES' => [ 'values' => [  'INDOOR_SWIMMING_POOL', 'OUTDOOR_SWIMMING_POOL', 'HEATED_POOL', 'SHOWER_FACILITY', 'SIMPLE_SAUNA', 'FOOD_AND_BEVERAGE', 'EQUIPMENT_CLOTHES_RENTAL_SHOP' ],
+                'description' => 'ádas',
+            ],
+        ];
+        $locations= $this->_model->loadRecord('locations', ['sellerProductId' => $sellerProductId]);
+        
+        $reservationNotifications =[
+            [
+                'type' => 'EMAIL',
+                'contactInfo' => 'orchipro@gmail.com',
+                'contactDescription' => 'orchipro@gmail.com',
+            ],
+        ];
+        
+        $displayCategories=[
+            [
+                'representative' => 'true',
+                'displayItemCategoryCode' => '107815',
+                'displaySubCategoryCode' => '',
+                'categoryText' => '[1차]: 여행/티켓 > 티켓/패스 > 테마파크 > 테마파크 > 서울 [2차]: 없음',
+            ]
+        ];
+        //[1차]: Travel/Ticket > Ticket/pass > Waterpark > Waterpark > Seoul [2차]: 없음
+        
+        $this->_model->setQuery('SELECT `searchTags` FROM tb_searchtags WHERE `sellerProductId`='.$sellerProductId);
+        $searchtags= $this->_model->readAll();
+        $newSearchtags[]="string";
+        if($searchtags){
+            $newSearchtags=[];
+            foreach ($searchtags as $value){
+                $newSearchtags[] = $value['searchTags'];
+            }
+        }
+        
+        
+        $this->_model->setQuery('SELECT `contact`, `contactType`, `contactUseType`
+                                    FROM tb_contacts
+                                    WHERE `sellerProductId`='.$sellerProductId);
+        $contacts = $this->_model->readAll();
+        $newContacts=[];
+        foreach ($contacts as $key => $value){
+            $newContacts[$value['contactType'].'-'.$value['contactUseType']] = $value['contact'];
+        }
+        
+        $data= $this->_model->loadRecords('informationuse', ['sellerProductId' => $sellerProductId]);
+        $introduction="introduction";
+        $csContactInfo="csContactInfo";
+        if($data){
+            foreach ($data as $value){
+                if($value['type']=='introduction' && $value['content']!="")
+                    $introduction=$value['content'];
+                    if($value['type']=='csContactInfo' && $value['content']!="")
+                        $csContactInfo=$value['content'];
+            }
+        }
+        
+        $district= $this->_model->loadRecord('district', ['id' => $pitem['productDetailTypeId']]);
+        
+        $data= array (
+            'travelId' => $travelProductId,
+            'productTypeUrl' => 'tickets',
+            'categoryId' => '7420',
+            'productType' => 'TICKET',
+            'travelType' => $item1['type_apivalue1'],
+            'isEmployee' => 'true',
+            'productDetailType' => $item1['type_apivalue2'],
+            'name' => $pitem['name'],
+            'inventoryType' => $pitem['inventoryType'],
+            'bookingConfirmed' => (($pitem['inventoryType'] == 'PERIOD')?true:false),
+            'bookingEstimatedTime' => '72',
+            'subordinateIds' => '',
+            
+            'travelItems' => $travelItems,
+            
+            'introduce' => $introduction,
+            'notice' => $csContactInfo,
+            'specialBenefits' => [ $pitem['benefits'] ],
+            
+            'properties' =>$properties,
+            
+            
+            //'roadNameAddress' => $locations['landNumberAddress'],
+            //'landNumberAddress' => $locations['landNumberAddress'],
+            'nation' => '대한민국',
+            //             'province' => $locations['landNumberAddress'],
+            //             'city' => $locations['landNumberAddress'],
+            //             'district' => $locations['landNumberAddress'],
+            //             'town' => $locations['landNumberAddress'],
+            //             'zipCode' =>  $locations['zipCode'],
+            'longitude' => '37.374077',
+            'latitude' => '127.11326',
+            'roadNameAddress' => "경기도 성남시 분당구 내정로129번길 38-1 ",
+            'landNumberAddress' => "경기도 성남시 분당구 정자동 30-1 ",
+            'province' => "",
+            'city' => "경기도",
+            'district' => "성남시 분당구",
+            'town' => $locations['landNumberAddress'],
+            'zipCode' =>  "13609",
+            'homePageUrl' => (isset($newContacts['WEBSITE-REPRESENTATIVE'])?$newContacts['WEBSITE-REPRESENTATIVE']:"") ,
+            'representativeCall' => (isset($newContacts['PHONE-REPRESENTATIVE'])?$newContacts['PHONE-REPRESENTATIVE']:""),
+            'emergencyCall' => (isset($newContacts['PHONE-EMERGENCY'])?$newContacts['PHONE-EMERGENCY']:"") ,
+            'reservationCall' => (isset($newContacts['PHONE-BOOKING_INQUIRY'])?$newContacts['PHONE-BOOKING_INQUIRY']:"") ,
+            'cancelInquireCall' => (isset($newContacts['PHONE-CANCEL_INQUIRY'])?$newContacts['PHONE-CANCEL_INQUIRY']:"") ,
+            'customerCenterContact' => '평일 09:00~18:00(단, 토/일, 공휴일은 휴무)',
+            
+            'reservationNotifications' => $reservationNotifications,
+            'oldScheduleJson' => '[]',
+            'directionInfo' => 'Directions ',
+            'subwayInfo' => 'Landmark',
+            'categorySelect' => '',
+            'representative' => 'true',
+            'displayCategories' => $displayCategories,
+            'displayKeyword' => '양평군',
+            'searchTags' => $newSearchtags
+        );
+        return $data;
+    }
+    
+    public function changetravelsalestatusAction() {
+        
+        $this->loginCoupang();
+        //mã sản phẩm trên kênh
+        $travelProductId=$this->_params['travelProductId'];
+        
+        $status_sale=1;
+        if(isset($this->_params['status_sale']) && $this->_params['status_sale']!='')
+            $status_sale=$this->_params['status_sale'];
+            
+            $onsale="ON_SALE";
+            if($status_sale==1) $onsale="ON_SALE";
+            if($status_sale==0) $onsale="SUSPENDED";
+            $data = [
+                'saleStatus' => $onsale,
+                'sellerTravelId' => $travelProductId
+            ];
+            
+            $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+            $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/change-travel-sale-status',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+            
+            echo $this->client->getResponse()->getContent();
+            
+            $data=[ 'domain' => "TSP",
+                'eventName' => "next_phase",
+                'logCategory' => "view",
+                'logType' => "page",
+                'pageName' => "product_registration",
+                'productDetailType' => "WATER_PARK",
+                'productType' => "TICKET",
+                'registerStep' => 1,
+                'registerStepString' => "basic",
+                'temporalId' => $travelProductId,
+                'vendorId' => "A00183931" ,
+            ];
+            
+            //         meta: {schemaId: 2477, schemaVersion: 2}
+            //         schemaId: 2477
+            //         schemaVersion: 2
+            $this->wingCoupang($data);
+            
+            
+    }
+    public function changesalestatusAction() { //tour // chưa xong
+        $this->loginCoupang();
+        //mã sản phẩm trên kênh
+        $travelProductId=$this->_params['travelProductId'];
+        $sellerTravelItemId =$this->_params['sellerTravelItemId'];
+        $status_sale=1;
+        if(isset($this->_params['status_sale']) && $this->_params['status_sale']!='') $status_sale=$this->_params['status_sale'];
+        
+        $onsale="ON_SALE";
+        if($status_sale==1) $onsale="ON_SALE";
+        if($status_sale==0) $onsale="SUSPENDED";
+        
+        $data = [
+            'saleStatus' => $onsale,
+            'sellerTravelId' => $travelProductId,
+            'vendorItemId' => $sellerTravelItemId
+        ];
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/change-sale-status',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        
+        echo $this->client->getResponse()->getContent();
+        $this->wingCoupang();
+        
+    }
+    
+    public function findtravelresultAction() { //find-travel-result
+        $this->loginCoupang();
+        //mã sản phẩm trên kênh
+        $travelProductId=null;
+        if(isset($this->_params['travelProductId']) && $this->_params['travelProductId']!='') $travelProductId=$this->_params['travelProductId'];
+        $travelProductName="";
+        if(isset($this->_params['travelProductName']) && $this->_params['travelProductName']!='') $travelProductName=$this->_params['travelProductName'];
+        $searchInterlocked='true';
+        if(isset($this->_params['searchInterlocked']) && $this->_params['searchInterlocked']!='') $searchInterlocked=$this->_params['searchInterlocked'];
+        $page=1;
+        
+        $data = [
+            'travelId' => $travelProductId,
+            'travelName' => $travelProductName,
+            'searchInterlocked' => $searchInterlocked,
+            'pageNumber'=> $page,
+            'productType' => "TICKET"
+        ];
+        
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/find-travel-result',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        
+        $result = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_BIGINT_AS_STRING);
+        //echo "<pre>";
+        //print_r($result);
+        $result1= $result['travels']['result'];
+        foreach ($result1 as $key => $giatri){
+            $this->_model->updateRecord('salechannel',['productId'=>$giatri['productId'], 'vendorItemPackageId'=>$giatri['productId'], 'travelId'=>$giatri['travelId']],['travelProductId' =>$giatri['sellerTravelId']]);
+            if($this->_model->loadRecord('salechannel',['travelProductId' =>$giatri['sellerTravelId']])){
+                $this->findvendoritemresultAction($giatri['sellerTravelId'],'false');
+            }  
+        }
+        
+//       $totalPages= $result['travels']['pagination']['totalPages'] ;
+//         for ($i = 2; $i <= $totalPages; $i++) {
+//             $data = [
+//                 'travelId' => $travelProductId,
+//                 'travelName' => $travelProductName,
+//                 'searchInterlocked' => $searchInterlocked,
+//                 'pageNumber'=> $i,
+//                 'productType' => "TICKET"
+//             ];
+//             $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+//             $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/find-travel-result',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+//             $result = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_BIGINT_AS_STRING);
+//             $result1= $result['travels']['result'];
+//             foreach ($result1 as $key => $giatri){
+//                 $this->_model->updateRecord('salechannel',['productId'=>$giatri['productId'], 'vendorItemPackageId'=>$giatri['productId'], 'travelId'=>$giatri['travelId']],['travelProductId' =>$giatri['sellerTravelId']]);
+//             }
+//         }
+        $this->wingCoupang();
+    }
+    public function findvendoritemresultAction($travelProductId = "" , $searchInterlocked) { //find-travel-result
+        //$this->loginCoupang();
+        
+        $salechannel=$this->_model->loadRecord('salechannel',['travelProductId'=>$travelProductId]);
+        //mã sản phẩm trên kênh
+        if(isset($this->_params['travelProductId']) && $this->_params['travelProductId']!='') $travelProductId=$this->_params['travelProductId'];
+        if(isset($this->_params['searchInterlocked']) && $this->_params['searchInterlocked']!='') $searchInterlocked=$this->_params['searchInterlocked'];
+        
+        $data = [
+            'travelId' => $travelProductId,
+            'searchInterlocked' => $searchInterlocked,
+        ];
+        echo "<pre>";
+        print_r($data);
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/find-vendor-item-result',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        
+        $result = json_decode($this->client->getResponse()->getContent(), true, 512, JSON_BIGINT_AS_STRING);
+        echo "<pre>";
+        print_r($result);
+        
+        
+        $vendorItems=$result['vendorItems'];
+        foreach ($vendorItems as $key =>$giatri){
+            
+            $sellerTravelId = $giatri['sellerTravelId'];
+            $sellerVendorItemId = $giatri['sellerVendorItemId'];
+            $travelItemId1 = $giatri['travelItemId'];
+            $this->_model->updateRecord('salechannelitem',[ 'travelItemId1'=>$travelItemId1  ],['sellerVendorItemId'=>$sellerVendorItemId] );
+            
+            $salechannelitem=$this->_model->loadRecord('salechannelitem',['sellerVendorItemId'=>$sellerVendorItemId]);
+            $usePeriodList = $giatri['usePeriodList'];
+            $sellerUsePeriodId =$usePeriodList[0]['sellerUsePeriodId'];
+            $usePeriodId =$usePeriodList[0]['usePeriodId'];
+            
+            $this->_model->updateRecord('useperiod',[ 'usePeriodId'=>$usePeriodId,'usePeriodName'=>$sellerUsePeriodId],['sellerTravelItemId'=>$salechannelitem['sellerTravelItemId'] ]);
+            
+        }
+        $this->wingCoupang();
+    }
+    
+    public function updatedescriptionAction() { //find-travel-result
+        $this->loginCoupang();
+        //echo $this->client->getResponse()->getContent();
+        //mã sản phẩm trên kênh
+        $travelProductId="";
+        if(isset($this->_params['travelProductId']) && $this->_params['travelProductId']!='') $travelProductId=$this->_params['travelProductId'];
+        
+        $data =[
+            'introduce' => 'abc',
+            'sellerTravelId' => '289241172495306752',
+            'sellerVendorItemIds' => ['289241172570804224'],
+            'productType' => 'TICKET',
+            'productDetailType' => 'WATER_PARK',
+            'itemProperties' =>json_encode([],JSON_FORCE_OBJECT)
+        ];
+        $str = json_encode($data);
+        $str=substr($str, 0, -5);
+        $str=$str."{}}";
+        //echo $str.'<br>';
+        //echo '{"introduce":"aaa","sellerTravelId":"289241172495306752","sellerVendorItemIds":["289241172570804224"],"productType":"TICKET","productDetailType":"WATER_PARK","itemProperties":{}}';
+        
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/update-description',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], $str);
+        
+        echo $this->client->getResponse()->getContent();
+        
+        $this->wingCoupang();
+    }
+    
+    public function updateuseperiodAction() { //find-travel-result
+        $this->loginCoupang();
+        
+        //echo $this->client->getResponse()->getContent();
+        //mã sản phẩm trên kênh
+        //$travelProductId="";
+        //if(isset($this->_params['travelProductId']) && $this->_params['travelProductId']!='') $travelProductId=$this->_params['travelProductId'];
+        
+        $data =[
+            'useFrom' => '2020-09-15 11:40:05',
+            'useTo' => '2020-09-15 11:40:08',
+            'sellerTravelId' => '289241172495306752',
+            'sellerVendorItemIds' =>['289241172570804224'],
+            'productType' => 'TICKET',
+            'productDetailType' => 'WATER_PARK',
+            'sellerPeriodIds' => ['289241172524666880'],
+        ];
+        
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/update-use-period',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        
+        echo $this->client->getResponse()->getContent();
+        
+        $this->wingCoupang();
+    }
+    
+    public function updatesaleperiodAction() { //find-travel-result
+        $this->loginCoupang();
+        
+        //echo $this->client->getResponse()->getContent();
+        //mã sản phẩm trên kênh
+        //$travelProductId="";
+        //if(isset($this->_params['travelProductId']) && $this->_params['travelProductId']!='') $travelProductId=$this->_params['travelProductId'];
+        
+        $data =[
+            'saleFrom' => '2020-09-15 11:32:35',
+            'saleTo' => '2020-09-15 11:32:46',
+            'sellerTravelId' => '289241172495306752',
+            'sellerVendorItemIds' =>['289241172570804224',],
+            'productType' => 'TICKET',
+            'productDetailType' => 'WATER_PARK'
+            //'noSaleTo' => "true"
+        ];
+        //         noSaleTo: "true"
+        //         saleTo: "2099-12-31 23:59:59"
+        
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/update-sale-period',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        
+        echo $this->client->getResponse()->getContent();
+        
+        $this->wingCoupang();
+    }
+    
+    public function deletevendoritemAction() { //find-travel-result
+        $this->loginCoupang();
+        
+        //echo $this->client->getResponse()->getContent();
+        //mã sản phẩm trên kênh
+        //$travelProductId="";
+        //if(isset($this->_params['travelProductId']) && $this->_params['travelProductId']!='') $travelProductId=$this->_params['travelProductId'];
+        
+        $data =[
+            'sellerTravelId' => '289237486079574016',
+            'sellerVendorItemIds' => ['289237486155071488'],
+            'productType' => 'TICKET',
+            'productDetailType' => 'WATER_PARK',
+        ];
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/delete-vendor-item',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        
+        echo $this->client->getResponse()->getContent();
+        $this->wingCoupang();
+    }
+    
+    
+    public function deletetravelAction() {
+        $this->loginCoupang();
+        
+        //mã sản phẩm trên kênh
+        $travelProductId=$this->_params['travelProductId'];
+        
+        $data = ["sellerTravelId"=> $travelProductId];
+        // request payload
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://with.coupang.com/tickets/management/delete-travel',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        
+        echo $this->client->getResponse()->getContent();
+        $this->wingCoupang();
+    }
+    public function getdataTicket_2($sellerProductId,$travelProductId){
+        
+        $item=$this->_model->loadRecord('sellerproduct',['sellerProductId'=>$sellerProductId]);
+        
+        $publications= $this->_model->loadRecord('publication', ['sellerProductId' => $sellerProductId]);
+        
+        $cancelpolicy = $this->_model->loadRecord('cancelpolicy', ['sellerProductId' => $sellerProductId]);
+
+        //additionalInfoText: "add info"
+        //additionalInfoType: "CUSTOM"
+        $refund = $this->_model->loadRecords('refundrates', ['cancelPolicyId' => $cancelpolicy['cancelPolicyId']]);
+        $refundRates=[];
+        foreach ($refund as $value1){
+            $refundRates[] = [
+                "conditionDays" => (int)$value1['conditionDays'],
+                "conditionTime" => $value1['conditionTime'],
+                "refundRate" => (int)$value1['refundRate']
+            ];
+        }
+        
+        $data = array (
+                'travelId' => $travelProductId,
+                'productTypeUrl' => 'tickets',
+                'immediateUse' => (($publications['isUseDirect'] == 1)?true:false),
+                'adultOnly' => (($item['adultOnly']==1)?true:false),
+                'ticketReceiveType' => $publications['ticketUsage'],
+                'ticketSendSpent' => $publications['ticketSendSpentTime'],
+                'ticketSendLimitTime' => $publications['ticketSendLimitTime'],
+                'cancelMarkType' => $cancelpolicy['cancelMarkType'],
+                'useAdditionalInfo' => 'false',
+                'additionalInfoType' => 'NONE',
+                'additionalInfoText' => '',
+                'unuseRefundAll' => 'false',
+                'cancelType' => $cancelpolicy['cancelType'],
+                'refundByBusinessDay' => (($cancelpolicy['refundOnBusinessDay'] == 1)?true:false),
+                'cancelRefundPolicy' => array (  'notice' => $cancelpolicy['notice'] ,$refundRates),
+                'reservationGuide' => '',
+                'usageNoticeContents' => '',
+                'inclusionNotice' => $item['inclusionNotice'],
+                'exclusionNotice' => $item['exclusionNotice'],
+                'externalCouponUseType' => (($publications['useExternalTicketNumber'] == 1)?"REAL_TIME":"NONE"),
+                'useBarcode' => (($publications['useBarcode']==1)?true:false),
+            );
+        
+        return $data;
+    }
+    public function getdataTicket_3($sellerProductId,$travelProductId){
+        
+        
+//         $url = 'https://with.coupang.com/images/upload';
+        
+        
+//         //The full path to the file that you want to upload
+//         $filePath = PATH_ROOT.'/attach/1600251572blog-logo1.png';
+//         $ch = curl_init();
+//         curl_setopt($ch, CURLOPT_URL, $url);
+//         curl_setopt($ch, CURLOPT_POST, true);
+//         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//         if(function_exists('curl_file_create')){
+//             $filePath = curl_file_create($filePath);
+//         } else{
+//             $filePath = '@' . realpath($filePath);
+//             curl_setopt($ch, CURLOPT_SAFE_UPLOAD, false);
+//         }
+        
+//         curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+//             'Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryvIyJIU4E6ygepBKA'
+//         ));
+//         //Setup our POST fields
+//         $postFields = array(
+//             'file' => '------WebKitFormBoundaryvIyJIU4E6ygepBKA
+//                            Content-Disposition: form-data; name="file"; filename="1600251572blog-logo1.png"
+//                            Content-Type: image/png
+            
+            
+//                            ------WebKitFormBoundaryvIyJIU4E6ygepBKA--',
+//         );
+        
+//         curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+//         $result = curl_exec($ch);
+//         if(curl_errno($ch)){
+//             throw new Exception(curl_error($ch));
+//         }
+//         $httpcode = curl_getinfo($ch);
+//         if (!$result) {
+//             echo ("Connection Failure");
+//         }
+        
+//         echo "<pre>";
+//         print_r($httpcode);
+        
+        $images = $this->_model->loadRecords('images', ['sellerProductId' => $sellerProductId]);
+        $travelImages=[];
+        if($images){
+            foreach ($images as $key => $value){
+                $travelImages[] = [
+                    "cdnImageUrl" => "travelConnect/common/A00183931/dec76ec6-f1d9-44ab-b1e3-6213b630a7e2.jpg",
+                    "tag" => $key,
+                    "order" => $key,
+                    "fileName" => $value['sellerUrl'],
+                    "representative" => (($value['representative'] == 1 && $value['type'] ==1)?true:false),
+                    'resizedImages' => [[
+                                        'imagePath' => "travelConnect/common/A00183931/dec76ec6-f1d9-44ab-b1e3-6213b630a7e2.jpg",
+                                        'resizeImageType' => 'RESIZE_1180_630_60',
+                                       ]]
+                    ];
+            }
+        }
+
+        $contents= $this->_model->loadRecords('contents', ['sellerProductId' => $sellerProductId]);
+        $detailContents =[];
+        if($contents){
+            foreach ($contents as $key => $value){
+                $detailContents[] = [
+                    'contentType' => $value['format'],
+                    'contentValue' => "travelConnect/common/A00183931/dec76ec6-f1d9-44ab-b1e3-6213b630a7e2.jpg",
+                    'retreatContentValue' => "travelConnect/common/A00183931/dec76ec6-f1d9-44ab-b1e3-6213b630a7e2.jpg",
+                    'retreatContentType' => 'RESIZE_1180_630_60',
+                    'order' => $key
+                ];
+            }
+        }
+        
+        $data =[
+            'productKey' => '',
+            'travelImages' => $travelImages,
+            'optionImages' => [],
+            'detailContents' => $detailContents,
+        ];
+        
+        return $data;
+    }
+    
+    public  function  wingCoupang($data = []){
+        if($data==[]){
+            $data= array (
+                                'vendorId' => 'A00183931',
+                                'productType' => 'TICKET',
+                                'domain' => 'TSP',
+                                'pageName' => 'product_manage',
+                                'logCategory' => 'event',
+                                'logType' => 'click',
+                                'eventName' => 'click_product_list',
+                                'productId' => 10000000548188,
+                                'vendorItemPackageId' => 30000000517681,
+                                'productDetailType' => 'WATER_PARK',
+                                'area' => 'item_list',
+                                'feature' => 'on_sale',
+                            );
+            $meta=array (
+                'schemaId' => 3359,
+                'schemaVersion' => 5,
+            );
+        }else{
+            $meta =[ 'schemaId' => 2477, 'schemaVersion' => 2 ];
+        }
+            
+        
+        date_default_timezone_set("GMT+0");
+        
+        $datetime = date("ymd").'T'.date("His.630").'Z';
+        $data=array (
+            'common' => array (
+                                'platform' => 'web',
+                                'pcid' => '15844395210037920818724',
+                                'memberSrl' => '',
+                                'libraryVersion' => '1.0.0',
+                                'lang' => 'vi-VN',
+                                'resolution' => '1920x1080',
+                                'eventTime' => $datetime,
+                                'web' => array (
+                                                    'pvid' => $this->authToken,
+                                                    'rvid' => '',
+                                                    'url' => '',
+                                                    'referrer' => '',
+                                                ),
+                            ),
+            'meta' => $meta,
+            'data' => $data,
+            'extra' => array (
+                                'sentTime' => $datetime,
+                                'success' => true,
+                            ),
+        );
+  
+        $this->client->setServerParameters(['Accept' => 'application/json', 'Content-Type' => 'application/json']);
+        $this->client->xmlHttpRequest("POST", 'https://weblog.coupang.com/weblog/submit/wing',[],[],['Accept' => 'application/json', 'Content-Type' => 'application/json'], json_encode($data));
+        
+        //echo $this->authToken;
+        echo "<br>Wing :".  $this->client->getResponse()->getContent() ."<br>";
+        
+        //$this->client->xmlHttpRequest("GET", 'https://with.coupang.com/logout');
+    }
+    
+    public function questionAction($start_date = null, $end_date = null) { //tour
+        $data =[    'username' => 'VENDOR,tbridge',
+                    'password' => 'coupang135!'];
+        $this->loginCoupang();
+        
+        echo $this->client->getResponse()->getContent();
+        
+        if ($start_date == null && $end_date == null) {
+            $lastYear = date('Y') - 1;
+            $start_date = $lastYear.date("md");
+            $end_date = date('Ymd');
+        }
+        
+        
+        
+        $this->_model->updateRecord('question', ['isDelete' => 1], ['where' => 'question_created > "'.date('Y-m-d',strtotime($start_date)).' 00:00:00" AND channel_name="COUPANG"']);
+        $crawler = $this->client->xmlHttpRequest('GET', 'https://with.coupang.com/inquiry/fetch?inquiryType=PRODUCT&inquiryStartAt='.$start_date.'&inquiryEndedAt='.$end_date.'&answerType=ALL&productId=&vendorItemIds=&size=100&page=1');                                       //
+        $dataQuestions = json_decode($this->client->getResponse()->getContent(),true);
+        if ($dataQuestions['inquirySearchResponseDtos']) {
+
+            foreach ($dataQuestions['inquirySearchResponseDtos'] as $items) {
+
+                $data = [
+                    'question_name' => trim($items['memberName']),
+                    'question_email' => trim($items['memberEmail']),
+                    'question_content' => trim($items['content']),
+                    'question_created' => trim($items['inquiryAt']),
+                    'dealId' => $items['productId'], 
+                    'dealName' => $items['productName'], 
+                    'optionId' => $items['vendorItemId'], 
+                    'optionName' => $items['vendorItemName'], 
+                    'channel_name' => 'COUPANG',
+                    'inquiryId' => $items['inquiryId'], //$items['productBO']['prdNo']
+                    'isDelete' => 0
+                ];
+                if ($items['answered'] == 1) {
+                    $commentCount= $items['commentCount']-1;
+                    $data['question_status'] = 2;
+                    $data['reply_name'] =    trim($items['inquiryCommentList'][$commentCount]['inquiryCommentId']);
+                    $data['reply_content'] = trim($items['inquiryCommentList'][$commentCount]['content']);
+                    $data['reply_created'] = trim($items['inquiryCommentList'][$commentCount]['inquiryCommentAt']);
+                }
+                $result = $this->_model->loadRecords('question', ['inquiryId' => $items['inquiryId'],'channel_name'=>'COUPANG']);
+                if ($result) {
+                    $this->_model->updateRecord('question', $data, ['inquiryId' => $items['inquiryId'] ,'channel_name'=>'COUPANG']);
+                } else {
+                    $this->_model->insertRecord('question', $data);
+                }
+            }
+        }
+    }
+    public function replyQuestionAction($inquiryId, $content) { //tour
+        $data =[    'username' => 'VENDOR,tbridge',
+                    'password' => 'coupang135!'     ];
+        $this->loginCoupang();
+        
+        $data =[    'inquiryId' => $inquiryId,
+                    'comment' => $content,
+                    'vendorId' => 'A00183931' ];
+        
+        $this->client->xmlHttpRequest('POST', 'https://with.coupang.com/inquiry/save',$data);
+    }
+   
+}
+
+?>

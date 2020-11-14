@@ -1,0 +1,137 @@
+<script type="text/javascript">
+	$(document).ready(function(){
+		// Hiển thị popup đăng mới phân loại kênh bán
+		$('.newpost').click(function(){
+			$.fn_popup(true, 'channel');
+			$('#load_file_name p').html('');			
+			$('.absolute.channel input[type="submit"]').val('<?=$this->language('l_Channel34')?>').removeAttr('data-cid data-id');
+		});	
+		// Thực hiện kiểm tra kênh id trùng
+		$($.elt_popup).on('keyup','.checkChannelID',function(){			
+			var channel = this;
+			var channelid = $(channel).val();		
+			var channelcid = $(channel).closest('form').find('input[type="submit"]').attr('data-cid');	
+			if(channelcid && channelcid.trim()==channelid.trim()){
+				$.fn_check(channel, true);	
+			}else{
+				if(channelid && channelid.length > 2){
+					$.fn_ajax('checkChennelID', {'channelid': channelid}, function(result){
+						$.fn_check(channel, result.flag);
+					}, true, false);
+				}else{
+					$.fn_check(channel, false);	
+				}	
+			}			
+		});
+		// Thực hiện import file excel
+		$($.elt_popup).on('submit', '.channel form', function(){	
+			var formdata = new FormData(); 
+			var fileupload = $("#change_files")[0].files[0];			
+			formdata.append("fileupload", fileupload);			
+			formdata.append("channelname", $(this).find('input[name="channelname"]').val());
+			formdata.append("channelid", $(this).find('input[name="channelid"]').val());
+			var clcid = $(this).find('input[type="submit"]').attr('data-cid');
+			var clid = $(this).find('input[type="submit"]').attr('data-id');			
+			formdata.append("clcid", (clcid?clcid:''));
+			formdata.append("clid", (clid?clid:''));
+            if(!fileupload){
+            	$.fn_alert(true, true, '<?=$this->language('l_Channel1')?>');
+            	return false;
+            }
+            if(formdata.get('channelname') == ''){
+            	$.fn_alert(true, true, '<?=$this->language('l_Channel2')?>');
+            	return false;
+            }
+            if(formdata.get('channelid') == ''){
+            	$.fn_alert(true, true, '<?=$this->language('l_Channel3')?>');
+            	return false;
+  			}
+  			if($(this).find('input[name="channelid"]').attr('data-check') !='true'){
+				$.fn_alert(true, false, "<?=$this->language('l_warnid2')?>");
+  				return false;
+  			}
+            $.fn_ajax_upload_file('importType', formdata, function(result){
+                console.log(result);
+            	if(result.flag == true && result.row){
+            		$.fn_popup(false, 'channel', true);
+            		if(clcid && clid){
+            			var element = $('#channeltype tr[data-cid="'+clcid+'"][data-id="'+clid+'"] + tr');
+            			$('#channeltype tr[data-cid="'+clcid+'"][data-id="'+clid+'"]').remove();
+            			if(element.length>0){
+            				$(element).before(result.row);
+            			}else{
+            				$('#channeltype tbody').append(result.row);
+            			}            			
+            		}else{
+            			$('#channeltype tbody').append(result.row);
+            		}
+            	}else{
+            		$.fn_alert(true, true, (result.error)?result.error:"<?=$this->language('l_Channel4')?>");
+            	}
+            });			
+			return false;
+		});			
+		// Thực hiện download file excel
+		$('#channeltype').on('click','.dowloadexcel', function(){	
+			var cid = $(this).attr('data-cid');		
+			var titleName = $('#contents .ct_head h3').text();  
+			var description = $('#contents .ct_head p').text();
+			if(titleName && description && cid){
+				window.open(encodeURI(jsData.urlAjax + 'downloadChannelType?cid='+cid+'&titleName='+titleName+'&description='+description));
+			}
+		});
+		// Hiển thị popup sửa phân loại kênh bán
+		$('table').on('click', '.editpost', function(){
+			var id = $(this).closest('tr').attr('data-id');
+			var cid = $(this).closest('tr').attr('data-cid');
+			if(cid && id){
+				$.fn_ajax('getchannel', {'cid':cid, 'id':id}, function(result){
+					if(result.flag == true){
+						$.fn_popup(true, 'channel');
+						$.fn_check($($.elt_popup).find('.checkChannelID'), true);
+						$('#load_file_name p').html('');
+						$('.absolute.channel input[name="channelname"]').val(result.channelname);
+						$('.absolute.channel input[name="channelid"]').val(result.channelcid);
+						$('.absolute.channel input[type="submit"]').val('<?=$this->language('l_edit')?>').attr({'data-cid':cid, 'data-id':id});
+					}
+				});
+			}
+			
+		});	
+	});
+</script>
+<div class="ct_head">
+	<h3><?=$this->language('l_Channel5')?></h3>
+	<p><?=$this->language('l_Channel6')?></p>
+</div>
+<div class="ct_content">
+	<div class="form_group clearfix channel">
+		<div class="form_table">
+			<div class="table_head bgwhite">
+				<div class="ctrl_head clearfix">
+					<div class="title col-xs-10">
+						<h3><?=$this->language('l_mbtotal').$this->getData('total')?> <?=$this->language('l_notification16')?></h3>
+					</div>
+					<div class="icons col-xs-2">
+						<button type="button" name="newpost" class="btn full hover newpost"><?=$this->language('l_notification9')?></button>
+					</div>
+				</div>
+			</div>
+			<div class="table_content">
+				<table class="table" id="channeltype">
+					<thead>
+						<tr>
+							<th><?=$this->language('l_Channel7')?></th>
+							<th><?=$this->language('l_Channel8')?></th>
+							<th><?=$this->language('l_Channel9')?></th>
+							<th><?=$this->language('l_notification13')?></th>
+							<th><?=$this->language('l_notification14')?></th>
+							<th><?=$this->language('l_accmanage')?></th>
+						</tr>
+					</thead>
+					<tbody><?=$this->getData('channelType')?></tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
