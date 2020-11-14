@@ -1,0 +1,12 @@
+{
+    "require": {
+        "symfony/dom-crawler": "^5.1",
+        "fabpot/goutte": "^4.0",
+        "symfony/http-foundation": "^5.1",
+        "friendsofsymfony/rest-bundle": "^3.0"
+    },
+    "require-dev": {
+        "symfony/browser-kit": "^5.1",
+        "symfony/css-selector": "^5.1"
+    }
+}
