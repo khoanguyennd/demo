@@ -1,0 +1,195 @@
+<?php
+$kiemtrangay = date("l");
+if ($kiemtrangay == "Sunday") {
+    $ngay = $this->language('h_cn');
+}
+if ($kiemtrangay == "Monday") {
+    $ngay = $this->language('h_t2');
+}
+if ($kiemtrangay == "Tuesday") {
+    $ngay = $this->language('h_t3');
+}
+if ($kiemtrangay == "Wednesday") {
+    $ngay = $this->language('h_t4');
+}
+if ($kiemtrangay == "Thursday") {
+    $ngay = $this->language('h_t5');
+}
+if ($kiemtrangay == "Friday") {
+    $ngay = $this->language('h_t6');
+}
+if ($kiemtrangay == "Saturday") {
+    $ngay = $this->language('h_t7');
+}
+$language = Session::get('lang');
+?>
+<style>
+.row {margin-right: 0px;margin-left: 0px;}
+.dropdown-menu {position: absolute !important;}
+.form-control {display: inline;}
+.logo img { max-width: 140px;}
+.navbarSupportedContent{margin: 0px; font-size: 14px; border-radius: 5px; padding: 0px 15px; position: absolute; top: 5px; right: 60px;}
+.fullScreen{margin: 0px; font-size: 14px; border-radius: 5px; padding: 0px 0px; position: absolute; top: 5px; right: 0px;}
+.navbar-expand-lg .navbar-nav .dropdown-menu {top: 40px;left: -60px;}
+.dropdown-item {font-size: 14px;padding-left: 0.5rem}
+.container-th {padding-top: 20px;}
+@media (min-width: 1024px) and (max-width: 1279px){ /* ipad */
+    .logo img {max-width: none;}
+    .bodydoc {font-size: 40px;line-height: 2;}
+    .navbarSupportedContent{top: 15px;right: 120px;padding: 5px 20px;}
+    .fullScreen{top: 15px;right: 15px;padding: 5px 15px;}
+    .fa {font-size: 30px;}
+    .navbar-expand-lg .navbar-nav .dropdown-menu {top: 52px;left: -22px;}
+    .dropdown-item {font-size: 18px}
+    .a_mobi_t {font-size: 20px !important;padding: 10px 20px !important;line-height: 30px !important;}
+    .shadow_button_mobi {font-size: 20px !important;padding: 10px 20px !important;line-height: 30px !important;}
+    .container-th {padding: 8% 10px 6% 20px;}
+}
+
+@media (min-width: 1280px) and (max-width: 1365px){ /* pad android */
+    .logo img {max-width: none;}
+    .bodydoc {font-size: 40px;line-height: 2;}
+    .navbarSupportedContent{top: 15px;right: 120px;padding: 5px 20px;}
+    .fullScreen{top: 15px;right: 15px;padding: 5px 15px;}
+    .fa {font-size: 30px;}		
+    .navbar-expand-lg .navbar-nav .dropdown-menu {top: 52px;left: -22px;}
+    .dropdown-item {font-size: 18px}
+    .a_mobi_t {font-size: 20px !important;padding: 10px 20px !important;line-height: 30px !important;}
+    .shadow_button_mobi {font-size: 20px !important;padding: 10px 20px !important;line-height: 30px !important;}
+    .container-th {padding: 8% 10px 6% 20px;}
+}
+</style>
+<script>
+    function registerhome() {
+        document.getElementById("userName").value = "";
+        document.getElementById("phone").value = "";
+        document.getElementById("point").value = "";
+        $(".error").html("");
+        $("#msg_err_home").html('');
+        $("#userName-error").html('');
+        $('#dangkytvModal').modal('show');
+    }
+</script>
+<div class="container-fluid bgt-home" style="width: 100%;height: 100%;position: absolute;top: 0;left: 0;" >
+    <input type="hidden" id="language" name="language" value="<?= Session::get('accountshopping')['area'] ?>">
+    <div class="row row_mobi_header">
+        <div class="col-md-4 paddingleftright5 logo">
+            <img src="<?= URL_PUBLIC ?>images/logo-1.png" alt="Billiard">
+        </div>
+        <div class="col-md-8 paddingleftright" style="width: 59.5%; float: left;">
+            <div class="w-auto pt-4" style="padding-top: 15px !important; ">
+                <div class="pr-2 date_mobi" style="position: relative;">
+                    <span class="date"><?= date('d') ?>.<?= date('m') ?>(<?= $ngay ?>)</span>
+                    <span class="date"><?= date('H') ?>.<?= date('i') ?></span>	
+                </div>  
+                <nav class="navbar navbar-expand-lg navbar-inverse btn btn-lag navbarSupportedContent">
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="display: block;">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fa fa-cog" aria-hidden="true"></i>
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown" >
+                                    <a class="dropdown-item" onclick="changeLangue('KR')" ><img class="img-flag" src="<?= URL_PUBLIC ?>images/kr.png"> <?= $this->language('l_language_KR') ?></a>
+                                    <a class="dropdown-item" onclick="changeLangue('VN')" ><img class="img-flag" src="<?= URL_PUBLIC ?>images/vn.png"> <?= $this->language('l_language_VN') ?></a>
+                                    <a class="dropdown-item" onclick="changeLangue('EN')" ><img class="img-flag" src="<?= URL_PUBLIC ?>images/en.jpg"> <?= $this->language('l_language_EN') ?></a>
+                                </div>
+                            </li>
+                            
+                            
+                        </ul>
+                    </div>
+                    
+                </nav>
+                
+               <nav class=" btn btn-lag fullScreen" >
+                <a class="nav-link" id="fullScreen" onclick="onfullscreen()">
+                    <i class="fa fa-arrows-alt" aria-hidden="true"></i>
+                </a>
+                </nav>
+                               
+                             
+            </div>
+        </div>
+        <div style="width: 100%" class="register_home_mobi paddingleftright5">            
+            <div class="float-right" style="padding-top: 10px; width: 100%; text-align: center;">
+                <a type="button" onclick="start(0)" class="btn btn-primary btn-blue a_mobi_t"><?= $this->language('l_tbnumbertvclb') ?> (<span class="home_totalmember"><?= $this->getData('totalMember') ?></span>)</a>
+                <a class="btn btn-warning btn-orange-sm a_mobi_t" onclick="registerhome();"><?= $this->language("l_registermember") ?></a>                
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="container-th">
+            <div>
+                <div class="div_bida_table" >
+                    <a class="table-bd" onclick="start(1)" >
+                        <div class="bida_table" style="position: relative; text-align: center">
+                            <img class="img_bida_table" src="<?= URL_PUBLIC ?>images/bida-table.png" alt="Billiard">
+                            <h3 class="h3_bida_table"><?= $this->language("l_mode2") ?></h3>
+                        </div>
+                    </a>
+                </div>
+                <div class="div_bida_table">
+                    <a class="table-bd" onclick="start(2)">
+                        <div class="bida_table" style="position: relative; text-align: center">
+                            <img class="img_bida_table" src="<?= URL_PUBLIC ?>images/bida-table.png" alt="Billiard">
+                            <h3 class="h3_bida_table"><?= $this->language("l_mode2_dg") ?></h3>
+                        </div>
+                    </a>
+                </div>
+                <div class="div_bida_table" >
+                    <a class="table-bd" onclick="start(3)">
+                        <div class="bida_table" style="position: relative; text-align: center">
+                            <img class="img_bida_table" src="<?= URL_PUBLIC ?>images/bida-table.png" alt="Billiard">
+                            <h3 class="h3_bida_table"><?= $this->language("l_mode3") ?></h3>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 margin0 ">
+            <div class="margin0 d-table w-auto" >
+                <a type="button" class="btn btn-primary btn-blue shadow_button shadow_button_mobi" data-toggle="modal" data-target="#trogiupModal"><?= $this->language("l_help") ?></a>
+                <a type="button" class="btn btn-primary btn-blue shadow_button shadow_button_mobi" href="<?= $this->route('logout') ?>"><?= $this->language("l_logout") ?></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<iframe src="" title="W3Schools Free Online Web Tutorials" style="display:none; width: 0;height: 0;position: absolute;top: 0;left: 0;z-index: 999;" id="iframe_callback"></iframe>
+
+<div class="div_load_alert">
+    <div class="main_mess">
+        <p><?= $this->language("l_main_mess") ?></p>
+        <img style="width: 200px;" src="<?= URL_PUBLIC ?>img/load.gif" />
+    </div>
+</div>
+<style>
+@media (min-width: 1024px) and (max-width: 1110px){
+    .logo img{width: 307px;}
+    .a_mobi_t{font-size: 18px !important;padding: 10px 15px !important; margin-left: 5px !important; margin-right: 5px !important;}
+    .date_mobi{font-size: 24px; padding-top: 30px;}
+    .btn-lag{top:30px !important;}
+    .register_home_mobi{margin-bottom: 30px;}
+    .shadow_button_mobi{padding: 10px 20px !important;font-size: 18px !important;border-radius: 5px !important;}
+    button.btn-blue{font-size: 18px;padding: 10px 20px;}
+    .h3_bida_table{height: 200px;line-height: 180px;font-size: 26px;}
+    .img_bida_table{height: 200px;}
+}
+@media (min-width: 1110px) and (max-width: 1280px){
+    .logo img{width: 307px;}
+    .a_mobi_t{font-size: 18px !important;padding: 10px 15px !important; margin-left: 5px !important; margin-right: 5px !important;}
+    .date_mobi{font-size: 24px; padding-top: 30px;}
+    .btn-lag{top:30px !important;}
+    .register_home_mobi{margin-bottom: 30px;}
+    .shadow_button_mobi{padding: 10px 20px !important;font-size: 18px !important;border-radius: 5px !important;}
+    button.btn-blue{font-size: 18px;padding: 10px 20px;}
+    .h3_bida_table{height: 230px;line-height: 215px;font-size: 30px;}
+    .img_bida_table{height: 230px;}
+}
+@media (min-height: 720px) and (max-height: 768px){
+    .margin0 {padding-top: 20px !important;}
+}
+</style>

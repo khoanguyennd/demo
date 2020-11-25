@@ -683,7 +683,7 @@ a.table-bd:hover{
 
 .khaicuocuser_player_active {
 	background: rgb(1,30,69);
-	background: linear-gradient(90deg, rgba(1,30,69,1) 0%, rgba(1,45,105,1) 35%, rgba(1,53,124,1) 100%);
+	background: linear-gradient(100deg, #2196F3 0%, #03A9F4 35%, #00BCD4 100%);
 	border: #cb7309 2px solid;
 	padding: 15px;
 	border-radius: 8px;
@@ -741,6 +741,12 @@ a.table-bd:hover{
 	padding-top: 22px;
 	margin: 0 auto;
 	/* float: left; */
+
+	float: left;
+
+	/*float: left;*/
+		margin: 0px auto;	
+
 }
 .circle-sm {
 	background: #013276;
@@ -850,15 +856,15 @@ a.table-bd:hover{
 
 }
 .star-player-main {
+	position: relative;
 	padding: 20px;
-
 }
 .start_player_diem  {
 	border-radius: 300px;
 	text-align: center;
 	font-size: 230px;
 	font-weight: bold;
-	color: #fff;
+	color: #000000;
 	width: 370px;
 	margin: 0 auto;
 	vertical-align: middle;
@@ -910,21 +916,17 @@ span.start_player_diem_span2 {
 	width: auto;
 	display: table;
 }
-.start_player_diem_color-or  {
+/* .start_player_diem_color-or  {
 	background: #cb7309;	
 }
 .start_player_diem_color-bl  {
 	background: #013378;	
-}
-.start_player_diem_color-bln  {
-	background: #035b9e;	
-}
-.start_player_diem_color-gr  {
-	background: #3aa201;	
-}
-.start_player_diem_color-st  {
-	background: #560272;	
-}
+} */
+.start_player_diem_color-bln  {background: linear-gradient(180deg, #ff0000  0%,#141414 100%);}
+.start_player_diem_color-bl {background: linear-gradient(180deg, #fff510 0%, #383415 100%);}
+.start_player_diem_color-or {background: linear-gradient(180deg, #ffffff 0%, #46565d 100%);}
+.start_player_diem_color-gr  {background: linear-gradient(180deg, #60ff0a 0%, #383415 100%);}
+.start_player_diem_color-st  {background: linear-gradient(180deg,#b901f6 0%,  #141414 100%)}
 .start_player_thongke {
 	background: #023685;
 	text-align: center;
@@ -1124,3 +1126,14 @@ button.btn-close {
 	text-align: center;
 }
 .che_point{display: none;width: 100%; position: absolute; top: 0px; left: 0px; height: 100%}
+.point_inning {
+    position: absolute;
+    top: 0px;
+    font-size: 33px;
+    border-radius: 0%;
+    background: #000d40;
+    padding: 0px 5px;
+    font-weight: bold;
+}
+
+.background_player_active{background-color: #2590ec;}

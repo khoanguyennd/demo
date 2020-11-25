@@ -38,21 +38,29 @@ if($number_user==2){
                     count--;
                     timer.innerHTML = "(" + count + ")";
                 }else if(count == -1){
-                	$("#timer").remove();
+                    $("#timer").remove();
                     clearInterval(r);
                 } else {
                     $('.button_play_mode2').click();
                     $("#timer").remove();
                     clearInterval(r);
+                    var status_sound = document.getElementById("status_sound").value;
+                    if(status_sound==1){
+                        var music = new Audio("<?= URL_BASE ?>/public/sound/start_"+lang+".mp3");
+                        music.play();
+                    }
                 }
             }, 1000);
         }
 
         $(".cbutton").click(function () {
+            var status_sound = document.getElementById("status_sound").value;
+            if(status_sound==1){
+                var music = new Audio("<?= URL_BASE ?>/public/sound/changepos.mp3");
+                music.play();
+            }
             var strDiv1Content = document.getElementById('start_player1').innerHTML;
             var strDiv2Content = document.getElementById('start_player2').innerHTML;
-            //strDiv1Content.replace('start_player_diem_span1', 'start_player_diem_span2');
-            //strDiv2Content.replace('start_player_diem_span2', 'start_player_diem_span1');
             document.getElementById('start_player1').innerHTML = strDiv2Content;
             document.getElementById('start_player2').innerHTML = strDiv1Content;
             const element = document.querySelector('#start_player1');
@@ -68,6 +76,7 @@ if($number_user==2){
         });
 
         $('.button_addpoint').attr('disabled', true);
+        $(".che_point").css("display", "block");
     });
 </script>
 
@@ -147,7 +156,11 @@ if($number_user==2){
     </div>
 </div>
 <!----------------------------------end thuc tran tran dau-------------------------------------->
+<style>
+    .div_full35_end{position: absolute; top: 0px; left: 0px; width: 100%;height: 100%;display: none; z-index: 500;}
+</style>
 <div class="container-fluid">
+    <div class="div_full35_end"></div>
     <div class="row mt-3">
         <div class="col-4 col-sm-4 col-md-4 pr-10">  
             <div id="start_player1">
@@ -165,7 +178,8 @@ if($number_user==2){
                         </div>
                     </div>
                     <div class="star-player-main t-line b-line pt-5">
-                        <div class="start_player_diem start_player_diem_color-or">
+                        <div style="position: relative;" class="start_player_diem start_player_diem_color-bl">
+                            <div class="che_point"></div>
                             <p class="button_addpoint" data-id="<?=$thanhvien1['id']?>" data-val = '1'>
                             <span id="point<?=$thanhvien1['id']?>"><?=$diem1 < 10 ? '0' . $diem1 : $diem1;?></span>
                             <!-- span class="start_player_diem_span2">05</span>
@@ -243,9 +257,17 @@ if($number_user==2){
         <!---------------------------center--------------------------->
         <div class="col-4 col-sm-4 col-md-4 pr-10 pl-10">
             <div class="main-bgt">
-                <div class="time_march">
+                <div class="time_march" style="position: relative;">
+                    <div id="divsound">
+                        <img onclick="changesound(0)" src="<?= URL_PUBLIC ?>images/s_on.png" />
+                    </div>
                     <p id="countTimeMarch">00:00</p>
                 </div>
+                <input type="hidden" id="status_sound" value="1" />
+                <style>
+                    #divsound{position: absolute; top: 0px; left: 0px;}
+                    #divsound img{margin-top: -10px;padding-left: 10px;}
+                </style>
                 <div class="start_luot_content mt-5 pb-lg-5" style="margin-bottom: 210px">
                     <p class="text-center pt-4"><img src="<?= URL_PUBLIC ?>images/logo-2.png" class="img-responsive"></p>
                 </div>
@@ -281,7 +303,8 @@ if($number_user==2){
                         </div>
                     </div>
                     <div class="star-player-main t-line b-line pt-5">
-                        <div class="start_player_diem start_player_diem_color-bl">
+                        <div style="position: relative;" class="start_player_diem start_player_diem_color-or">
+                            <div class="che_point"></div>
                             <p class="button_addpoint" data-id="<?=$thanhvien2['id']?>" data-val = '1'>
                             <span id="point<?=$thanhvien2['id']?>"><?=$diem2 < 10 ? '0' . $diem2 : $diem2;?></span>
                             <!-- span class="start_player_diem_span2">05</span>
@@ -405,7 +428,7 @@ if($number_user==2){
             timedCountCurrentUser();
         }
     }
-
+    
     function stopCountTimeUser() {        
        
         if (timeUse) {
@@ -413,44 +436,90 @@ if($number_user==2){
             clearTimeout(timeUse);
         }
     }
+    function changesound(status){
+        if(status==0){
+            document.getElementById("status_sound").value=0;
+            $("#divsound").html('<img onclick="changesound(1)" src="<?= URL_BASE ?>/public/images/s_off.png" />')
+        }else{
+            document.getElementById("status_sound").value=1;
+            $("#divsound").html('<img onclick="changesound(0)" src="<?= URL_BASE ?>/public/images/s_on.png" />')
+        }
+    }
     $('.button_play_mode2').on('click', function(){
         count=-1;
+        var status_sound = document.getElementById("status_sound").value;
+        if(status_sound==1){
+            var music = new Audio("<?= URL_BASE ?>/public/sound/start_"+lang+".mp3");
+            music.play();
+        }
         $('.button_addpoint').attr('disabled', false);
         $(".button_play_mode2").hide();
+        $(".che_point").css("display", "none");
         $(".button_pause2_normal").show();
         startCountTimeUser();  
         $("#timer").remove();              
     })
 
     $('.button_pause2_normal').on('click', function(){
+        var status_sound = document.getElementById("status_sound").value;
+        if(status_sound==1){
+            var music = new Audio("<?= URL_BASE ?>/public/sound/pause_"+lang+".mp3");
+            music.play();
+        }
         $(".button_play_mode2").html("<?= $this->language("l_continue") ?>");
         $('.button_addpoint').attr('disabled', true);
+        $(".che_point").css("display", "block");
         $(".button_pause2_normal").hide();
         $(".button_play_mode2").show();
         stopCountTimeUser();                
     })
 
-    $(".button_ok_mode2_end").click(function () {
-        $('.div_load_alert').css("display","block");
-        window.location = "<?= $this->route('setting2') ?>";
+    $(".button_ok_mode2_end").click(function () {                
+        var status_sound = document.getElementById("status_sound").value;
+        if(status_sound==1){
+            var music = new Audio("<?= URL_BASE ?>/public/sound/ok_stop_kr.mp3");
+            music.play();
+        }
+        $('#KetThucTranDonGianDauModal').modal('hide');
+        $('.div_full35_end').css("display", "block");
+        setTimeout(function () {
+            window.location = "<?= $this->route('setting2') ?>";
+        }, 2000);
+        
     });
     $(".button_yes_mode2_end").click(function () {
     	strname = "<?=$thanhvien2['thanhvien_name']?>"+","+"<?=$thanhvien1['thanhvien_name']?>";
         strpoint = "<?=$thanhvien2['diem']?>"+","+"<?=$thanhvien1['diem']?>";
         $('.div_load_alert').css("display", "block");
-        $.fn_ajax('setting2', { 'strname': strname, 'strpoint': strpoint, 'number_player': 2 }, function(result) {
-            console.log(result)
+        $.fn_ajax('setting2', { 'strname': strname, 'strpoint': strpoint, 'number_player': 2 }, function(result) {            
             if (result.flag == true) {
-               window.location = "<?= $this->route('start2') ?>/"+result.trandau_id;
+                var status_sound = document.getElementById("status_sound").value;
+                if(status_sound==1){
+                    var music = new Audio("<?= URL_BASE ?>/public/sound/ok_stop_kr.mp3");
+                    music.play();
+                }
+                $('#confirmmode2Modal').modal('hide');
+                $('.div_full35_end').css("display", "block");
+                setTimeout(function () {
+                    window.location = "<?= $this->route('start2') ?>/"+result.trandau_id;
+                }, 2000);               
             }
         }, true);
        
     });
-    $('body').on('click', '.button_addpoint', function(){
-        play();
+    $('body').on('click', '.button_addpoint', function(){        
         $('.button_pause2_normal').show();
         var dataId = parseInt($(this).attr('data-id'));
         var point = parseInt($(this).attr('data-val'));
+        var status_sound = document.getElementById("status_sound").value;
+        if(status_sound==1){
+            if(point==-1){
+                var music = new Audio("<?= URL_BASE ?>/public/sound/T1_"+lang+".mp3");
+            }else{
+                var music = new Audio("<?= URL_BASE ?>/public/sound/C"+point+"_"+lang+".mp3");
+            }
+            music.play();
+        }
         var trandau_id = parseInt($('#trandau_id').val());
         var time = $('#timeUser').val();
         var currentPoint = parseInt($('#pointCurrentUser' + dataId).val());
@@ -504,11 +573,21 @@ if($number_user==2){
         }
 
         if(nextPoint >= endPoint) {
-            $('.button_addpoint').hide();
+            var status_sound = document.getElementById("status_sound").value;
+            if(status_sound==1){
+                var music = new Audio("<?= URL_BASE ?>/public/sound/win_kr.mp3");
+                music.play();
+            }
+            /*$('.button_addpoint').hide();*/
+			$(".che_point").css("display", "block");
             $('.win' + dataId).show();
             $('.button_pause2_normal').hide();
             $('#confirmmode2Modal').modal('show');
             stopCountTimeUser(); 
+            //ket thuc tran dau
+            $.fn_ajax('updateStatusMatch', {'trandau_id': trandau_id, 'ket_qua': 3 }, function (result) {
+                console.log(result.msg);
+            }, true);
         }
         var url = $baseUrl + '/addPointPlay2UserNormal.html';
         var strload='<img style="margin-top: 25%; margin-left: 13%;" class="imagesload_wait" src="'+$baseUrl+'/public/img/load.gif" />';                

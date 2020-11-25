@@ -1,0 +1,487 @@
+<?php
+$trandau = $this->getData('trandau');
+$trandau_thanhvien = $this->getData('trandau_thanhvien');
+$trandau_chitiet = $this->getData('trandau_chitiet');
+$number_user = $trandau["soluong_user"];
+$tongwin = $this->getData('tongwin');
+$trandau_id = $trandau["id"];
+$seconds = $this->getData('seconds');
+$timesave = $this->getData('timesave');
+$timemarch = $this->getData('timemarch');
+$auto5s = $_SESSION["auto5s"];
+$auto = $this->getData('auto');
+$checkshowall = FALSE;
+if (($tongwin + 1) == $number_user) {
+    $checkshowall = TRUE;
+}
+?>
+<script type="text/javascript">
+acecptComeBack();
+var strname = "";
+var strpoint = "";
+</script>
+<div class="container-fluid container-fluid_mobi">
+    <div class="main-bgt main-bgt_mobi">
+        <div class="row row_mobi">
+            <div class="row_mobi_1">
+                <div class="row_mobi_1_div">
+                    <a type="button" href="" class="btn btn-primary btn-blue-bn-t mb-1 ml-0 w-100 row_mobi_1_div_a" data-toggle="modal" data-target="#trogiupModal"><?= $this->language("l_help")?></a>
+                </div>
+            </div>
+            <div class="row_mobi_2">
+                <div class="time_march play_time" style="position: relative;">
+                    <div id="divsound">
+                        <img onclick="changesound(0)" src="<?= URL_PUBLIC ?>images/s_on.png" />
+                    </div>
+                    <p id="countTimeMarch"><?= $timemarch ?></p>
+                </div>
+            </div>
+            <input type="hidden" id="status_sound" value="1" />
+            <style>
+                #divsound{position: absolute; top: 0px; left: 0px;}
+                #divsound img{margin-top: -10px;width: 35px;padding-left: 10px;}
+            </style>
+            <div class="row_mobi_3">
+                <div class="mt-4 row_mobi_3_div">
+                    <button class="button_play">
+                        <?= $this->language("l_play") ?> 
+                        <?php if ($auto5s == 0) { ?>
+                            <span id="timer">(5)</span>
+                            <?php Session::set('auto5s', 1); ?>
+                        <?php } ?>            
+                    <button class="button_continue"><?= $this->language("l_continue") ?></button>
+                    <button class="button_pause35"><?= $this->language("l_pause") ?></button>
+                    <button class="button_stop3"><?= $this->language("l_conforms_end") ?></button>                                        
+                </div>
+            </div>
+        </div>		
+    </div>
+    <div class="row row_mobi_content_35">
+        <div class="div_full35"></div>
+        <?php 
+        for ($i = 1; $i <= $number_user; $i++) {
+            if($number_user==3&&$i==2){
+                $class="col-md-4 pl-10 pr-10 d_m_3_2"; 
+                $c_p_m="point_mobi35"; 
+                $sub_add_point="btn-blue-n";
+                $d_c="diem-chap-tv_mobi";
+                $s_p_m="star-player-main";
+                $g_a_mobi="groupaction_mobi";
+            }
+            if($number_user==3&&$i==1){$g_a_mobi="groupaction_mobi";$s_p_m="star-player-main";$class="col-md-4 pl-10 d_m_3_1"; $c_p_m="point_mobi35"; $sub_add_point="btn-blue-n";$d_c="diem-chap-tv_mobi";}
+            if($number_user==3&&$i==3){$g_a_mobi="groupaction_mobi";$s_p_m="star-player-main";$class="col-md-4 pl-10 d_m_3_3"; $c_p_m="point_mobi35"; $sub_add_point="btn-blue-n";$d_c="diem-chap-tv_mobi";}
+            
+            if($number_user==4&&$i==1){$g_a_mobi="groupaction_mobi4";$s_p_m="star-player-main";$class="col-md-3 pr-10 d_m_4_1 class_m_4"; $c_p_m="point_mobi35_4"; $sub_add_point="s_a_p_4";$d_c="diem-chap-tv_mobi4";}
+            if($number_user==4&&$i==2){$g_a_mobi="groupaction_mobi4";$s_p_m="star-player-main";$class="col-md-3 pr-10 pl-10 d_m_4_2 class_m_4"; $c_p_m="point_mobi35_4"; $sub_add_point="s_a_p_4";$d_c="diem-chap-tv_mobi4";}
+            if($number_user==4&&$i==3){$g_a_mobi="groupaction_mobi4";$s_p_m="star-player-main";$class="col-md-3 pr-10 pl-10 d_m_4_3 class_m_4"; $c_p_m="point_mobi35_4"; $sub_add_point="s_a_p_4";$d_c="diem-chap-tv_mobi4";}
+            if($number_user==4&&$i==4){$g_a_mobi="groupaction_mobi4";$s_p_m="star-player-main";$class="col-md-3 pr-10 d_m_4_4 class_m_4"; $c_p_m="point_mobi35_4"; $sub_add_point="s_a_p_4";$d_c="diem-chap-tv_mobi4";}   
+            
+            if($number_user==5&&$i==1){$g_a_mobi="groupaction_mobi5";$s_p_m="star-player-main5";$class="col-20 col-205 pr-10"; $c_p_m="point_mobi35_5"; $sub_add_point="s_a_p_5";$d_c="diem-chap-tv_mobi5";}
+            if($number_user==5&&$i==2){$g_a_mobi="groupaction_mobi5";$s_p_m="star-player-main5";$class="col-20 col-205 pr-10 pl-10"; $c_p_m="point_mobi35_5"; $sub_add_point="s_a_p_5";$d_c="diem-chap-tv_mobi5";}
+            if($number_user==5&&$i==3){$g_a_mobi="groupaction_mobi5";$s_p_m="star-player-main5";$class="col-20 col-205 pr-10 pl-10"; $c_p_m="point_mobi35_5"; $sub_add_point="s_a_p_5";$d_c="diem-chap-tv_mobi5";}
+            if($number_user==5&&$i==4){$g_a_mobi="groupaction_mobi5";$s_p_m="star-player-main5";$class="col-20 col-205 pr-10 pl-10"; $c_p_m="point_mobi35_5"; $sub_add_point="s_a_p_5";$d_c="diem-chap-tv_mobi5";}
+            if($number_user==5&&$i==5){$g_a_mobi="groupaction_mobi5";$s_p_m="star-player-main5";$class="col-20 col-205 pr-10"; $c_p_m="point_mobi35_5"; $sub_add_point="s_a_p_5";$d_c="diem-chap-tv_mobi5";}
+            
+            if($i==1){$class_point="gr";}
+            if($i==2){$class_point="or";}
+            if($i==3){$class_point="bln";}
+            if($i==4){$class_point="bl";}
+            if($i==5){$class_point="st";}
+            $thanhvien_name = $this->getData('thanhvien_name' . $i);
+            $thanhvien_diemketthuc = $this->getData('thanhvien_diemketthuc' . $i);
+            $thanhvien_point = $this->getData('thanhvien_point' . $i);
+            $thanhvien_win = $this->getData('thanhvien_win' . $i);
+            $thanhvien_trandau_id = $trandau_thanhvien[$i - 1]['id'];
+        ?>
+        <script type="text/javascript">
+            strname = "<?=$thanhvien_name?>" + "," +strname;
+            strpoint = "<?=$thanhvien_diemketthuc?>" + "," + strpoint;
+        </script>
+        <div class="<?=$class?> paddingleftright">
+            <div class="bgt-blue mb-3">
+                <div class="star-player-top b-line pt-2 pb-0 pl-4">
+                    <div class="row row_star_player_top">
+                        <div class="">
+                            <h3 class="name-item"><?=$thanhvien_name?></h3>
+                        </div>
+                        <div class="diem-chap-tv text-center <?=$d_c?>">
+                            <span><?=$thanhvien_diemketthuc?></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="<?=$s_p_m?> t-line b-line">
+                    <div style="position: relative;" class="start_player_diem start_player_diem_color-<?=$class_point?> s-160 w-275 h-275 <?=$c_p_m?>">
+                        <div class="che_point"></div>
+                        <p class="pointusernow<?= $i ?>" onclick="addpoint('<?= $i ?>', '<?= $thanhvien_name ?>', '<?= $thanhvien_diemketthuc ?>', '<?= $trandau_id ?>', '<?= $thanhvien_trandau_id ?>')">
+                            <span id="point">
+                                <?php
+                                    if ($thanhvien_point < 10) {echo "0" . $thanhvien_point;} else {echo $thanhvien_point;}
+                                ?>
+                            </span>
+                        </p>
+                    </div>
+                    <input type="hidden" id="pointplay35<?= $i ?>" value="<?= $thanhvien_point ?>" />
+                    <div id="groupaction<?= $i ?>" class="rowsplay_button start_player_button m-auto m-0 <?=$g_a_mobi?>" style="padding-top: 10px;">
+                        <?php if ($checkshowall) { ?>
+                            <?php if ($thanhvien_win == 0) { ?>
+                                <p class="places"><?= $this->language("l_hang") ?> <?= $tongwin + 1 ?></p>
+                            <?php } else { ?>
+                                <p class="places"><?= $this->language("l_hang") ?> <?= $thanhvien_win ?></p>
+                            <?php } ?>
+                        <?php } else { ?>
+                            <?php if ($thanhvien_win == 0) { ?>
+                                <button class="button_minus btn btn-primary <?=$sub_add_point?> button_minus<?=$i?>" onclick="subpoint('<?= $i ?>', '<?= $thanhvien_name ?>', '<?= $thanhvien_diemketthuc ?>', '<?= $trandau_id ?>', '<?= $thanhvien_trandau_id ?>')" >
+                                    <i class="fa fa-minus" aria-hidden="true"></i>
+                                </button>
+                                <button class="button_minus btn btn-primary <?=$sub_add_point?> button_plus<?=$i?>"  onclick="addpoint('<?= $i ?>', '<?= $thanhvien_name ?>', '<?= $thanhvien_diemketthuc ?>', '<?= $trandau_id ?>', '<?= $thanhvien_trandau_id ?>')" >
+                                    <i class="fa fa-plus"aria-hidden="true"></i>
+                                </button>
+                            <?php } else { ?>
+                                <p class="places"><?= $this->language("l_hang") ?> <?= $thanhvien_win ?></p>
+                            <?php } ?>
+                        <?php } ?>
+                    </div>
+                </div>
+                <div class="start_player_history t-line">
+                    <div class="title_history">
+                        <div class="row" style="margin-left: 0px; margin-right: 0px;">
+                            <div class="col-md-12 paddingleftright5 text-left">
+                                <p><?= $this->language("l_lichsutrandau")?></p>								
+                            </div>
+                        </div>
+                    </div>
+                    <div class="main_history">
+                        <div class="hide-scroll">
+                            <div class="viewport" style="margin-top: 0px;">
+                                <div class="history<?=$i?>"></div>
+                                <?php            
+                                    foreach ($trandau_chitiet as $td_ct){
+                                        if($thanhvien_trandau_id==$td_ct['thanhvien_trandau_id']){
+                                            echo $td_ct['content'];
+                                        }
+                                    }
+                                ?>
+                            </div>                            
+                        </div>
+                    </div>						
+                </div>
+            </div>
+        </div>
+        <?php }?>
+    </div>    
+</div>
+<input type="hidden" id="timesave" value="<?= $timesave ?>" />
+<input type="hidden" id="hidden_timesave" value="<?= $seconds ?>" />
+<script>
+var thutu=<?= ($tongwin+1) ?>;
+var numberplay =<?= $number_user ?>;
+    $(document).ready(function () {
+        <?php if ($auto5s == 0) { ?>
+        	$(".rowsplay_button :input").prop("disabled", true);
+                $(".che_point").css("display", "block");
+            startAutoplay();
+        <?php } ?>
+        <?php if ($auto5s != 0) { ?>
+        	$(".rowsplay_button :input").prop("disabled", false);
+                $(".che_point").css("display", "none");
+            autoplay();
+        <?php } ?>
+        $(".button_play").click(function () {
+            count=-1;
+            $(".button_play").css("display", "none");
+            $(".che_point").css("display", "none");
+            //$(".div_full35").css("display", "none");
+            $(".rowsplay_button :input").prop("disabled", false);
+            $(".button_pause35").css("display", "initial");
+            startCountTimeUser();
+            $("#timer").remove();
+        });
+        $(".button_continue").click(function () {
+            $(".button_continue").css("display", "none");
+            $(".che_point").css("display", "none");
+            //$(".div_full35").css("display", "none");
+            $(".rowsplay_button :input").prop("disabled", false);
+            $(".button_pause35").css("display", "initial");
+            startCountTimeUser();
+        });
+        $(".button_pause35").click(function () {
+            $(".button_play").html("<?= $this->language("l_continue") ?>");
+            $(".button_pause35").css("display", "none");
+            $(".button_continue").css("display", "initial");
+            $(".rowsplay_button :input").prop("disabled", true);
+            $(".che_point").css("display", "block");
+            stopCountTimeUser();
+        });
+        $(".button_stop3").click(function () {
+            $('#endmode35Modal').modal('show');
+        });
+        $(".button_ok_mode35_end").click(function () {
+            $('.div_load_alert').css("display", "block");
+            window.location = "<?= $this->route('setting3') ?>";
+        });
+
+        $(".button_yes_mode35_end").click(function () {
+            strname = strname.slice(0, -1);
+            strpoint = strpoint.slice(0, -1);
+            $('.div_load_alert').css("display", "block");
+            $.fn_ajax('setting3', { 'strname': strname,'strpoint': strpoint,'number_player': numberplay}, function(result) {
+                //console.log(result);
+                if (result.flag == true) {
+                    window.location = "<?= $this->route('start3') ?>/"+result.trandau_id;
+                }
+                
+            }, true);
+            
+        });
+    });
+    var count = 5;
+    function startAutoplay() {
+        var r = setInterval(function () {
+            var timer = document.getElementById("timer");
+            if (count > 0) {
+                count--;
+                timer.innerHTML = "(" + count + ")";
+            } else if(count == -1){
+            	$("#timer").remove();
+                clearInterval(r);
+            }else {
+            	$(".rowsplay_button :input").prop("disabled", false);
+                $(".button_play").css("display", "none");
+                $(".button_pause35").css("display", "initial");
+                $(".che_point").css("display", "none");
+                startCountTimeUser();
+                $("#timer").remove();
+                clearInterval(r);
+            }
+        }, 1000);
+    }
+    function changesound(status){
+        if(status==0){
+            document.getElementById("status_sound").value=0;
+            $("#divsound").html('<img onclick="changesound(1)" src="<?= URL_BASE ?>/public/images/s_off.png" />')
+        }else{
+            document.getElementById("status_sound").value=1;
+            $("#divsound").html('<img onclick="changesound(0)" src="<?= URL_BASE ?>/public/images/s_on.png" />')
+        }
+    }
+    function autoplay() {
+        $(".button_play").css("display", "none");
+        //$(".div_full35").css("display", "none");
+        //console.log(thutu+"-"+numberplay)
+        if (numberplay == thutu){
+            $('#confirmmode35Modal').modal('show');
+            $(".button_pause35").css("display", "none");            
+            stopCountTimeUser();        	
+        }else{
+            $(".button_pause35").css("display", "initial");  
+            startCountTimeUser();
+        }
+    }
+    function subpoint(pos, name, point, trandau_id, thanhvien_trandau_id) {
+        var status_sound = document.getElementById("status_sound").value;
+        if(status_sound==1){
+            var music = new Audio("<?= URL_BASE ?>/public/1.mp3");
+            music.play();
+        }
+        var hidden_timesave = document.getElementById("hidden_timesave").value;
+        var pointnow = document.getElementById("pointplay35" + pos).value;
+        var pointold = pointnow;
+        pointnow = parseInt(pointnow);
+        if(pointnow>0){
+            pointnow = pointnow - 1;
+            document.getElementById("pointplay35" + pos).value = pointnow;
+            if (pointnow < 10) {
+                if (pointnow < 0) {
+                    $(".pointusernow" + pos).html(pointnow);
+                } else {
+                    $(".pointusernow" + pos).html("0" + pointnow);
+                }
+            } else {
+                $(".pointusernow" + pos).html(pointnow);
+            }
+            var timesave = document.getElementById("timesave").value;
+            var str = '';
+                str += '<div class="row b-line-d m-0 text-capitalize">';
+                    str += '<div class="col-md-8 pt-2 text-left pl-4">';
+                        str += '<p class="mb-1"><strong>[' + name + ']:</strong> -1 <?= $this->language("l_pointtb") ?></p>';
+                        str += '<p><?= $this->language("l_thoigian") ?>: ' + timesave + '</p>';
+                    str += '</div>';
+                    str += '<div class="col-md-4 pt-2 text-right">';
+                        str += '<p class="mb-1">' + pointold + '->' + pointnow + ' <?= $this->language("l_pointtb") ?></p>';
+                    str += '</div>';
+                str += '</div>';
+            $('.history'+pos).after(str);
+//             var strload = '<img class="imagesloadleft" src="' + $baseUrl + '/public/img/load.gif" />';
+//             $(".button_minus" + pos).after(strload);            
+//             $(".rowsplay_button :input").prop("disabled", true);        
+            $.fn_ajax('inningsavemode35', {'trandau_id': trandau_id, 'name': name, 'str': str, 'pointnow': pointnow, 'timesave': timesave, 'hidden_timesave': hidden_timesave, 'thanhvien_trandau_id': thanhvien_trandau_id}, function (result) {
+                if (result.flag == true) {
+//                     $('.imagesloadleft').remove();
+//                     $(".rowsplay_button :input").prop("disabled", false);
+                } else {
+                    alert("Error");
+                }
+            }, true);
+        }        
+    }
+   
+    function addpoint(pos, name, point, trandau_id, thanhvien_trandau_id) {
+        var status_sound = document.getElementById("status_sound").value;
+        if(status_sound==1){
+            var music = new Audio("<?= URL_BASE ?>/public/1.mp3");
+            music.play();
+        }
+        var pointnow = document.getElementById("pointplay35" + pos).value;
+        var hidden_timesave = document.getElementById("hidden_timesave").value;
+        var pointold = pointnow;
+        pointnow = parseInt(pointnow);
+        pointnow = pointnow + 1;
+        
+        if (parseInt(pointnow) <= parseInt(point)) {
+
+			if(parseInt(pointnow) == parseInt(point)) {
+
+                var str1 = '<p class="places"><?= $this->language("l_hang") ?> ' + thutu + '</p>';
+                $("#groupaction" + pos).html(str1);
+                $("#groupaction" + pos).addClass('win');
+                
+                thutu=thutu+1;
+                
+                if (numberplay == thutu) {
+                    var thuhang = thutu;
+                    var str2 = '<p class="places"><?= $this->language("l_hang") ?> ' + thuhang + '</p>';
+                    $('div[class^="rowsplay_button"]').not('.win').html(str2);
+                    if (thuhang == pos) {
+                        $('.button_pause35').hide();
+                    }
+
+                    $('#confirmmode35Modal').modal('show');
+                }
+                
+			}
+                
+            document.getElementById("pointplay35" + pos).value = pointnow;
+            if (pointnow < 10) {
+                if (pointnow < 0) {
+                    $(".pointusernow" + pos).html(pointnow);
+                } else {
+                    $(".pointusernow" + pos).html("0" + pointnow);
+                }
+            } else {
+                $(".pointusernow" + pos).html(pointnow);
+            }
+            var timesave = document.getElementById("timesave").value;        
+            var str = '';
+            str += '<div class="row b-line-d m-0 text-capitalize">';
+                str += '<div class="col-md-8 pt-2 text-left pl-4">';
+                    str += '<p class="mb-1"><strong>[' + name + ']:</strong> +1 <?= $this->language("l_pointtb") ?></p>';
+                    str += '<p><?= $this->language("l_thoigian") ?>: ' + timesave + '</p>';
+                str += '</div>';
+                str += '<div class="col-md-4 pt-2 text-right">';
+                    str += '<p class="mb-1">' + pointold + '->' + pointnow + ' <?= $this->language("l_pointtb") ?></p>';
+                str += '</div>';
+            str += '</div>';
+            $('.history'+pos).after(str);        
+            $.fn_ajax('inningsavemode35', {'trandau_id': trandau_id, 'name': name, 'numberplay': numberplay, 'str': str, 'pointnow': pointnow, 'point': point, 'timesave': timesave, 'hidden_timesave': hidden_timesave, 'thanhvien_trandau_id': thanhvien_trandau_id}, function (result) {
+                //console.log(result);
+                if (result.flag == true) {
+                    if (parseInt(pointnow) == parseInt(point)) {
+                        var str1 = '<p class="places"><?= $this->language("l_hang") ?> ' + result.thutu + '</p>';
+                        $("#groupaction" + pos).html(str1);
+                        $("#groupaction" + pos).addClass('win');
+                        
+                        $('.imagesloadleft').remove();
+                        $(".rowsplay_button :input").prop("disabled", false);
+                        
+                        if (result.showall == true) {
+                            var thuhang = result.thutu + 1;
+                            var str2 = '<p class="places"><?= $this->language("l_hang") ?> ' + thuhang + '</p>';
+                            $('div[class^="rowsplay_button"]').not('.win').html(str2);
+                            if (thuhang == pos) {
+                                $('.button_pause35').hide();
+                            }
+                        }
+                    }
+                    
+                } else {
+                    alert("Error");
+                }
+            }, true);
+            
+        }
+    }
+</script>
+<script type="text/javascript">
+    var secondUseCurrent = <?=$seconds?>; var timeUse; var timerOnUser = 0;
+    if (localStorage.hasOwnProperty("secondUseCurrent")) {    
+    	secondUseCurrent=parseInt(localStorage.getItem("secondUseCurrent"));
+    }
+    function timedCountCurrentUser(){
+        document.getElementById("hidden_timesave").value = secondUseCurrent;
+        if (secondUseCurrent < 10) { txtSecond = '0' + parseInt(secondUseCurrent);} 
+        else { txtSecond = parseInt(secondUseCurrent);}
+        localStorage.setItem("secondUseCurrent",secondUseCurrent); 
+        
+        secondUseCurrent = secondUseCurrent + 1;
+        
+        var h = Math.floor( txtSecond / 3600 );
+        var m = Math.floor( (txtSecond%3600) / 60 );
+        var s = txtSecond % 60;
+        if (s < 10) { s = "0" + s;}
+        if (m < 10) { m = "0" + m;}
+        if (h < 10) { h = "0" + h;}
+        
+        $("#countTimeMarch").html(h + ":" + m);
+        document.getElementById("timesave").value = h + ":" + m + ":" + s;
+        timeUse = setTimeout("timedCountCurrentUser()", 1000);
+    }
+    function startCountTimeUser(){
+        if (!timerOnUser){
+            timerOnUser = 1;
+            timedCountCurrentUser();
+        }
+    }
+    function stopCountTimeUser() {
+        if (timeUse) {
+            timerOnUser = 0;
+            clearTimeout(timeUse);
+        }
+    }
+</script>
+<div class="modal fade" id="endmode35Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width: 80%; top: 10%">
+        <div class="modal-content bgt-blue">
+            <div class="modal-body p-0 b-line">
+                <div class="title text-center pb-3 b-line"><h3><?= $this->language("l_confirm_end") ?></h3></div>
+            </div>
+            <div class="modal-footer t-line pb-4 pt-4">
+                <div class="m-0 m-auto">
+                    <button type="button" class="btn btn-primary btn-blue " data-dismiss="modal"><?= $this->language("l_close") ?></button>
+                    <button type="button" class="btn btn-primary btn-blue button_ok_mode35_end"><?= $this->language("l_ok") ?></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmmode35Modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document" style="max-width: 80%; top: 10%">
+        <div class="modal-content bgt-blue">
+            <div class="modal-body p-0 b-line">
+                <div class="title text-center pb-3 b-line"><h3><?=$this->language("l_confirm_start") ?></h3></div>
+            </div>
+            <div class="modal-footer t-line pb-4 pt-4">
+                <div class="m-0 m-auto">
+                    <button type="button" class="btn btn-primary btn-blue button_ok_mode35_end" data-dismiss="modal"><?= $this->language("l_no") ?></button>
+                    <button type="button" class="btn btn-primary btn-blue button_yes_mode35_end"><?= $this->language("l_yes") ?></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="div_load_alert">
+    <div class="main_mess">
+        <p><?= $this->language("l_main_mess") ?></p>
+        <img style="width: 200px;" src="<?= URL_PUBLIC ?>img/load.gif" />
+    </div>
+</div>
